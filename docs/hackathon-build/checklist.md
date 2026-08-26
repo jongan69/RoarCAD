@@ -13,5 +13,6 @@
 - [x] Direct `executeTool` contract test and manual browser journey.
 - [x] Public GitHub repository and verified Vercel preview.
 - [ ] Live WebMCP execution proof in a WebMCP-enabled ChatGPT/Chrome build.
-- [ ] Screenshots and final demo recording.
+- [x] Indicator and PocketRoar browser screenshots.
+- [ ] Final demo recording.
 - [ ] Devpost registration and submission confirmations.

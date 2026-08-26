@@ -2,7 +2,7 @@
 
 RoarCAD is a local-first browser PCB workbench where a human and an AI agent operate the same versioned `BoardGraph`. It supports custom 1–10 layer boards, exact parts and pin maps, library or embedded footprints, nets, differential pairs, placement, checks, editable PCB and schematic views, engineering/fabrication exports, and five page-bound [WebMCP](https://developer.chrome.com/docs/ai/webmcp/) tools.
 
-- [Verified preview](https://roarcad-e64j06b89-jongan69s-projects.vercel.app)
+- [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
 
 The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a complex design and exports a clearly marked engineering package. It cannot request a quote until its electrical, physical, licensing, and compatibility gates are proven.
@@ -47,7 +47,7 @@ Browsers without WebMCP retain the complete manual workflow. Agents cannot order
 
 `draft_board` accepts requirements plus an optional structured `design`. `preview_design_change` accepts allowlisted operations. Supplier and agent evidence always enters unreviewed; only the visible manual UI can approve evidence, parts, and footprints.
 
-Enable WebMCP in Chrome 149+ or open the hosted app in ChatGPT's in-app browser. Direct tool calls can be exercised in DevTools with `document.modelContext.executeTool(toolName, JSON.stringify(input))`.
+In Chrome, enable `chrome://flags/#enable-webmcp-testing` and relaunch before opening the hosted app. Unsupported browsers show **Manual mode** and retain the full workflow. Direct tool calls can be exercised in a WebMCP-enabled build with `document.modelContext.executeTool(toolName, JSON.stringify(input))`.
 
 ## Manufacturing status
 
@@ -65,6 +65,12 @@ JLCPCB_QUOTE_ENABLED=false
 ```
 
 The tokenization keys remain unused unless an approved endpoint explicitly requires them. Protect `/api/manufacturing/jlcpcb/quote` with a Vercel WAF fixed-window rule of three requests per ten minutes per IP before enabling live quoting.
+
+## Screenshots
+
+![Fabrication-ready indicator workflow](docs/screenshots/indicator-fabrication.jpg)
+
+![PocketRoar engineering-only workflow](docs/screenshots/pocketroar-engineering.jpg)
 
 See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), and the [demo script](docs/DEMO.md).
 
