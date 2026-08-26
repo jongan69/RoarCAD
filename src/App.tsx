@@ -147,7 +147,7 @@ export default function App() {
         const current = requireProject()
         if (current.currentRevisionId !== revisionId)
           throw new Error("Only the current revision can export.")
-        const result = await prepareExport(current, requestedClass)
+        const result = await prepareExport(current, requestedClass, setNotice)
         setPrepared(result)
         setProject(withValidation(current, result.validation))
         setNotice(

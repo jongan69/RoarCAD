@@ -258,9 +258,12 @@ function normalizeFabricationTimestamp(contents: string, createdAt: string): str
 export async function prepareExport(
   project: BoardProject,
   artifactClass: ArtifactClass = "engineering",
+  onProgress: (stage: string) => void = () => undefined,
 ): Promise<PreparedExport> {
   const revision = currentRevision(project)
+  onProgress("Compiling the current revision…")
   const circuitJson = await compileSnapshot(revision.snapshot)
+  onProgress("Running design checks…")
   const validation = {
     ...(await validateCircuit(revision.snapshot, circuitJson)),
     checkedAt: revision.createdAt,
@@ -271,6 +274,7 @@ export async function prepareExport(
     throw new Error("Fabrication export blocked: the design is not fabrication-ready.")
   }
 
+  onProgress("Generating manufacturing layers…")
   const gerberLayers = stringifyGerberCommandLayers(
     convertSoupToGerberCommands(circuitJson as never),
   ) as Record<string, string>
@@ -317,6 +321,7 @@ export async function prepareExport(
       "# Engineering candidate only\n\nThis package is not fabrication-ready and must not be quoted, ordered, or treated as electrically validated.\n",
     )
   }
+  onProgress("Hashing the artifact manifest…")
   const manifest = {
     schemaVersion: 2 as const,
     revisionId: revision.id,
@@ -335,6 +340,7 @@ export async function prepareExport(
   files["manifest.json"] = encode(JSON.stringify({ ...manifest, manifestHash }, null, 2))
   const bundleZip = new JSZip()
   for (const [name, bytes] of Object.entries(files)) bundleZip.file(name, bytes)
+  onProgress("Packaging the download bundle…")
   return {
     revisionId: revision.id,
     manifestHash,
