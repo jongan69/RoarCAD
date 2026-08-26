@@ -20,3 +20,11 @@ Jonathan chose an AI-led demo centered on visibly building the PocketRoar design
 - A camera-state regression test zoomed the PCB, switched to the schematic, then returned to PCB. With hover-only overlays removed, the before/after screenshots had the same SHA-256 (`b96364f5c8b07508c6d14f17a5242336e08d51307a4bfd8fb455950249f6a54b`).
 - The Vercel Bun functions now use the required default `fetch` handler and root TypeScript options. The deployed handoff route returned structured validation JSON; repeated quote probes were rejected by the configured fixed-window WAF before a function invocation was logged.
 - Preview protection remains intentionally distinct from public-production acceptance. A judge-accessible production alias is still blocked on explicit promotion approval.
+
+## 2026-08-26 production promotion
+
+- Jonathan authorized the speed-run to the judge-ready finish line.
+- Commit `404fcb8` passed the complete remote CI suite on both `dev` and `main`.
+- Vercel promoted that commit to `https://roarcad.vercel.app/`; the public route returned HTTP 200.
+- GitHub now detects the root MIT license on the public repository's default `main` branch.
+- The final public demo video and explicit Devpost submission confirmation remain open; nothing has been sent to Devpost.

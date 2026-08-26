@@ -50,11 +50,11 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: The recording shows preview non-mutation, human approval, new revision, export, and PocketRoar quote rejection.
   Verify: live five-tool execution passed and screenshots are captured; raw video capture and replay remain open.
 
-- [ ] **9. Finish public repository evidence**
+- [x] **9. Finish public repository evidence**
   Spec ref: `scope.md > source and documentation`
   What to build: Stable demo link, detected MIT license, current README, safety/architecture/testing docs, and secret scan.
   Acceptance: A clean visitor can run and understand the project without private context.
-  Verify: GitHub public page, `git grep` secret review, and clean clone smoke test. GitHub license detection remains blocked until the accepted `dev` candidate is promoted to default branch `main` with explicit approval.
+  Verify: Accepted commit `404fcb8` passed CI on both branches, Vercel promoted it to `https://roarcad.vercel.app/`, the tracked-secret scan was clean, and GitHub detects the MIT license on default branch `main`.
 
 - [ ] **10. Produce the under-three-minute demo**
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B6`

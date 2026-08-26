@@ -101,7 +101,8 @@ Pending Jonathan’s public YouTube upload of the final approved under-three-min
 - WebMCP-enabled Chrome exposed exactly five tools and completed the full generic-board journey with no application console errors.
 - ChatGPT's in-app browser completed the manual fallback journey without horizontal overflow or application console errors.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
-- Production promotion, the final public YouTube URL, and the explicit final Devpost confirmation remain open gates.
+- Production is live at `https://roarcad.vercel.app/`, `main` passed CI, and GitHub detects the MIT license.
+- The final public YouTube URL and explicit final Devpost confirmation remain open gates.
 
 ## Known Limitations
 
