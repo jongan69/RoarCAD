@@ -15,9 +15,9 @@
     "ai_usage": "Codex assisted research, implementation, validation, and submission preparation.",
     "codex_usage": "Codex built the typed domain workflow, tscircuit integration, browser tools, safety boundary, and tests."
   },
-  "current_stage": "start-hackathon",
-  "completed_stages": [],
-  "rules_acknowledged": false,
+  "current_stage": "resources",
+  "completed_stages": ["review"],
+  "rules_acknowledged": true,
   "learning": {
     "status": "in-progress",
     "current_step": "build",
@@ -26,5 +26,5 @@
     "checklist_file": "docs/hackathon-build/checklist.md"
   },
   "submission": { "draft_file": "devpost-submission.md", "status": "not-started" },
-  "next_command": "start-hackathon"
+  "next_command": "resources"
 }
