@@ -9,7 +9,7 @@ import {
   verifyQuoteToken,
 } from "../api/manufacturing/jlcpcb/shared"
 import { captureBridgeSnapshot, createProject, indicatorSnapshot } from "../src/domain"
-import { MAX_PROJECT_BYTES } from "../src/manufacturing"
+import { MAX_PROJECT_BYTES, parseProviderResponse } from "../src/manufacturing"
 
 describe("manufacturing boundary", () => {
   test("falls back honestly and requires explicit confirmation", async () => {
@@ -123,5 +123,14 @@ describe("manufacturing boundary", () => {
       }),
     )
     expect(response.status).toBe(413)
+  })
+
+  test("reports non-JSON provider failures without leaking their body", async () => {
+    await expect(
+      parseProviderResponse(
+        new Response("A server error occurred", { status: 401 }),
+        "Quote failed",
+      ),
+    ).rejects.toThrow("Quote failed (HTTP 401)")
   })
 })

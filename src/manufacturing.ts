@@ -52,6 +52,18 @@ export const handoffSchema = z.object({
   confirmed: z.literal(true),
 })
 
+export async function parseProviderResponse<T>(response: Response, fallback: string): Promise<T> {
+  const body = await response.text()
+  let result: T & { error?: string }
+  try {
+    result = JSON.parse(body) as T & { error?: string }
+  } catch {
+    throw new Error(`${fallback} (HTTP ${response.status}).`)
+  }
+  if (!response.ok) throw new Error(result.error ?? `${fallback} (HTTP ${response.status}).`)
+  return result
+}
+
 export async function requestJlcQuote(
   project: BoardProject,
   configuration: ManufacturingConfiguration,
@@ -70,9 +82,7 @@ export async function requestJlcQuote(
     headers: { "content-type": "application/json" },
     body,
   })
-  const result = (await response.json()) as QuoteResult & { error?: string }
-  if (!response.ok) throw new Error(result.error ?? "JLCPCB quote request failed.")
-  return result
+  return parseProviderResponse<QuoteResult>(response, "JLCPCB quote request failed")
 }
 
 export async function requestJlcHandoff(input: z.input<typeof handoffSchema>): Promise<{
@@ -86,12 +96,10 @@ export async function requestJlcHandoff(input: z.input<typeof handoffSchema>): P
     headers: { "content-type": "application/json" },
     body: JSON.stringify(parsed),
   })
-  const result = (await response.json()) as {
+  return parseProviderResponse<{
     error?: string
     checkoutUrl?: string
     warnings: string[]
     fallbackUrl: string
-  }
-  if (!response.ok) throw new Error(result.error ?? "JLCPCB handoff failed.")
-  return result
+  }>(response, "JLCPCB handoff failed")
 }
