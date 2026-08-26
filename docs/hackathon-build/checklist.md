@@ -44,11 +44,11 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: Every remaining omission appears as an explicit blocker; no unsupported fabrication claim.
   Verify: engineering export plus independent evidence review.
 
-- [ ] **8. Capture the complete WebMCP proof**
+- [x] **8. Capture the complete WebMCP proof**
   Spec ref: `prd.md > real browser agent`
   What to build: Record Chrome executing all five tools against the deployed app.
   Acceptance: The recording shows preview non-mutation, human approval, new revision, export, and PocketRoar quote rejection.
-  Verify: live five-tool execution passed and screenshots are captured; raw video capture and replay remain open.
+  Verify: the live five-tool Chrome journey passed; fresh preview and apply calls produced the tracked before/after revision captures used in the final video.
 
 - [x] **9. Finish public repository evidence**
   Spec ref: `scope.md > source and documentation`
@@ -60,7 +60,7 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B6`
   What to build: Real product screen capture with reviewed AI narration, captions, edits, and audio.
   Acceptance: Under three minutes, public YouTube URL, no fabricated behavior, no secrets.
-  Verify: watch the final upload logged out with captions enabled.
+  Verify: the local 2:24 master is 1920×1080 H.264/AAC with 234 Whisper-timed caption cards; public YouTube upload and logged-out replay remain open.
 
 - [ ] **11. Complete and review the Devpost packet**
   Spec ref: `devpost-submission.md`

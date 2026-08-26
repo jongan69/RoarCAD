@@ -83,7 +83,10 @@ https://github.com/jongan69/RoarCAD
 
 ## Demo Video
 
-Pending Jonathan’s public YouTube upload of the final approved under-three-minute MP4.
+The final upload master is ready at `artifacts/demo/roarcad-demo-final.mp4`, with the
+matching sidecar captions at `artifacts/demo/roarcad-demo-final.srt`. It is 2:24,
+1920×1080, H.264/AAC, and uses only genuine live-product captures. Pending Jonathan’s
+public YouTube upload and returned URL.
 
 ## Screenshot Shot List
 
@@ -91,8 +94,8 @@ Pending Jonathan’s public YouTube upload of the final approved under-three-min
 2. PocketRoar at engineering readiness with visible blockers: `docs/screenshots/pocketroar-engineering.jpg`.
 3. WebMCP-ready PocketRoar workspace: `docs/screenshots/pocketroar-webmcp-engineering.png`.
 4. Environmental-monitor generic-board proof: `docs/screenshots/environment-monitor-webmcp.png`.
-5. Video frame: non-mutating preview before human approval.
-6. Video frame: PocketRoar fabrication/quote rejection.
+5. Non-mutating PocketRoar preview: `docs/screenshots/pocketroar-preview.jpg`.
+6. Approved immutable PocketRoar revision: `docs/screenshots/pocketroar-applied-revision.jpg`.
 
 ## Submission Readiness Notes
 
@@ -101,6 +104,7 @@ Pending Jonathan’s public YouTube upload of the final approved under-three-min
 - WebMCP-enabled Chrome exposed exactly five tools and completed the full generic-board journey with no application console errors.
 - ChatGPT's in-app browser completed the manual fallback journey without horizontal overflow or application console errors.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
+- The final local video master is 2:24 at 1920×1080 with audible Grady narration and 234 Whisper-timed caption cards. Its SHA-256 is `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
 - Production is live at `https://roarcad.vercel.app/`, `main` passed CI, and GitHub detects the MIT license.
 - The final public YouTube URL and explicit final Devpost confirmation remain open gates.
 

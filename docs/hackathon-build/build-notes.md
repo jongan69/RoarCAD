@@ -28,3 +28,11 @@ Jonathan chose an AI-led demo centered on visibly building the PocketRoar design
 - Vercel promoted that commit to `https://roarcad.vercel.app/`; the public route returned HTTP 200.
 - GitHub now detects the root MIT license on the public repository's default `main` branch.
 - The final public demo video and explicit Devpost submission confirmation remain open; nothing has been sent to Devpost.
+
+## 2026-08-26 final video master
+
+- Grady narration completed as 16 consistent, pause-free takes and was assembled without time-stretching.
+- The final local master is `artifacts/demo/roarcad-demo-final.mp4`: 2:24, 1920×1080, H.264 video, stereo AAC audio, SHA-256 `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
+- Whisper timed 405 authored words into 234 clean caption cards with 0.936 authored-text similarity; the sidecar is `artifacts/demo/roarcad-demo-final.srt`.
+- Every product frame comes from the deployed application. The preview and approved revision captures were regenerated through the live Chrome WebMCP page before assembly.
+- Jonathan still owns the public YouTube upload, logged-out replay, URL handoff, and final Devpost submit action.
