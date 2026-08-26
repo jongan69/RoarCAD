@@ -1,4 +1,4 @@
-import { authorizeHandoff, JLC_FALLBACK_URL } from "./shared"
+import { authorizeHandoff, JLC_FALLBACK_URL } from "./shared.js"
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== "POST")

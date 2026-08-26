@@ -3,5 +3,5 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "formatter": { "enabled": true, "indentStyle": "space", "lineWidth": 100 },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "asNeeded" } },
-  "files": { "includes": ["**", "!dist", "!node_modules"] }
+  "files": { "includes": ["**", "!dist", "!node_modules", "!.vercel", "!.env.local"] }
 }

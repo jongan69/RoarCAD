@@ -2,7 +2,7 @@ import {
   handoffSchema,
   manufacturingRequestSchema,
   type QuoteResult,
-} from "../../../src/manufacturing"
+} from "../../../src/manufacturing.js"
 
 export const JLC_FALLBACK_URL = "https://jlcpcb.com/quote"
 

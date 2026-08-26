@@ -1,4 +1,4 @@
-import { fallbackQuote, parseQuoteRequest } from "./shared"
+import { fallbackQuote, parseQuoteRequest } from "./shared.js"
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== "POST")
