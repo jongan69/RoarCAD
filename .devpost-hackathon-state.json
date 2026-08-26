@@ -1,0 +1,30 @@
+{
+  "plugin": "devpost-hackathon",
+  "version": 2,
+  "hackathon": {
+    "slug": "webmcp",
+    "name": "The WebMCP Challenge",
+    "url": "https://webmcp.devpost.com/",
+    "selected": true,
+    "source": "known"
+  },
+  "participant": { "name": "", "display_name": "" },
+  "project": {
+    "name": "RoarCAD",
+    "summary": "A transparent WebMCP PCB workbench with preview-first changes and human-approved manufacturing handoff.",
+    "ai_usage": "Codex assisted research, implementation, validation, and submission preparation.",
+    "codex_usage": "Codex built the typed domain workflow, tscircuit integration, browser tools, safety boundary, and tests."
+  },
+  "current_stage": "start-hackathon",
+  "completed_stages": [],
+  "rules_acknowledged": false,
+  "learning": {
+    "status": "in-progress",
+    "current_step": "build",
+    "completed_steps": ["scope", "prd", "spec", "checklist"],
+    "plan_file": "docs/hackathon-build/spec.md",
+    "checklist_file": "docs/hackathon-build/checklist.md"
+  },
+  "submission": { "draft_file": "devpost-submission.md", "status": "not-started" },
+  "next_command": "start-hackathon"
+}
