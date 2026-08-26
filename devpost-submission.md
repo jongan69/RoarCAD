@@ -83,10 +83,11 @@ https://github.com/jongan69/RoarCAD
 
 ## Demo Video
 
-The final upload master is ready at `artifacts/demo/roarcad-demo-final.mp4`, with the
-matching sidecar captions at `artifacts/demo/roarcad-demo-final.srt`. It is 2:24,
-1920×1080, H.264/AAC, and uses only genuine live-product captures. Pending Jonathan’s
-public YouTube upload and returned URL.
+https://youtu.be/wxrciZWlEIk
+
+The public video is 2:25, 1920×1080, H.264/AAC, with AI narration disclosure enabled.
+It uses genuine live-product captures and passed YouTube's copyright and Community
+Guidelines checks.
 
 ## Screenshot Shot List
 
@@ -106,7 +107,9 @@ public YouTube upload and returned URL.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
 - The final local video master is 2:24 at 1920×1080 with audible Grady narration and 234 Whisper-timed caption cards. Its SHA-256 is `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
 - Production is live at `https://roarcad.vercel.app/`, `main` passed CI, and GitHub detects the MIT license.
-- The final public YouTube URL and explicit final Devpost confirmation remain open gates.
+- The public video was verified through YouTube's anonymous oEmbed endpoint.
+- Devpost accepted submission `1154859` on August 26, 2026 at 10:37:25 EDT and live
+  readback confirmed the public project at `https://devpost.com/software/roarcad`.
 
 ## Known Limitations
 
@@ -130,7 +133,7 @@ public YouTube upload and returned URL.
 - `28258` — AI tools: `Codex and ChatGPT. Codex assisted research, implementation, debugging, browser acceptance testing, documentation, and submission preparation. ChatGPT supported product exploration and the in-app-browser fallback review.`
 - `28259` — Learning: `Significant`
 - `28260` — Career AI value: `Yes`
-- Demo video URL: pending the final public YouTube upload
+- Demo video URL: `https://youtu.be/wxrciZWlEIk`
 
 ## Judging-Criteria Review
 

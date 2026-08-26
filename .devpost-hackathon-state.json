@@ -16,7 +16,7 @@
     "codex_usage": "Codex built the typed domain workflow, tscircuit integration, browser tools, safety boundary, and tests."
   },
   "current_stage": "submit-project",
-  "completed_stages": ["review", "resources"],
+  "completed_stages": ["review", "resources", "submit-project"],
   "rules_acknowledged": true,
   "learning": {
     "status": "in-progress",
@@ -25,6 +25,12 @@
     "plan_file": "docs/hackathon-build/spec.md",
     "checklist_file": "docs/hackathon-build/checklist.md"
   },
-  "submission": { "draft_file": "devpost-submission.md", "status": "needs-work" },
-  "next_command": "prepare-submission"
+  "submission": {
+    "draft_file": "devpost-submission.md",
+    "status": "submitted",
+    "submission_id": 1154859,
+    "submitted_at": "2026-08-26T10:37:25.894-04:00",
+    "public_url": "https://devpost.com/software/roarcad"
+  },
+  "next_command": "hackathon-map"
 }
