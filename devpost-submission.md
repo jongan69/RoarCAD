@@ -37,8 +37,8 @@ Verify an approved JLCPCB quote/cart API account, add measured PocketRoar transp
 
 ## Links
 
-- Source: pending public repository
-- Demo: pending Vercel preview
+- Source: https://github.com/jongan69/RoarCAD
+- Demo: https://roarcad-e64j06b89-jongan69s-projects.vercel.app
 - Video: pending final recording
 
 ## AI disclosure

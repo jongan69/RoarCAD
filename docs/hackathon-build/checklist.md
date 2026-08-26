@@ -8,6 +8,7 @@
 - [x] JLCPCB server boundary and safe fallback.
 - [x] Dependency install and local quality gates.
 - [x] Direct `executeTool` contract test and manual browser journey.
-- [ ] Public GitHub repository and Vercel preview.
+- [x] Public GitHub repository and verified Vercel preview.
+- [ ] Live WebMCP execution proof in a WebMCP-enabled ChatGPT/Chrome build.
 - [ ] Screenshots and final demo recording.
 - [ ] Devpost registration and submission confirmations.

@@ -2,6 +2,9 @@
 
 RoarCAD is a browser PCB workbench where a human and an AI agent can inspect the same requirements, preview the same changes, and pass through the same validation gates. The MVP compiles a small two-layer power-indicator board with [tscircuit](https://tscircuit.com), renders PCB and schematic views, produces manufacturing artifacts, and exposes five page-bound [WebMCP](https://learn.chatgpt.com/docs/webmcp) tools.
 
+- [Verified preview](https://roarcad-e64j06b89-jongan69s-projects.vercel.app)
+- [Public source](https://github.com/jongan69/RoarCAD)
+
 The included PocketRoar Capture Bridge is a requirements package, not a fabrication-ready design. It stays blocked until its camera, device, OS, transport, video-mode, charging, and physical-validation inputs are proven.
 
 ## Run
