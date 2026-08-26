@@ -17,9 +17,10 @@ test("registers and directly executes exactly five page tools", async () => {
     unregisterTool(name: string) {
       tools.delete(name)
     },
-    executeTool(name: string, input: string) {
-      const tool = tools.get(name)
-      if (!tool) throw new Error("Tool not found")
+    getTools() {
+      return Promise.resolve([...tools.values()])
+    },
+    executeTool(tool: RegisteredTool, input: string) {
       return tool.execute(JSON.parse(input))
     },
   }
@@ -45,6 +46,7 @@ test("registers and directly executes exactly five page tools", async () => {
     apply: async () => ({ status: "applied" }),
     prepare: async () => ({ status: "prepared", humanDownloadRequired: true }),
   })
+  await Promise.resolve()
 
   expect([...tools.keys()].sort()).toEqual([
     "apply_design_change",
@@ -55,19 +57,24 @@ test("registers and directly executes exactly five page tools", async () => {
   ])
   expect(tools.get("inspect_design")?.annotations?.readOnlyHint).toBe(true)
   expect(tools.get("inspect_design")?.annotations?.untrustedContentHint).toBe(true)
+  const tool = (name: string) => {
+    const registered = tools.get(name)
+    if (!registered) throw new Error(`Tool not found: ${name}`)
+    return registered
+  }
   await context.executeTool(
-    "draft_board",
+    tool("draft_board"),
     JSON.stringify({
       requirements: "green LED",
       design: boardGraphSchema.parse(indicatorSnapshot.design),
     }),
   )
   await context.executeTool(
-    "inspect_design",
+    tool("inspect_design"),
     JSON.stringify({ revisionId: "revision-1", query: "risks" }),
   )
   await context.executeTool(
-    "preview_design_change",
+    tool("preview_design_change"),
     JSON.stringify({
       revisionId: "revision-1",
       request: "move D1",
@@ -77,11 +84,11 @@ test("registers and directly executes exactly five page tools", async () => {
     }),
   )
   await context.executeTool(
-    "apply_design_change",
+    tool("apply_design_change"),
     JSON.stringify({ revisionId: "revision-1", changeId: "change-1" }),
   )
   await context.executeTool(
-    "validate_and_export",
+    tool("validate_and_export"),
     JSON.stringify({
       revisionId: "revision-1",
       targets: ["gerber"],
@@ -89,5 +96,35 @@ test("registers and directly executes exactly five page tools", async () => {
     }),
   )
   cleanup()
+  await Promise.resolve()
   expect(tools.size).toBe(0)
+})
+
+test("registration is idempotent when Chrome cannot unregister tools", async () => {
+  const tools = new Map<string, RegisteredTool>()
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: {
+      modelContext: {
+        registerTool(tool: RegisteredTool) {
+          if (tools.has(tool.name))
+            throw new DOMException("Duplicate tool name", "InvalidStateError")
+          tools.set(tool.name, tool)
+        },
+        getTools: () => Promise.resolve([...tools.values()]),
+      },
+    },
+  })
+  const actions = {
+    draft: async () => ({}),
+    inspect: async () => ({}),
+    preview: async () => ({}) as DesignChange,
+    apply: async () => ({}),
+    prepare: async () => ({}),
+  }
+  registerWebMcpTools(actions)
+  await Promise.resolve()
+  registerWebMcpTools(actions)
+  await Promise.resolve()
+  expect(tools.size).toBe(5)
 })

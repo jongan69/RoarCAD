@@ -23,7 +23,8 @@ declare global {
     modelContext?: {
       registerTool(tool: Tool): void
       unregisterTool?(name: string): void
-      executeTool?(name: string, input: string): Promise<ToolResult>
+      getTools?(): Promise<Tool[]>
+      executeTool?(tool: Tool, input: string): Promise<ToolResult>
     }
   }
 }
@@ -183,8 +184,21 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
       },
     },
   ]
-  for (const tool of tools) context.registerTool(tool)
+  let cancelled = false
+  const registeredNames: string[] = []
+  const ready = (async () => {
+    const existing = new Set((await context.getTools?.())?.map(({ name }) => name) ?? [])
+    if (cancelled) return
+    for (const tool of tools) {
+      if (existing.has(tool.name)) continue
+      context.registerTool(tool)
+      registeredNames.push(tool.name)
+    }
+  })().catch((error) => console.error("WebMCP tool registration failed.", error))
   return () => {
-    for (const tool of tools) context.unregisterTool?.(tool.name)
+    cancelled = true
+    void ready.then(() => {
+      for (const name of registeredNames) context.unregisterTool?.(name)
+    })
   }
 }

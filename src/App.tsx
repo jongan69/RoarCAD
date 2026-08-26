@@ -196,6 +196,28 @@ export default function App() {
   const validation =
     revision.validation.status === "not-run" ? domainValidation : revision.validation
   const design = revision.snapshot.design
+  const validationLabel =
+    validation.status === "blocked"
+      ? "blocked"
+      : validation.readiness === "fabrication-ready"
+        ? "passed"
+        : "engineering review"
+  const validationClass =
+    validation.status === "blocked"
+      ? "blocked"
+      : validation.readiness === "fabrication-ready"
+        ? "passed"
+        : "engineering"
+
+  const selectMoveTarget = (reference: string, graph = design) => {
+    setMoveReference(reference)
+    const placement = graph?.components.find(
+      (component) => component.reference === reference,
+    )?.placement
+    if (!placement) return
+    setMoveX(placement.x)
+    setMoveY(placement.y)
+  }
 
   const selectReference = async (reference: "indicator" | "capture") => {
     const next = await createProject(
@@ -204,7 +226,7 @@ export default function App() {
       reference === "indicator" ? indicatorSnapshot : captureBridgeSnapshot,
     )
     setArtifactClass(reference === "indicator" ? "fabrication" : "engineering")
-    setMoveReference(reference === "indicator" ? "D1" : "U1")
+    selectMoveTarget(reference === "indicator" ? "D1" : "U1", currentRevision(next).snapshot.design)
     setChange(null)
     changeRef.current = null
     setProject(next)
@@ -519,7 +541,7 @@ export default function App() {
               <select
                 id="move-reference"
                 value={moveReference}
-                onChange={(event) => setMoveReference(event.target.value)}
+                onChange={(event) => selectMoveTarget(event.target.value)}
               >
                 {design?.components.map((component) => (
                   <option key={component.reference}>{component.reference}</option>
@@ -573,8 +595,8 @@ export default function App() {
             </p>
           )}
           <h2>Design checks</h2>
-          <div className={`validation ${validation.status}`}>
-            <strong>{validation.status}</strong>
+          <div className={`validation ${validationClass}`}>
+            <strong>{validationLabel}</strong>
             <span>
               {validation.readiness} · {validation.errors.length} blockers ·{" "}
               {validation.warnings.length} warnings

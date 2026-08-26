@@ -727,7 +727,7 @@ const captureComponents: BoardComponent[] = [
   candidate(
     "U10",
     "chip",
-    "TPD1S514-3YZR",
+    "TPD1S514-1YZR",
     "Texas Instruments",
     libFootprint("qfn12"),
     31,
@@ -852,6 +852,14 @@ const captureComponents: BoardComponent[] = [
 export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
   requirements: [
     {
+      id: "req-video-only",
+      label: "Video-only unprotected-HDMI prototype",
+      value: "1080p30 YCbCr 4:2:2 to UVC; no audio, HDCP, or simultaneous charging claim",
+      required: true,
+      status: "verified",
+      evidenceIds: ["ev-toshiba-tc358743", "ev-infineon-cx3"],
+    },
+    {
       id: "req-host",
       label: "Exact USB-C iPad and iPadOS version",
       value: "USB-C iPad target; exact model pending",
@@ -885,8 +893,12 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     "Engineering candidate eight-layer stack; fabricator must approve final geometry.",
     "USB SuperSpeed 90 Ω differential; MIPI CSI-2 100 Ω differential.",
     "No high-speed probe stubs; expose only rail and low-speed test points.",
+    "Video only: TC358743 and CX3 audio interfaces are both outputs and must not be connected.",
   ],
   validationPlan: [
+    "Resolve the 1.6 mm HDMI versus 0.8 mm USB-C connector thickness conflict.",
+    "Run regulator transient SPICE with vendor models and the CX3 PHY startup load.",
+    "Run HDMI, MIPI, and USB channel analysis with the approved stackup and public models.",
     "Prove known UVC capture on the exact iPad, OS, cable, and orientation.",
     "Measure HDMI lock, CSI counters, UVC enumeration, reconnect, thermal behavior, and five-hour soak.",
     "Review stackup, impedance, power integrity, return paths, EMI/ESD, enclosure, licensing, and DFM.",
@@ -958,6 +970,8 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     routingHints: ["Route all named differential pairs before low-speed control nets."],
   },
   unresolvedRisks: [
+    "The selected HDMI and USB-C connectors require incompatible PCB thicknesses.",
+    "The published Toshiba material omits the complete register map, startup sequence, decoupling network, and reference design.",
     "TC358743 EDID, HPD, register programming, sequencing, and recovery are not frozen.",
     "TC358743-to-CX3 timing and the target 1080p30 mode are unmeasured.",
     "USB-C current policy and CX3 1.2 V startup transient are unverified.",

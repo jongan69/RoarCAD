@@ -167,7 +167,8 @@ main {
 .workspace {
   display: grid;
   grid-template-columns: minmax(260px, 22%) minmax(520px, 1fr) minmax(280px, 24%);
-  min-height: 630px;
+  height: clamp(560px, calc(100vh - 190px), 680px);
+  min-height: 0;
 }
 .panel {
   background: var(--surface);
@@ -183,7 +184,7 @@ main {
 .inspector {
   padding: 20px;
   overflow: auto;
-  max-height: 680px;
+  min-height: 0;
 }
 .panel-heading {
   display: flex;
@@ -324,6 +325,7 @@ main {
   grid-template-rows: 48px 1fr auto;
   background: #0d0e0d;
   min-width: 0;
+  min-height: 0;
 }
 .canvas-toolbar {
   justify-content: space-between;
@@ -345,12 +347,13 @@ main {
   color: var(--muted);
 }
 .viewer {
-  min-height: 500px;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
 .viewer > div:not(.blocked-canvas) {
   height: 100%;
+  min-height: 0;
 }
 .blocked-canvas {
   height: 100%;
@@ -455,6 +458,9 @@ main {
 }
 .validation.passed strong {
   color: var(--good);
+}
+.validation.engineering strong {
+  color: var(--warn);
 }
 .validation.blocked strong {
   color: var(--bad);

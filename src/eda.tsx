@@ -255,6 +255,32 @@ function normalizeFabricationTimestamp(contents: string, createdAt: string): str
     .replaceAll(/date \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g, `date ${createdAt}`)
 }
 
+function digitalVerificationMarkdown(
+  snapshot: DesignSnapshot,
+  validation: Validation,
+  circuitJson: CircuitElement[],
+): string {
+  const pending = snapshot.validationPlan.map((item) => `- [ ] ${item}`).join("\n")
+  return `# RoarCAD digital verification
+
+Revision checks are reproducible engineering evidence, not physical certification.
+
+| Analysis | Result | Evidence |
+| --- | --- | --- |
+| BoardGraph schema and reference integrity | ${validation.status === "blocked" ? "blocked" : "pass"} | Validated input graph |
+| tscircuit compile and design checks | ${validation.status} | ${circuitJson.length} Circuit JSON elements; ${validation.errors.length} blockers; ${validation.warnings.length} warnings |
+| Analog/power SPICE | not run | Exact vendor models and extracted load network are not attached to this revision |
+| HDMI / MIPI / USB signal integrity | not run | Approved stackup, routed channels, package models, and S-parameters are required |
+| Firmware, EDID, UVC, and host compatibility | not run | Requires firmware plus physical source and host hardware |
+
+## Remaining validation plan
+
+${pending || "- [ ] No physical validation plan was supplied."}
+
+Readiness: **${validation.readiness}**. Fabrication and ordering require a fabrication-ready revision.
+`
+}
+
 export async function prepareExport(
   project: BoardProject,
   artifactClass: ArtifactClass = "engineering",
@@ -312,6 +338,9 @@ export async function prepareExport(
     "validation.json": encode(JSON.stringify(validation, null, 2)),
     "validation.md": encode(
       `# RoarCAD validation\n\nStatus: **${validation.status}**\n\nReadiness: **${validation.readiness}**\n\nRevision: \`${revision.id}\`\n`,
+    ),
+    "digital-verification.md": encode(
+      digitalVerificationMarkdown(revision.snapshot, validation, circuitJson),
     ),
     "circuit.json": encode(JSON.stringify(circuitJson, null, 2)),
     "project.roarcad.json": encode(JSON.stringify(exportedProject, null, 2)),

@@ -23,6 +23,9 @@ test("indicator compiles, validates, and exports consistent artifacts", async ()
   expect(prepared.files["gerbers.zip"].byteLength).toBeGreaterThan(100)
   expect(prepared.files["bom.csv"].byteLength).toBeGreaterThan(50)
   expect(prepared.files["placement.csv"].byteLength).toBeGreaterThan(20)
+  expect(new TextDecoder().decode(prepared.files["digital-verification.md"])).toContain(
+    "physical certification",
+  )
   expect((await prepareExport(project, "fabrication")).manifestHash).toBe(prepared.manifestHash)
 })
 
@@ -35,6 +38,9 @@ test("PocketRoar uses the generic compiler and exports engineering-only artifact
   expect(prepared.manifest.artifactClass).toBe("engineering")
   expect(new TextDecoder().decode(prepared.files["ENGINEERING_ONLY.md"])).toContain(
     "not fabrication-ready",
+  )
+  expect(new TextDecoder().decode(prepared.files["digital-verification.md"])).toContain(
+    "Analog/power SPICE | not run",
   )
   await expect(prepareExport(project, "fabrication")).rejects.toThrow("fabrication-ready")
 }, 15_000)

@@ -19,6 +19,12 @@ describe("generic board domain", () => {
     expect(boardGraphSchema.parse(captureBridgeSnapshot.design).board.layers).toBe(8)
     expect(validateSnapshot(indicatorSnapshot).readiness).toBe("fabrication-ready")
     expect(validateSnapshot(captureBridgeSnapshot).readiness).toBe("engineering")
+    expect(captureBridgeSnapshot.requirements).toContainEqual(
+      expect.objectContaining({ id: "req-video-only", status: "verified" }),
+    )
+    expect(captureBridgeSnapshot.design?.components).toContainEqual(
+      expect.objectContaining({ reference: "U10", mpn: "TPD1S514-1YZR" }),
+    )
   })
 
   test("preview is non-mutating and stale structured changes are rejected", async () => {
