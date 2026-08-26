@@ -19,7 +19,6 @@
 }
 body {
   margin: 0;
-  min-width: 1040px;
   min-height: 100vh;
 }
 button,
@@ -587,5 +586,56 @@ dd {
 @media (max-width: 1200px) {
   .workspace {
     grid-template-columns: 250px minmax(500px, 1fr) 270px;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    min-height: 72px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-block: 10px;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+  }
+  .reference-switch {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+  .reference-switch span {
+    flex-basis: 100%;
+    margin-left: 0;
+    max-width: 100%;
+  }
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+  .workspace > .panel + .panel {
+    border-left: 1px solid var(--line);
+  }
+  .requirements,
+  .inspector {
+    max-height: 560px;
+  }
+  .canvas-panel {
+    min-height: 680px;
+  }
+  .canvas-toolbar {
+    gap: 8px;
+  }
+  .canvas-toolbar code {
+    display: none;
+  }
+  .change-bar > div {
+    flex-wrap: wrap;
+  }
+  .history {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
