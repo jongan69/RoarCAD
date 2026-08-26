@@ -2,6 +2,7 @@
 
 RoarCAD is a local-first browser PCB workbench where a human and an AI agent operate the same versioned `BoardGraph`. It supports custom 1–10 layer boards, exact parts and pin maps, library or embedded footprints, nets, differential pairs, placement, checks, editable PCB and schematic views, engineering/fabrication exports, and five page-bound [WebMCP](https://developer.chrome.com/docs/ai/webmcp/) tools.
 
+- [Production app](https://roarcad.vercel.app)
 - [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
 
