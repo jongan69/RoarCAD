@@ -31,3 +31,5 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 }
+
+export default { fetch: POST }
