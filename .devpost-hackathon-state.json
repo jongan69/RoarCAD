@@ -16,7 +16,7 @@
     "codex_usage": "Codex built the typed domain workflow, tscircuit integration, browser tools, safety boundary, and tests."
   },
   "current_stage": "resources",
-  "completed_stages": ["review"],
+  "completed_stages": ["review", "resources"],
   "rules_acknowledged": true,
   "learning": {
     "status": "in-progress",
@@ -26,5 +26,5 @@
     "checklist_file": "docs/hackathon-build/checklist.md"
   },
   "submission": { "draft_file": "devpost-submission.md", "status": "not-started" },
-  "next_command": "resources"
+  "next_command": "prepare-submission"
 }
