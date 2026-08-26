@@ -77,6 +77,6 @@ PocketRoar remains an **engineering-only** example. Its current [electrical comp
 
 ![PocketRoar engineering-only workflow](docs/screenshots/pocketroar-engineering.jpg)
 
-See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), [sample prompts](docs/SAMPLE_PROMPTS.md), and the [demo script](docs/DEMO.md).
+See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), [sample prompts](docs/SAMPLE_PROMPTS.md), the [demo script](docs/DEMO.md), and the [final video packet](docs/VIDEO_PACKET.md).
 
 MIT © Jonathan Gan
