@@ -563,16 +563,21 @@ export default function App() {
           </div>
           <div className="viewer">
             {circuitJson.length ? (
-              view === "pcb" ? (
-                <PCBViewer
-                  circuitJson={circuitJson as never}
-                  allowEditing={canvasEditing}
-                  editEvents={editEvents as never}
-                  onEditEventsChanged={handleViewerEdits as never}
-                />
-              ) : (
-                <SchematicViewer circuitJson={circuitJson as never} />
-              )
+              <>
+                <div className={view === "pcb" ? "viewer-surface" : "viewer-surface hidden"}>
+                  <PCBViewer
+                    circuitJson={circuitJson as never}
+                    allowEditing={canvasEditing}
+                    editEvents={editEvents as never}
+                    onEditEventsChanged={handleViewerEdits as never}
+                  />
+                </div>
+                {view === "schematic" && (
+                  <div className="viewer-surface">
+                    <SchematicViewer circuitJson={circuitJson as never} />
+                  </div>
+                )}
+              </>
             ) : (
               <div className="blocked-canvas">
                 <span>Draft blocked</span>

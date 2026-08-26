@@ -360,9 +360,13 @@ main {
   overflow: hidden;
   position: relative;
 }
-.viewer > div:not(.blocked-canvas) {
+.viewer-surface,
+.viewer-surface > div {
   height: 100%;
   min-height: 0;
+}
+.viewer-surface.hidden {
+  display: none;
 }
 .blocked-canvas {
   height: 100%;

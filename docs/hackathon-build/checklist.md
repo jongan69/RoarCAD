@@ -32,11 +32,11 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: Viewer height remains constant and browser console has no application errors.
   Verify: deployed browser probe plus CI.
 
-- [ ] **6. Demonstrate a third generic board**
+- [x] **6. Demonstrate a third generic board**
   Spec ref: `scope.md > public hosted application`
   What to build: Draft a non-fixture board through `draft_board`, then inspect, preview, apply, and export it.
   Acceptance: No project-name/template branch and agent evidence remains unreviewed.
-  Verify: recorded deployed Chrome journey.
+  Verify: deployed Chrome journey on 2026-08-26: `draft_board` → `inspect_design` → `preview_design_change` → `apply_design_change` → `validate_and_export`; engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`.
 
 - [ ] **7. Upgrade PocketRoar to the strongest defensible candidate**
   Spec ref: `scope.md > PocketRoar engineering-candidate package`
@@ -48,13 +48,13 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Spec ref: `prd.md > real browser agent`
   What to build: Record Chrome executing all five tools against the deployed app.
   Acceptance: The recording shows preview non-mutation, human approval, new revision, export, and PocketRoar quote rejection.
-  Verify: replay the raw capture end to end.
+  Verify: live five-tool execution passed and screenshots are captured; raw video capture and replay remain open.
 
 - [ ] **9. Finish public repository evidence**
   Spec ref: `scope.md > source and documentation`
   What to build: Stable demo link, detected MIT license, current README, safety/architecture/testing docs, and secret scan.
   Acceptance: A clean visitor can run and understand the project without private context.
-  Verify: GitHub public page, `git grep` secret review, and clean clone smoke test.
+  Verify: GitHub public page, `git grep` secret review, and clean clone smoke test. GitHub license detection remains blocked until the accepted `dev` candidate is promoted to default branch `main` with explicit approval.
 
 - [ ] **10. Produce the under-three-minute demo**
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B6`
