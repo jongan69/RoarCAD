@@ -66,6 +66,205 @@ const objectSchema = (properties: Record<string, unknown>, required: string[]) =
   additionalProperties: false,
 })
 
+const placementJsonSchema = objectSchema(
+  {
+    x: { type: "number", minimum: -500, maximum: 500 },
+    y: { type: "number", minimum: -500, maximum: 500 },
+    rotation: { type: "number", minimum: 0, maximum: 359 },
+    side: { enum: ["top", "bottom"] },
+  },
+  ["x", "y"],
+)
+
+const footprintJsonSchema = objectSchema(
+  {
+    source: { enum: ["footprinter", "kicad-library", "jlcpcb", "pad-map"] },
+    identifier: { type: "string", minLength: 1, maxLength: 240 },
+    sha256: { type: "string", pattern: "^[a-f0-9]{64}$" },
+    pads: {
+      type: "array",
+      maxItems: 512,
+      items: {
+        type: "object",
+        description:
+          "Bounded embedded pad: pcb_smtpad or pcb_plated_hole with geometry and portHints.",
+      },
+    },
+    reviewed: { type: "boolean", description: "Ignored for agent input; always stored false." },
+  },
+  ["source", "identifier", "pads"],
+)
+
+const componentJsonSchema = objectSchema(
+  {
+    kind: {
+      enum: [
+        "resistor",
+        "capacitor",
+        "inductor",
+        "diode",
+        "led",
+        "transistor",
+        "mosfet",
+        "fuse",
+        "crystal",
+        "connector",
+        "switch",
+        "testpoint",
+        "chip",
+      ],
+    },
+    reference: { type: "string", pattern: "^[A-Z]+[0-9]+$" },
+    mpn: { type: "string", minLength: 1, maxLength: 120 },
+    manufacturer: { type: "string", minLength: 1, maxLength: 120 },
+    value: { type: "string", maxLength: 80 },
+    pins: {
+      type: "array",
+      minItems: 1,
+      maxItems: 256,
+      items: objectSchema(
+        {
+          number: { type: "string", minLength: 1, maxLength: 40 },
+          label: { type: "string", minLength: 1, maxLength: 80 },
+        },
+        ["number", "label"],
+      ),
+    },
+    footprint: footprintJsonSchema,
+    placement: placementJsonSchema,
+    reviewStatus: {
+      enum: ["candidate", "reviewed"],
+      description: "Ignored for agent input; always stored candidate.",
+    },
+    evidenceIds: { type: "array", minItems: 1, maxItems: 10, items: { type: "string" } },
+    supplierPartIds: { type: "object", additionalProperties: { type: "string" } },
+    doNotPlace: { type: "boolean" },
+  },
+  ["kind", "reference", "mpn", "manufacturer", "pins", "footprint", "placement", "evidenceIds"],
+)
+
+const boardJsonSchema = objectSchema(
+  {
+    outline: {
+      oneOf: [
+        objectSchema(
+          {
+            shape: { const: "rectangle" },
+            widthMm: { type: "number", minimum: 5, maximum: 500 },
+            heightMm: { type: "number", minimum: 5, maximum: 500 },
+          },
+          ["shape", "widthMm", "heightMm"],
+        ),
+        objectSchema(
+          {
+            shape: { const: "polygon" },
+            points: {
+              type: "array",
+              minItems: 3,
+              maxItems: 128,
+              items: objectSchema({ x: { type: "number" }, y: { type: "number" } }, ["x", "y"]),
+            },
+          },
+          ["shape", "points"],
+        ),
+      ],
+    },
+    layers: { enum: [1, 2, 4, 6, 8, 10] },
+    material: { enum: ["fr4", "fr1", "flex"] },
+    thicknessMm: { type: "number", minimum: 0.2, maximum: 8 },
+    solderMaskColor: { enum: ["green", "red", "blue", "purple", "black", "white", "yellow"] },
+    allowBlindAndBuriedVias: { type: "boolean" },
+    doubleSidedAssembly: { type: "boolean" },
+    stackup: { type: "array", maxItems: 10, items: { type: "string" } },
+  },
+  ["outline", "layers", "solderMaskColor"],
+)
+
+const boardGraphJsonSchema = objectSchema(
+  {
+    board: boardJsonSchema,
+    components: { type: "array", minItems: 1, maxItems: 200, items: componentJsonSchema },
+    nets: {
+      type: "array",
+      maxItems: 500,
+      items: objectSchema(
+        {
+          name: { type: "string", minLength: 1, maxLength: 80 },
+          members: { type: "array", minItems: 2, maxItems: 200, items: { type: "string" } },
+          className: { type: "string" },
+        },
+        ["name", "members"],
+      ),
+    },
+    netClasses: {
+      type: "array",
+      minItems: 1,
+      maxItems: 50,
+      items: objectSchema(
+        {
+          name: { type: "string" },
+          traceWidthMm: { type: "number", exclusiveMinimum: 0 },
+          clearanceMm: { type: "number", minimum: 0 },
+          targetImpedanceOhms: { type: "number", exclusiveMinimum: 0 },
+        },
+        ["name", "traceWidthMm", "clearanceMm"],
+      ),
+    },
+    differentialPairs: { type: "array", maxItems: 100, items: { type: "object" } },
+    pours: { type: "array", maxItems: 50, items: { type: "object" } },
+    holes: { type: "array", maxItems: 100, items: { type: "object" } },
+    keepouts: { type: "array", maxItems: 100, items: { type: "object" } },
+    routingHints: { type: "array", maxItems: 200, items: { type: "string" } },
+  },
+  ["board", "components", "nets", "netClasses"],
+)
+
+const operationJsonSchema = {
+  type: "object",
+  required: ["type"],
+  properties: {
+    type: {
+      enum: [
+        "set-board",
+        "upsert-component",
+        "remove-component",
+        "move-component",
+        "upsert-net",
+        "remove-net",
+        "upsert-differential-pair",
+        "remove-differential-pair",
+        "upsert-pour",
+        "remove-pour",
+        "upsert-hole",
+        "remove-hole",
+        "upsert-keepout",
+        "remove-keepout",
+        "update-requirement",
+        "upsert-evidence",
+        "add-risk",
+        "resolve-risk",
+      ],
+    },
+    board: boardJsonSchema,
+    component: componentJsonSchema,
+    reference: { type: "string", pattern: "^[A-Z]+[0-9]+$" },
+    x: { type: "number" },
+    y: { type: "number" },
+    rotation: { type: "number" },
+    side: { enum: ["top", "bottom"] },
+    net: { type: "object" },
+    pair: { type: "object" },
+    pour: { type: "object" },
+    hole: { type: "object" },
+    keepout: { type: "object" },
+    requirement: { type: "object" },
+    evidence: { type: "object" },
+    name: { type: "string" },
+    id: { type: "string" },
+    risk: { type: "string", maxLength: 500 },
+  },
+} as const
+
 const text = (value: unknown): ToolResult => ({
   content: [{ type: "text", text: JSON.stringify(value, null, 2) }],
 })
@@ -83,7 +282,7 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
         {
           requirements: { type: "string", maxLength: 5000 },
           design: {
-            type: "object",
+            ...boardGraphJsonSchema,
             description:
               "Validated BoardGraph. Exact parts require kind, reference, MPN, manufacturer, pins, footprint, placement, and evidence IDs.",
           },
@@ -123,11 +322,9 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
             type: "array",
             minItems: 1,
             maxItems: 50,
-            items: {
-              type: "object",
-              description:
-                "One allowlisted operation: set-board, upsert/remove/move-component, upsert/remove-net, differential pair, pour, hole, keepout, requirement, evidence, or risk.",
-            },
+            items: operationJsonSchema,
+            description:
+              "Allowlisted structured operations. Each operation is revalidated against its type-specific application schema.",
           },
         },
         ["revisionId", "request", "operations"],

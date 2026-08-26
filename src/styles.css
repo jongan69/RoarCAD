@@ -286,6 +286,12 @@ main {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
 }
+.graph-editor button {
+  margin-top: 7px;
+}
+.graph-editor button + button {
+  margin-left: 6px;
+}
 .dot {
   flex: 0 0 auto;
   width: 7px;
@@ -343,6 +349,10 @@ main {
   color: white;
   box-shadow: inset 0 -2px var(--copper);
 }
+.canvas-toolbar button.editing {
+  color: var(--warn);
+  box-shadow: inset 0 -2px var(--warn);
+}
 .canvas-toolbar code {
   color: var(--muted);
 }
@@ -393,6 +403,12 @@ main {
 .change-bar > div {
   display: flex;
   gap: 8px;
+}
+.change-bar small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
 }
 .change-bar input {
   flex: 1;

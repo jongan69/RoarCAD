@@ -31,6 +31,9 @@ export function parseQuoteRequest(source: unknown) {
   if (revision.snapshot.design.board.layers !== request.configuration.layers) {
     throw new Error("Manufacturing layer count does not match the design.")
   }
+  if (revision.snapshot.design.board.thicknessMm !== request.configuration.thicknessMm) {
+    throw new Error("Manufacturing thickness does not match the design.")
+  }
   return request
 }
 

@@ -27,6 +27,7 @@ import {
   prepareExport,
 } from "./eda"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
+import { environmentMonitorGraph, environmentMonitorRequirements } from "./samples"
 import { loadStoredProject, saveStoredProject } from "./storage"
 import { registerWebMcpTools } from "./webmcp"
 
@@ -56,7 +57,9 @@ export default function App() {
   const [moveX, setMoveX] = useState(3)
   const [moveY, setMoveY] = useState(2)
   const [editEvents, setEditEvents] = useState<unknown[]>([])
+  const [canvasEditing, setCanvasEditing] = useState(false)
   const [graphText, setGraphText] = useState("")
+  const lastViewerMoveRef = useRef("")
 
   useEffect(() => {
     const load = async () => {
@@ -177,6 +180,8 @@ export default function App() {
     setPrepared(null)
     setQuote(null)
     setEditEvents([])
+    setCanvasEditing(false)
+    lastViewerMoveRef.current = ""
     if (!snapshot.design) {
       setCircuitJson([])
       setNotice("Requirements are blocked; no BoardGraph was compiled.")
@@ -250,6 +255,7 @@ export default function App() {
   }
 
   const handleViewerEdits = (events: unknown[]) => {
+    if (!canvasEditing) return
     setEditEvents(events)
     const move = [...events]
       .reverse()
@@ -269,7 +275,14 @@ export default function App() {
         item.source_component_id === pcbComponent?.source_component_id,
     )
     const reference = typeof source?.name === "string" ? source.name : undefined
-    if (reference) void previewMove(reference, move.new_center.x, move.new_center.y)
+    if (!reference) return
+    const moveKey = `${revision.id}:${reference}:${move.new_center.x}:${move.new_center.y}`
+    if (lastViewerMoveRef.current === moveKey) return
+    lastViewerMoveRef.current = moveKey
+    setMoveReference(reference)
+    setMoveX(move.new_center.x)
+    setMoveY(move.new_center.y)
+    void previewMove(reference, move.new_center.x, move.new_center.y)
   }
 
   const apply = () =>
@@ -392,6 +405,15 @@ export default function App() {
                 <div>
                   <strong>{item.label}</strong>
                   <small>{item.value ?? "Answer required"}</small>
+                  {item.status !== "verified" && (
+                    <button
+                      type="button"
+                      className="mini"
+                      onClick={() => void review({ requirementId: item.id })}
+                    >
+                      Confirm requirement
+                    </button>
+                  )}
                 </div>
               </article>
             ))}
@@ -481,6 +503,15 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
+                setGraphText(JSON.stringify(environmentMonitorGraph, null, 2))
+                setNotice(environmentMonitorRequirements)
+              }}
+            >
+              Load environmental monitor sample
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 try {
                   void actions.draft(
                     "Manual custom board",
@@ -513,6 +544,20 @@ export default function App() {
               >
                 Schematic
               </button>
+              {view === "pcb" && (
+                <button
+                  type="button"
+                  aria-pressed={canvasEditing}
+                  className={canvasEditing ? "editing" : ""}
+                  onClick={() => {
+                    setCanvasEditing((enabled) => !enabled)
+                    setEditEvents([])
+                    lastViewerMoveRef.current = ""
+                  }}
+                >
+                  {canvasEditing ? "Lock placement" : "Unlock placement"}
+                </button>
+              )}
             </div>
             <code>{revision.id}</code>
           </div>
@@ -521,7 +566,7 @@ export default function App() {
               view === "pcb" ? (
                 <PCBViewer
                   circuitJson={circuitJson as never}
-                  allowEditing
+                  allowEditing={canvasEditing}
                   editEvents={editEvents as never}
                   onEditEventsChanged={handleViewerEdits as never}
                 />
@@ -563,6 +608,10 @@ export default function App() {
                 Preview
               </button>
             </div>
+            <small>
+              Canvas placement is {canvasEditing ? "unlocked" : "locked"}. Typed previews remain
+              available at all times.
+            </small>
           </div>
         </section>
 

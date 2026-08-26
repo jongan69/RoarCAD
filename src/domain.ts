@@ -261,6 +261,11 @@ export const boardGraphSchema = z
         })
       }
     }
+    for (const pour of graph.pours) {
+      if (!netNames.has(pour.net)) {
+        context.addIssue({ code: "custom", message: `Pour ${pour.id} references an unknown net.` })
+      }
+    }
   })
 
 export const snapshotSchema = z.object({
@@ -596,7 +601,7 @@ const captureComponents: BoardComponent[] = [
   candidate(
     "U1",
     "chip",
-    "TC358743XBG(EL,NOK",
+    "TC358743XBG",
     "Toshiba",
     bgaFootprint("P-TFBGA64-0606-0.65-001", 8, 8, 0.65),
     -18,
@@ -862,7 +867,7 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     {
       id: "req-host",
       label: "Exact USB-C iPad and iPadOS version",
-      value: "USB-C iPad target; exact model pending",
+      value: "iPad Pro 11-inch (3rd generation), iPad13,4; iPadOS and cable pending",
       required: true,
       status: "unverified",
       evidenceIds: ["ev-apple-external-camera"],
@@ -959,7 +964,7 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
         maxSkewMm: 0.25,
       },
     ],
-    pours: [{ id: "gnd-top", layer: "top", net: "V33_TEST", clearanceMm: 0.2, outline: [] }],
+    pours: [],
     holes: [
       { id: "mount-1", x: -38, y: -18, diameterMm: 3.2, plated: false },
       { id: "mount-2", x: 38, y: -18, diameterMm: 3.2, plated: false },
@@ -1026,9 +1031,14 @@ export function validateSnapshot(snapshot: DesignSnapshot): Validation {
       checkedAt: new Date().toISOString(),
     }
   const warnings: string[] = []
+  const evidenceIds = new Set(snapshot.evidence.map(({ id }) => id))
   for (const requirement of snapshot.requirements) {
     if (requirement.required && requirement.status !== "verified")
       warnings.push(`Required input is ${requirement.status}: ${requirement.label}`)
+    for (const evidenceId of requirement.evidenceIds) {
+      if (!evidenceIds.has(evidenceId))
+        warnings.push(`Requirement ${requirement.id} references missing evidence ${evidenceId}.`)
+    }
   }
   for (const component of design.components) {
     if (component.reviewStatus !== "reviewed")
@@ -1040,6 +1050,10 @@ export function validateSnapshot(snapshot: DesignSnapshot): Validation {
     )
     if (!hasReviewedOfficialEvidence)
       warnings.push(`${component.reference} lacks reviewed official evidence.`)
+    for (const evidenceId of component.evidenceIds) {
+      if (!evidenceIds.has(evidenceId))
+        warnings.push(`${component.reference} references missing evidence ${evidenceId}.`)
+    }
   }
   warnings.push(...snapshot.unresolvedRisks.map((risk) => `Unresolved risk: ${risk}`))
   return {
@@ -1267,18 +1281,23 @@ export function sanitizeAgentSnapshot(snapshot: DesignSnapshot): DesignSnapshot 
 }
 
 export function sanitizeAgentOperations(operations: ChangeOperation[]): ChangeOperation[] {
-  return operations.map((operation) =>
-    operation.type === "upsert-component"
-      ? {
-          ...operation,
-          component: {
-            ...operation.component,
-            reviewStatus: "candidate",
-            footprint: { ...operation.component.footprint, reviewed: false },
-          },
-        }
-      : operation,
-  )
+  return operations.map((operation) => {
+    if (operation.type === "upsert-component")
+      return {
+        ...operation,
+        component: {
+          ...operation.component,
+          reviewStatus: "candidate" as const,
+          footprint: { ...operation.component.footprint, reviewed: false },
+        },
+      }
+    if (operation.type === "update-requirement")
+      return {
+        ...operation,
+        requirement: { ...operation.requirement, status: "unverified" as const },
+      }
+    return operation
+  })
 }
 
 export function createRequirementsSnapshot(requirements: string): DesignSnapshot {
@@ -1311,7 +1330,7 @@ export function createDraftSnapshot(requirements: string, design?: BoardGraph): 
           label: "Agent-supplied custom board brief",
           value: requirements,
           required: true,
-          status: "verified",
+          status: "unverified",
           evidenceIds: [],
         },
       ],
@@ -1322,16 +1341,28 @@ export function createDraftSnapshot(requirements: string, design?: BoardGraph): 
         "Review exact parts, footprints, evidence, checks, and physical risks before fabrication.",
       ],
       design,
-      unresolvedRisks: [],
+      unresolvedRisks: [
+        "Agent-supplied requirements, parts, footprints, and evidence require visible human review.",
+      ],
     }),
   )
 }
 
 export async function applyHumanReview(
   project: BoardProject,
-  target: { evidenceId?: string; componentReference?: string; footprintReference?: string },
+  target: {
+    requirementId?: string
+    evidenceId?: string
+    componentReference?: string
+    footprintReference?: string
+  },
 ): Promise<BoardProject> {
   const snapshot = structuredClone(currentRevision(project).snapshot)
+  if (target.requirementId) {
+    const requirement = snapshot.requirements.find(({ id }) => id === target.requirementId)
+    if (!requirement) throw new Error("Requirement not found.")
+    requirement.status = "verified"
+  }
   if (target.evidenceId) {
     const evidence = snapshot.evidence.find(({ id }) => id === target.evidenceId)
     if (!evidence) throw new Error("Evidence not found.")
@@ -1345,7 +1376,11 @@ export async function applyHumanReview(
     if (target.componentReference) component.reviewStatus = "reviewed"
     if (target.footprintReference) component.footprint.reviewed = true
   }
-  const label = target.evidenceId ?? target.componentReference ?? target.footprintReference
+  const label =
+    target.requirementId ??
+    target.evidenceId ??
+    target.componentReference ??
+    target.footprintReference
   const revision = await createRevision(
     project.currentRevisionId,
     `Human review: ${label}`,

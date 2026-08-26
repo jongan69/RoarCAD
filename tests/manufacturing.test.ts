@@ -33,6 +33,19 @@ describe("manufacturing boundary", () => {
         },
       }).revisionId,
     ).toBe(project.currentRevisionId)
+    expect(() =>
+      parseQuoteRequest({
+        project,
+        revisionId: project.currentRevisionId,
+        configuration: {
+          mode: "bare-pcb",
+          quantity: 5,
+          layers: 2,
+          thicknessMm: 0.8,
+          finish: "ENIG",
+        },
+      }),
+    ).toThrow("thickness")
   })
 
   test("builds the documented JLC authorization shape", async () => {

@@ -6,6 +6,7 @@ import {
   indicatorSnapshot,
 } from "../src/domain"
 import { compileBoardGraph, compileSnapshot, prepareExport, validateCircuit } from "../src/eda"
+import { environmentMonitorGraph } from "../src/samples"
 
 test("indicator compiles, validates, and exports consistent artifacts", async () => {
   const project = await createProject("indicator", "Power indicator", indicatorSnapshot)
@@ -44,3 +45,9 @@ test("PocketRoar uses the generic compiler and exports engineering-only artifact
   )
   await expect(prepareExport(project, "fabrication")).rejects.toThrow("fabrication-ready")
 }, 15_000)
+
+test("a third custom board compiles through the same generic path", async () => {
+  const circuitJson = await compileBoardGraph(environmentMonitorGraph)
+  expect(circuitJson.some(({ type }) => type === "pcb_board")).toBe(true)
+  expect(circuitJson.filter(({ type }) => type === "source_component").length).toBe(3)
+})

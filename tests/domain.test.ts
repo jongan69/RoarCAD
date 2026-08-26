@@ -8,6 +8,7 @@ import {
   importProject,
   indicatorSnapshot,
   previewChange,
+  sanitizeAgentOperations,
   sanitizeAgentSnapshot,
   stableStringify,
   validateSnapshot,
@@ -83,5 +84,29 @@ describe("generic board domain", () => {
         ({ reviewStatus, footprint }) => reviewStatus === "candidate" && !footprint.reviewed,
       ),
     ).toBe(true)
+    expect(
+      sanitizeAgentOperations([
+        {
+          type: "update-requirement",
+          requirement: {
+            id: "agent-claim",
+            label: "Agent claim",
+            required: true,
+            status: "verified",
+            evidenceIds: [],
+          },
+        },
+      ])[0],
+    ).toMatchObject({ requirement: { status: "unverified" } })
+  })
+
+  test("rejects pours that reference unknown nets", () => {
+    const design = boardGraphSchema.parse(indicatorSnapshot.design)
+    expect(() =>
+      boardGraphSchema.parse({
+        ...design,
+        pours: [{ id: "bad-pour", layer: "top", net: "MISSING", clearanceMm: 0.2, outline: [] }],
+      }),
+    ).toThrow("unknown net")
   })
 })

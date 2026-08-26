@@ -5,7 +5,7 @@ RoarCAD is a local-first browser PCB workbench where a human and an AI agent ope
 - [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
 
-The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a complex design and exports a clearly marked engineering package. It cannot request a quote until its electrical, physical, licensing, and compatibility gates are proven.
+The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a complex design and exports a clearly marked engineering package. A third environmental-monitor sample proves that a new structured brief uses the same compiler without a project-name branch. PocketRoar cannot request a quote until its electrical, physical, licensing, and compatibility gates are proven.
 
 ## Run
 
@@ -29,7 +29,7 @@ bun run build
 
 1. Draft or import a structured custom `BoardGraph` containing geometry, parts, footprints, pins, nets, and constraints.
 2. Inspect requirements, exact MPNs, official evidence, and unresolved risks.
-3. Preview a structured change or drag a PCB component. A preview never mutates stored design state.
+3. Preview a structured change or explicitly unlock placement and drag a PCB component. The canvas is locked by default and a preview never mutates stored design state.
 4. Approve and apply the preview to create an immutable revision.
 5. Validate the graph and generated Circuit JSON.
 6. Prepare engineering or fabrication Gerber, BOM, placement, validation, digital-verification, project, and hash-manifest artifacts.
@@ -46,6 +46,8 @@ Browsers without WebMCP retain the complete manual workflow. Agents cannot order
 - `validate_and_export`
 
 `draft_board` accepts requirements plus an optional structured `design`. `preview_design_change` accepts allowlisted operations. Supplier and agent evidence always enters unreviewed; only the visible manual UI can approve evidence, parts, and footprints.
+
+The complete structured schemas are exposed on the registered tools and are revalidated by Zod inside the application. Reproducible prompts for requirements-only, custom-board, change, export, and PocketRoar journeys are in [sample prompts](docs/SAMPLE_PROMPTS.md).
 
 In Chrome, enable `chrome://flags/#enable-webmcp-testing` and relaunch before opening the hosted app. Unsupported browsers show **Manual mode** and retain the full workflow. Direct tool calls use the current Chrome contract: resolve the registered tool with `await document.modelContext.getTools()`, then call `document.modelContext.executeTool(tool, JSON.stringify(input))`.
 
@@ -66,7 +68,7 @@ JLCPCB_QUOTE_ENABLED=false
 
 The tokenization keys remain unused unless an approved endpoint explicitly requires them. Protect `/api/manufacturing/jlcpcb/quote` with a Vercel WAF fixed-window rule of three requests per ten minutes per IP before enabling live quoting.
 
-PocketRoar remains an **engineering-only** example. Its current [electrical completion brief](docs/research/pocketroar-electrical-completion.md) identifies the proprietary-data, connector, power, firmware, simulation, compliance, and physical-test gates that still block fabrication and quoting.
+PocketRoar remains an **engineering-only** example. Its current [electrical completion brief](docs/research/pocketroar-electrical-completion.md) identifies the proprietary-data, connector, power, firmware, simulation, compliance, and physical-test gates that still block fabrication and quoting. The paired target is an [11-inch iPad Pro, third generation (`iPad13,4`)](docs/research/ipad-target.md); its iPadOS, cable, UVC, and sustained-frame evidence remain open.
 
 ## Screenshots
 
@@ -74,6 +76,6 @@ PocketRoar remains an **engineering-only** example. Its current [electrical comp
 
 ![PocketRoar engineering-only workflow](docs/screenshots/pocketroar-engineering.jpg)
 
-See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), and the [demo script](docs/DEMO.md).
+See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), [sample prompts](docs/SAMPLE_PROMPTS.md), and the [demo script](docs/DEMO.md).
 
 MIT © Jonathan Gan
