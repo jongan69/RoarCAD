@@ -4,6 +4,7 @@ dist
 .DS_Store
 *.local
 *.zip
+artifacts/
 *.tsbuildinfo
 .env*
 !.env.example
