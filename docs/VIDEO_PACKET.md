@@ -44,6 +44,8 @@ Generate timings from the finished narration audio with Whisper. Burn the author
 
 ## YouTube packet
 
+**Thumbnail:** `docs/screenshots/roarcad-youtube-thumbnail.png`
+
 **Title:** RoarCAD — A WebMCP PCB Workbench With Human Approval
 
 **Description:**

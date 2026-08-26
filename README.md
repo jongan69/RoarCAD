@@ -73,6 +73,8 @@ PocketRoar remains an **engineering-only** example. Its current [electrical comp
 
 ## Screenshots
 
+![RoarCAD demo thumbnail](docs/screenshots/roarcad-youtube-thumbnail.png)
+
 ![Fabrication-ready indicator workflow](docs/screenshots/indicator-fabrication.jpg)
 
 ![PocketRoar engineering-only workflow](docs/screenshots/pocketroar-engineering.jpg)
