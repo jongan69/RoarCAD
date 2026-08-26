@@ -4,7 +4,7 @@
 
 - Complete indicator inspect → preview → apply → validate → export flow.
 - Exactly five progressive-enhancement WebMCP tools.
-- Blocked PocketRoar transport requirements package.
+- PocketRoar engineering-candidate package with explicit fabrication blockers.
 - Human-approved JLC-ready package and honest provider fallback.
 - Public hosted application, source, demo, and safety documentation.
 

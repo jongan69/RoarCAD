@@ -1,5 +1,12 @@
 import { z } from "zod"
-import type { DesignChange } from "./domain"
+import {
+  type BoardGraph,
+  boardGraphSchema,
+  type ChangeOperation,
+  changeOperationSchema,
+  type DesignChange,
+} from "./domain"
+import type { ArtifactClass } from "./eda"
 
 type ToolResult = { content: Array<{ type: "text"; text: string }> }
 type Tool = {
@@ -7,7 +14,7 @@ type Tool = {
   title: string
   description: string
   inputSchema: Record<string, unknown>
-  annotations?: { readOnlyHint?: boolean }
+  annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean }
   execute: (input: unknown) => Promise<ToolResult>
 }
 
@@ -21,24 +28,34 @@ declare global {
   }
 }
 
-const draftInput = z.object({ requirements: z.string().min(1).max(5_000) })
+const draftInput = z.object({
+  requirements: z.string().min(1).max(5_000),
+  design: boardGraphSchema.optional(),
+})
 const inspectInput = z.object({ revisionId: z.string(), query: z.string().min(1).max(1_000) })
-const previewInput = z.object({ revisionId: z.string(), request: z.string().min(1).max(500) })
+const previewInput = z.object({
+  revisionId: z.string(),
+  request: z.string().min(1).max(500),
+  operations: z.array(changeOperationSchema).min(1).max(50),
+})
 const applyInput = z.object({ revisionId: z.string(), changeId: z.string() })
 const exportInput = z.object({
   revisionId: z.string(),
   targets: z
-    .array(z.enum(["gerber", "bom", "placement", "validation"]))
+    .array(
+      z.enum(["circuit-json", "gerber", "bom", "placement", "validation", "project", "manifest"]),
+    )
     .min(1)
-    .max(4),
+    .max(7),
+  artifactClass: z.enum(["engineering", "fabrication"]),
 })
 
 export type WebMcpActions = {
-  draft(requirements: string): Promise<unknown>
+  draft(requirements: string, design?: BoardGraph): Promise<unknown>
   inspect(revisionId: string, query: string): Promise<unknown>
-  preview(revisionId: string, request: string): Promise<DesignChange>
+  preview(revisionId: string, request: string, operations: ChangeOperation[]): Promise<DesignChange>
   apply(revisionId: string, changeId: string): Promise<unknown>
-  prepare(revisionId: string, targets: string[]): Promise<unknown>
+  prepare(revisionId: string, targets: string[], artifactClass: ArtifactClass): Promise<unknown>
 }
 
 const objectSchema = (properties: Record<string, unknown>, required: string[]) => ({
@@ -59,11 +76,23 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
     {
       name: "draft_board",
       title: "Draft board",
-      description: "Create a board draft or a blocked requirements report from user requirements.",
-      inputSchema: objectSchema({ requirements: { type: "string", maxLength: 5000 } }, [
-        "requirements",
-      ]),
-      execute: async (input) => text(await actions.draft(draftInput.parse(input).requirements)),
+      description:
+        "Create a custom PCB draft from a complete structured BoardGraph, or return a blocked requirements report when design is omitted. Design fields include board, components, nets, netClasses, differentialPairs, pours, holes, keepouts, and routingHints.",
+      inputSchema: objectSchema(
+        {
+          requirements: { type: "string", maxLength: 5000 },
+          design: {
+            type: "object",
+            description:
+              "Validated BoardGraph. Exact parts require kind, reference, MPN, manufacturer, pins, footprint, placement, and evidence IDs.",
+          },
+        },
+        ["requirements"],
+      ),
+      execute: async (input) => {
+        const parsed = draftInput.parse(input)
+        return text(await actions.draft(parsed.requirements, parsed.design))
+      },
     },
     {
       name: "inspect_design",
@@ -74,7 +103,7 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
         { revisionId: { type: "string" }, query: { type: "string", maxLength: 1000 } },
         ["revisionId", "query"],
       ),
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input) => {
         const parsed = inspectInput.parse(input)
         return text(await actions.inspect(parsed.revisionId, parsed.query))
@@ -83,14 +112,29 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
     {
       name: "preview_design_change",
       title: "Preview design change",
-      description: "Create a non-mutating, evidence-linked design diff for human review.",
+      description:
+        "Create a non-mutating, evidence-linked diff from allowlisted structured board operations. Supplier and evidence data remain untrusted and unreviewed.",
       inputSchema: objectSchema(
-        { revisionId: { type: "string" }, request: { type: "string", maxLength: 500 } },
-        ["revisionId", "request"],
+        {
+          revisionId: { type: "string" },
+          request: { type: "string", maxLength: 500 },
+          operations: {
+            type: "array",
+            minItems: 1,
+            maxItems: 50,
+            items: {
+              type: "object",
+              description:
+                "One allowlisted operation: set-board, upsert/remove/move-component, upsert/remove-net, differential pair, pour, hole, keepout, requirement, evidence, or risk.",
+            },
+          },
+        },
+        ["revisionId", "request", "operations"],
       ),
+      annotations: { untrustedContentHint: true },
       execute: async (input) => {
         const parsed = previewInput.parse(input)
-        return text(await actions.preview(parsed.revisionId, parsed.request))
+        return text(await actions.preview(parsed.revisionId, parsed.request, parsed.operations))
       },
     },
     {
@@ -116,15 +160,26 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
           targets: {
             type: "array",
             minItems: 1,
-            maxItems: 4,
-            items: { enum: ["gerber", "bom", "placement", "validation"] },
+            maxItems: 7,
+            items: {
+              enum: [
+                "circuit-json",
+                "gerber",
+                "bom",
+                "placement",
+                "validation",
+                "project",
+                "manifest",
+              ],
+            },
           },
+          artifactClass: { enum: ["engineering", "fabrication"] },
         },
-        ["revisionId", "targets"],
+        ["revisionId", "targets", "artifactClass"],
       ),
       execute: async (input) => {
         const parsed = exportInput.parse(input)
-        return text(await actions.prepare(parsed.revisionId, parsed.targets))
+        return text(await actions.prepare(parsed.revisionId, parsed.targets, parsed.artifactClass))
       },
     },
   ]

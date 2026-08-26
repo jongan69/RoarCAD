@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import type { DesignChange } from "../src/domain"
+import { boardGraphSchema, type DesignChange, indicatorSnapshot } from "../src/domain"
 import { registerWebMcpTools } from "../src/webmcp"
 
 type RegisteredTool = {
   name: string
-  annotations?: { readOnlyHint?: boolean }
+  annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean }
   execute(input: unknown): Promise<unknown>
 }
 
@@ -30,10 +30,13 @@ test("registers and directly executes exactly five page tools", async () => {
   const change: DesignChange = {
     id: "change-1",
     baseRevisionId: "revision-1",
-    request: "move D1 to 3, 2",
+    request: "move D1",
     summary: "Move D1",
     evidenceIds: [],
-    operation: { type: "move-component", reference: "D1", x: 3, y: 2 },
+    operations: [{ type: "move-component", reference: "D1", x: 3, y: 2, rotation: 0, side: "top" }],
+    candidateHash: "a".repeat(64),
+    readinessBefore: "fabrication-ready",
+    readinessAfter: "fabrication-ready",
   }
   const cleanup = registerWebMcpTools({
     draft: async () => ({ status: "drafted" }),
@@ -51,14 +54,27 @@ test("registers and directly executes exactly five page tools", async () => {
     "validate_and_export",
   ])
   expect(tools.get("inspect_design")?.annotations?.readOnlyHint).toBe(true)
-  await context.executeTool("draft_board", JSON.stringify({ requirements: "green LED" }))
+  expect(tools.get("inspect_design")?.annotations?.untrustedContentHint).toBe(true)
+  await context.executeTool(
+    "draft_board",
+    JSON.stringify({
+      requirements: "green LED",
+      design: boardGraphSchema.parse(indicatorSnapshot.design),
+    }),
+  )
   await context.executeTool(
     "inspect_design",
     JSON.stringify({ revisionId: "revision-1", query: "risks" }),
   )
   await context.executeTool(
     "preview_design_change",
-    JSON.stringify({ revisionId: "revision-1", request: "move D1 to 3, 2" }),
+    JSON.stringify({
+      revisionId: "revision-1",
+      request: "move D1",
+      operations: [
+        { type: "move-component", reference: "D1", x: 3, y: 2, rotation: 0, side: "top" },
+      ],
+    }),
   )
   await context.executeTool(
     "apply_design_change",
@@ -66,7 +82,11 @@ test("registers and directly executes exactly five page tools", async () => {
   )
   await context.executeTool(
     "validate_and_export",
-    JSON.stringify({ revisionId: "revision-1", targets: ["gerber"] }),
+    JSON.stringify({
+      revisionId: "revision-1",
+      targets: ["gerber"],
+      artifactClass: "fabrication",
+    }),
   )
   cleanup()
   expect(tools.size).toBe(0)

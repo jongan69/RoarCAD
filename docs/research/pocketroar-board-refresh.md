@@ -12,6 +12,24 @@ The next evidence-producing step should be a bench probe, not an eight-layer PCB
 2. Prove discovery, preview, sustained capture, thermals/power, disconnect/reconnect, audio if required, and simultaneous charging if required.
 3. Only if the Apple path passes, couple evaluation hardware or modules for the HDMI receiver and CX3, validate one exact 1080p30 format, then freeze the schematic and stackup.
 
+## RoarCAD engineering-candidate package
+
+The checked-in reference graph deliberately freezes only enough exact parts and package identities to exercise RoarCAD's generic eight-layer compile, placement, routing-review, BOM, CPL, validation, and engineering-Gerber path:
+
+| Function | Exact candidate | Package state |
+| --- | --- | --- |
+| HDMI receiver | `TC358743XBG(EL,NOK` | Toshiba P-TFBGA64, 6 × 6 mm, 0.65 mm pitch; embedded candidate pad map |
+| USB/UVC bridge | `CYUSB3065-BZXC` | Infineon PG-LFBGA-121, 10 × 10 mm, 0.8 mm pitch; embedded candidate pad map |
+| HDMI connector | `10029449-101RLF` | Amphenol 19-position right-angle connector; mechanical freeze pending |
+| USB-C connector | `105450-0101` | Molex 24-contact right-angle receptacle; shell and board thickness pending |
+| SuperSpeed mux | `HD3SS3212IRKSR` | TI RKS VQFN-20 |
+| CC controller | `TUSB320LAIRWBR` | TI RWB X2QFN-12 |
+| Boot flash | `S25FL064LABMFB010` | Infineon SOIC-8 |
+| Main rails | `TPS62130ARGTR`, `TPS62160DSGR`, `TPS7A2025PDBVR` | Candidate 1.2 V, 3.3/1.8 V, and 2.5 V regulators |
+| Reference clocks | `ECS-2520MV-270-CN-TR`, `ECS-2520MVLC-120-CN-TR` | Candidate 27 MHz and 19.2 MHz clocks |
+
+Every item enters as candidate/unreviewed. The engineering bundle includes `ENGINEERING_ONLY.md`; fabrication export and the independently recompiling quote endpoint reject this project until all gates below close.
+
 ## Apple host support
 
 ### Fact

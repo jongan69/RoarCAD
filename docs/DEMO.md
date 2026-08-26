@@ -1,17 +1,17 @@
 # Demo script — under three minutes
 
-1. Open the indicator reference. Point out its exact MPNs, official datasheets, PCB, schematic, and immutable revision ID.
-2. Ask the agent: “Inspect the current design and tell me what would block fabrication.”
-3. Ask: “Preview moving D1 to 3, 2.” Show the visual diff and that the revision ID did not change.
-4. Approve the preview. Show the new revision and history entry.
-5. Ask the agent to validate and prepare Gerber, BOM, placement, and validation artifacts. Emphasize that the agent prepared them but the human controls download.
-6. Select bare PCB or PCBA and request a JLCPCB quote. With no credentials, show the explicit no-price fallback and verified download package.
-7. Switch to PocketRoar. Show the transport questionnaire, blocked canvas, and refusal to draft or export an integrated board.
+1. Open the indicator reference. Show that it is an ordinary two-layer `BoardGraph` with reviewed exact parts, footprints, evidence, nets, PCB, schematic, and immutable revision.
+2. Ask the agent to inspect the revision and readiness. It should report `fabrication-ready` without claiming physical validation.
+3. Drag D1 or call `preview_design_change` with a move operation. Show the visual diff and unchanged revision ID, then approve it and show the new history entry.
+4. Ask `validate_and_export` for a fabrication package. The agent prepares it, but the human controls the download.
+5. Request a JLCPCB quote. Show the server-recompiled manifest and honest no-price fallback while the provider endpoint remains disabled.
+6. Switch to PocketRoar. Show the same compiler rendering an eight-layer candidate with TC358743XBG, CYUSB3065-BZXC, exact connectors, clocks, power, and high-speed pairs.
+7. Export its `ENGINEERING_ONLY` package, then show that fabrication export and JLCPCB quoting are rejected.
 
 Sample prompts:
 
-- “Draft a small green power-indicator board.”
+- “Draft this custom sensor board using the supplied structured BoardGraph.”
 - “Inspect revision `<id>` for evidence and unresolved risks.”
-- “Preview resizing the board to 28 by 18 mm.”
+- “Preview moving component D1 to x 3 mm, y 2 mm with a structured operation.”
 - “Apply change `<change-id>` to revision `<id>`.”
-- “Validate revision `<id>` and prepare Gerber, BOM, placement, and validation outputs.”
+- “Validate revision `<id>` and prepare a fabrication Gerber, BOM, placement, validation, project, and manifest package.”

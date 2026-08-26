@@ -1,47 +1,75 @@
 import { z } from "zod"
+import { type BoardProject, boardProjectSchema } from "./domain"
 
-export const MAX_BUNDLE_BYTES = 4_000_000
+export const MAX_PROJECT_BYTES = 2_000_000
 
-export const manufacturingRequestSchema = z.object({
+export const manufacturingConfigurationSchema = z.object({
   mode: z.enum(["bare-pcb", "pcba"]),
   quantity: z.number().int().min(5).max(10_000),
-  layers: z.literal(2),
-  thicknessMm: z.union([z.literal(1), z.literal(1.2), z.literal(1.6), z.literal(2)]),
+  layers: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(4),
+    z.literal(6),
+    z.literal(8),
+    z.literal(10),
+  ]),
+  thicknessMm: z.union([
+    z.literal(0.8),
+    z.literal(1),
+    z.literal(1.2),
+    z.literal(1.6),
+    z.literal(2),
+  ]),
   finish: z.enum(["HASL-lead-free", "ENIG"]),
-  manifestHash: z.string().regex(/^[a-f0-9]{64}$/),
-  bundleBytes: z.number().int().positive().max(MAX_BUNDLE_BYTES),
 })
 
+export const manufacturingRequestSchema = z.object({
+  project: boardProjectSchema,
+  revisionId: z.string().min(1),
+  configuration: manufacturingConfigurationSchema,
+})
+
+export type ManufacturingConfiguration = z.infer<typeof manufacturingConfigurationSchema>
 export type ManufacturingRequest = z.infer<typeof manufacturingRequestSchema>
 
 export type QuoteResult = {
   configured: boolean
   provider: "JLCPCB"
   quoteId?: string
+  quoteToken?: string
   expiresAt?: string
   price?: { amount: string; currency: string }
   shipping?: { amount: string; currency: string }
   substitutions: string[]
   warnings: string[]
   fallbackUrl: string
+  manifestHash?: string
 }
 
 export const handoffSchema = z.object({
-  quoteId: z.string().min(1),
-  manifestHash: z.string().regex(/^[a-f0-9]{64}$/),
+  quoteToken: z.string().min(80).max(8_000),
   confirmed: z.literal(true),
 })
 
 export async function requestJlcQuote(
-  request: ManufacturingRequest,
-  bundle: Blob,
+  project: BoardProject,
+  configuration: ManufacturingConfiguration,
 ): Promise<QuoteResult> {
-  const parsed = manufacturingRequestSchema.parse(request)
-  if (bundle.size !== parsed.bundleBytes) throw new Error("Bundle size does not match the request.")
-  const form = new FormData()
-  form.set("request", JSON.stringify(parsed))
-  form.set("bundle", bundle, "roarcad-manufacturing.zip")
-  const response = await fetch("/api/manufacturing/jlcpcb/quote", { method: "POST", body: form })
+  const payload = manufacturingRequestSchema.parse({
+    project,
+    revisionId: project.currentRevisionId,
+    configuration,
+  })
+  const body = JSON.stringify(payload)
+  if (new TextEncoder().encode(body).byteLength > MAX_PROJECT_BYTES) {
+    throw new Error("Project exceeds the manufacturing request limit.")
+  }
+  const response = await fetch("/api/manufacturing/jlcpcb/quote", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+  })
   const result = (await response.json()) as QuoteResult & { error?: string }
   if (!response.ok) throw new Error(result.error ?? "JLCPCB quote request failed.")
   return result
@@ -60,6 +88,7 @@ export async function requestJlcHandoff(input: z.input<typeof handoffSchema>): P
   })
   const result = (await response.json()) as {
     error?: string
+    checkoutUrl?: string
     warnings: string[]
     fallbackUrl: string
   }

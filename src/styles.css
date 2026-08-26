@@ -24,6 +24,8 @@ body {
 }
 button,
 input,
+select,
+textarea,
 .button {
   font: inherit;
 }
@@ -217,6 +219,72 @@ main {
   font-size: 11px;
   line-height: 1.45;
 }
+.readiness-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.readiness-banner span {
+  color: var(--muted);
+  text-align: right;
+}
+.readiness-banner[data-readiness="fabrication-ready"] strong {
+  color: var(--good);
+}
+.readiness-banner[data-readiness="engineering"] strong {
+  color: var(--warn);
+}
+.readiness-banner[data-readiness="blocked"] strong {
+  color: var(--bad);
+}
+.mini {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+.evidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid #2d2c27;
+  font-size: 11px;
+}
+.graph-editor {
+  margin-top: 22px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.graph-editor summary {
+  cursor: pointer;
+  color: var(--copper);
+  font-size: 11px;
+}
+.graph-editor p {
+  margin: 10px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.graph-editor textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  color: white;
+  background: #10100e;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 8px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+}
 .dot {
   flex: 0 0 auto;
   width: 7px;
@@ -330,6 +398,16 @@ main {
   border: 1px solid var(--line);
   border-radius: 5px;
   padding: 9px 10px;
+}
+.change-bar select {
+  color: white;
+  background: #10100e;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 9px 10px;
+}
+.change-bar input[type="number"] {
+  flex: 0 0 84px;
 }
 .change-bar input:focus {
   border-color: var(--copper);

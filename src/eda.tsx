@@ -8,18 +8,35 @@ import {
 } from "circuit-json-to-gerber"
 import { convertCircuitJsonToPickAndPlaceCsv } from "circuit-json-to-pnp-csv"
 import JSZip from "jszip"
-import type { BoardProject, DesignSnapshot, Validation } from "./domain"
-import { currentRevision, sha256, stableStringify, validateSnapshot } from "./domain"
+import { createElement, type ReactElement } from "react"
+import type {
+  BoardComponent,
+  BoardGraph,
+  BoardProject,
+  DesignSnapshot,
+  Readiness,
+  Validation,
+} from "./domain"
+import {
+  boardGraphSchema,
+  currentRevision,
+  sha256,
+  stableStringify,
+  validateSnapshot,
+} from "./domain"
 
 export type CircuitElement = Record<string, unknown>
+export type ArtifactClass = "engineering" | "fabrication"
 
 export type PreparedExport = {
   revisionId: string
   manifestHash: string
   manifest: {
-    schemaVersion: 1
+    schemaVersion: 2
     revisionId: string
     generatedAt: string
+    artifactClass: ArtifactClass
+    readiness: Readiness
     files: Array<{ name: string; sha256: string; bytes: number }>
   }
   files: Record<string, Uint8Array>
@@ -29,48 +46,150 @@ export type PreparedExport = {
 
 const encode = (value: string) => new TextEncoder().encode(value)
 
-export async function compileSnapshot(snapshot: DesignSnapshot): Promise<CircuitElement[]> {
-  const spec = snapshot.boardSpec
-  if (!spec) throw new Error("This requirements package has no compilable board.")
-  const placement = Object.fromEntries(spec.placements.map((item) => [item.reference, item]))
+function footprintValue(component: BoardComponent): string | Array<Record<string, unknown>> {
+  const footprint = component.footprint
+  if (footprint.source === "pad-map") return footprint.pads
+  if (footprint.source === "kicad-library") return `kicad:${footprint.identifier}`
+  if (footprint.source === "jlcpcb") return `jlcpcb:${footprint.identifier}`
+  return footprint.identifier
+}
+
+function componentElement(component: BoardComponent): ReactElement {
+  const common = {
+    name: component.reference,
+    footprint: footprintValue(component),
+    manufacturerPartNumber: component.mpn,
+    pcbX: component.placement.x,
+    pcbY: component.placement.y,
+    pcbRotation: component.placement.rotation,
+    pcbSide: component.placement.side,
+    doNotPlace: component.doNotPlace,
+  }
+  const pinLabels = Object.fromEntries(
+    component.pins.map(({ number, label }) => [`pin${number}`, label]),
+  )
+  switch (component.kind) {
+    case "resistor":
+      return createElement("resistor", { ...common, resistance: component.value ?? "1k" })
+    case "capacitor":
+      return createElement("capacitor", { ...common, capacitance: component.value ?? "100nF" })
+    case "inductor":
+      return createElement("inductor", { ...common, inductance: component.value ?? "1uH" })
+    case "diode":
+      return createElement("diode", common)
+    case "led":
+      return createElement("led", { ...common, color: component.value ?? "green" })
+    case "transistor":
+      return createElement("transistor", { ...common, type: "bjt" })
+    case "mosfet":
+      return createElement("mosfet", { ...common, channelType: "n", mosfetMode: "enhancement" })
+    case "fuse":
+      return createElement("fuse", { ...common, currentRating: component.value ?? "1A" })
+    case "crystal":
+      return createElement("crystal", {
+        ...common,
+        frequency: component.value ?? "27MHz",
+        loadCapacitance: "10pF",
+        pinVariant: component.pins.length >= 4 ? "four_pin" : "two_pin",
+      })
+    case "connector":
+      return createElement("connector", { ...common, pinCount: component.pins.length, pinLabels })
+    case "switch":
+      return createElement("switch", { ...common, type: "spst" })
+    case "testpoint":
+      return createElement("testpoint", { ...common, footprintVariant: "pad" })
+    case "chip":
+      return createElement("chip", { ...common, pinLabels })
+  }
+}
+
+function graphChildren(graph: BoardGraph) {
+  const children: ReactElement[] = graph.components.map(componentElement)
+  for (const net of graph.nets) {
+    for (let index = 1; index < net.members.length; index += 1) {
+      children.push(
+        createElement("trace", {
+          name: index === 1 ? net.name : `${net.name}_${index}`,
+          from: net.members[0],
+          to: net.members[index],
+        }),
+      )
+    }
+  }
+  for (const pair of graph.differentialPairs) {
+    children.push(
+      createElement("differentialpair", {
+        name: pair.name,
+        positiveConnection: pair.positiveNet,
+        negativeConnection: pair.negativeNet,
+        targetDifferentialImpedance: pair.targetImpedanceOhms,
+        maxLengthSkew: pair.maxSkewMm,
+        pcbTraceGap: pair.traceGapMm,
+      }),
+    )
+  }
+  for (const pour of graph.pours) {
+    children.push(
+      createElement("copperpour", {
+        name: pour.id,
+        layer: pour.layer,
+        connectsTo: `net.${pour.net}`,
+        clearance: pour.clearanceMm,
+        outline: pour.outline.length ? pour.outline : undefined,
+      }),
+    )
+  }
+  for (const hole of graph.holes) {
+    children.push(
+      createElement("hole", {
+        name: hole.id,
+        diameter: hole.diameterMm,
+        pcbX: hole.x,
+        pcbY: hole.y,
+      }),
+    )
+  }
+  for (const keepout of graph.keepouts) {
+    children.push(
+      createElement("keepout", {
+        name: keepout.id,
+        shape: "rect",
+        pcbX: keepout.x,
+        pcbY: keepout.y,
+        width: keepout.widthMm,
+        height: keepout.heightMm,
+        layers: keepout.layers,
+      }),
+    )
+  }
+  return children
+}
+
+export async function compileBoardGraph(input: BoardGraph): Promise<CircuitElement[]> {
+  const graph = boardGraphSchema.parse(input)
+  const outline = graph.board.outline
+  const boardProps = {
+    material: graph.board.material,
+    layers: graph.board.layers,
+    thickness: graph.board.thicknessMm,
+    solderMaskColor: graph.board.solderMaskColor,
+    allowBlindAndBuriedVias: graph.board.allowBlindAndBuriedVias,
+    doubleSidedAssembly: graph.board.doubleSidedAssembly,
+    ...(outline.shape === "rectangle"
+      ? { width: outline.widthMm, height: outline.heightMm }
+      : { outline: outline.points }),
+  }
   const circuit = new Circuit()
   circuit.add(
-    <board width={`${spec.widthMm}mm`} height={`${spec.heightMm}mm`}>
-      <pinheader
-        name="J1"
-        pinCount={2}
-        footprint="pinrow2"
-        manufacturerPartNumber="TSW-102-07-G-S"
-        pcbX={placement.J1?.x ?? -9}
-        pcbY={placement.J1?.y ?? 0}
-        pcbRotation={placement.J1?.rotation ?? 90}
-        schX={-5}
-      />
-      <resistor
-        name="R1"
-        resistance={spec.resistanceOhms}
-        footprint="0805"
-        manufacturerPartNumber="CR0805-FX-1001ELF"
-        pcbX={placement.R1?.x ?? -4}
-        pcbY={placement.R1?.y ?? 0}
-        schX={-2}
-      />
-      <led
-        name="D1"
-        color="green"
-        footprint="0805"
-        manufacturerPartNumber="LTST-C170KGKT"
-        pcbX={placement.D1?.x ?? 4}
-        pcbY={placement.D1?.y ?? 0}
-        schX={2}
-      />
-      <trace from="J1.pin1" to="R1.pin1" />
-      <trace from="R1.pin2" to="D1.pos" />
-      <trace from="D1.neg" to="J1.pin2" />
-    </board>,
+    createElement("board" as never, boardProps as never, ...graphChildren(graph)) as never,
   )
   await circuit.renderUntilSettled()
   return circuit.getCircuitJson() as CircuitElement[]
+}
+
+export async function compileSnapshot(snapshot: DesignSnapshot): Promise<CircuitElement[]> {
+  if (!snapshot.design) throw new Error("This requirements package has no compilable BoardGraph.")
+  return compileBoardGraph(snapshot.design)
 }
 
 export async function validateCircuit(
@@ -90,12 +209,20 @@ export async function validateCircuit(
         "Unknown check issue",
     ),
   )
-  const errors = labels.filter((_, index) => String(issues[index]?.type ?? "").includes("error"))
-  const warnings = labels.filter((label) => !errors.includes(label))
+  const checkErrors = labels.filter((_, index) =>
+    String(issues[index]?.type ?? "").includes("error"),
+  )
+  const checkWarnings = labels.filter((label) => !checkErrors.includes(label))
+  const fabricationErrors = domain.readiness === "fabrication-ready" ? checkErrors : []
   return {
-    status: errors.length ? "blocked" : "passed",
-    errors,
-    warnings,
+    status: fabricationErrors.length ? "blocked" : "passed",
+    readiness: fabricationErrors.length ? "blocked" : domain.readiness,
+    errors: fabricationErrors,
+    warnings: [
+      ...domain.warnings,
+      ...checkWarnings,
+      ...(domain.readiness === "engineering" ? checkErrors : []),
+    ],
     checkedAt: new Date().toISOString(),
   }
 }
@@ -106,14 +233,15 @@ function csvCell(value: string): string {
 
 function bomCsv(snapshot: DesignSnapshot): string {
   return [
-    "Designator,Manufacturer,MPN,Value,Footprint",
-    ...snapshot.components.map((component) =>
+    "Designator,Manufacturer,MPN,Value,Footprint,ReviewStatus",
+    ...(snapshot.design?.components ?? []).map((component) =>
       [
         component.reference,
         component.manufacturer,
         component.mpn,
         component.value ?? "",
-        component.footprint,
+        component.footprint.identifier,
+        component.reviewStatus,
       ]
         .map(csvCell)
         .join(","),
@@ -121,47 +249,80 @@ function bomCsv(snapshot: DesignSnapshot): string {
   ].join("\n")
 }
 
-export async function prepareExport(project: BoardProject): Promise<PreparedExport> {
+function normalizeFabricationTimestamp(contents: string, createdAt: string): string {
+  return contents
+    .replaceAll(/CreationDate,[^*\r\n]+/g, `CreationDate,${createdAt}`)
+    .replaceAll(/date \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/g, `date ${createdAt}`)
+}
+
+export async function prepareExport(
+  project: BoardProject,
+  artifactClass: ArtifactClass = "engineering",
+): Promise<PreparedExport> {
   const revision = currentRevision(project)
   const circuitJson = await compileSnapshot(revision.snapshot)
-  const validation = await validateCircuit(revision.snapshot, circuitJson)
-  if (validation.status !== "passed") {
+  const validation = {
+    ...(await validateCircuit(revision.snapshot, circuitJson)),
+    checkedAt: revision.createdAt,
+  }
+  if (validation.status !== "passed")
     throw new Error(`Export blocked: ${validation.errors.join(" ")}`)
+  if (artifactClass === "fabrication" && validation.readiness !== "fabrication-ready") {
+    throw new Error("Fabrication export blocked: the design is not fabrication-ready.")
   }
 
   const gerberLayers = stringifyGerberCommandLayers(
     convertSoupToGerberCommands(circuitJson as never),
   ) as Record<string, string>
   const gerberZip = new JSZip()
-  for (const [name, contents] of Object.entries(gerberLayers)) gerberZip.file(name, contents)
-  const drills = [
+  const deterministicZipDate = new Date("1980-01-01T00:00:00.000Z")
+  for (const [name, contents] of Object.entries(gerberLayers))
+    gerberZip.file(name, normalizeFabricationTimestamp(contents, revision.createdAt), {
+      date: deterministicZipDate,
+    })
+  for (const [name, isPlated] of [
     ["plated.drl", true],
     ["unplated.drl", false],
-  ] as const
-  for (const [name, isPlated] of drills) {
+  ] as const) {
     const commands = convertSoupToExcellonDrillCommands({
       circuitJson: circuitJson as never,
       is_plated: isPlated,
     })
-    gerberZip.file(name, stringifyExcellonDrill(commands))
+    gerberZip.file(
+      name,
+      normalizeFabricationTimestamp(stringifyExcellonDrill(commands), revision.createdAt),
+      { date: deterministicZipDate },
+    )
   }
 
-  const validationJson = JSON.stringify(validation, null, 2)
+  const exportedProject = {
+    ...project,
+    revisions: project.revisions.map((item) =>
+      item.id === revision.id ? { ...item, validation } : item,
+    ),
+  }
   const files: Record<string, Uint8Array> = {
     "gerbers.zip": await gerberZip.generateAsync({ type: "uint8array" }),
     "bom.csv": encode(bomCsv(revision.snapshot)),
     "placement.csv": encode(convertCircuitJsonToPickAndPlaceCsv(circuitJson as never)),
-    "validation.json": encode(validationJson),
+    "validation.json": encode(JSON.stringify(validation, null, 2)),
     "validation.md": encode(
-      `# RoarCAD validation\n\nStatus: **${validation.status}**\n\nRevision: \`${revision.id}\`\n`,
+      `# RoarCAD validation\n\nStatus: **${validation.status}**\n\nReadiness: **${validation.readiness}**\n\nRevision: \`${revision.id}\`\n`,
     ),
     "circuit.json": encode(JSON.stringify(circuitJson, null, 2)),
-    "project.roarcad.json": encode(JSON.stringify(project, null, 2)),
+    "project.roarcad.json": encode(JSON.stringify(exportedProject, null, 2)),
+  }
+  if (artifactClass === "engineering") {
+    files["ENGINEERING_ONLY.md"] = encode(
+      "# Engineering candidate only\n\nThis package is not fabrication-ready and must not be quoted, ordered, or treated as electrically validated.\n",
+    )
   }
   const manifest = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     revisionId: revision.id,
-    generatedAt: new Date().toISOString(),
+    generatedAt: revision.createdAt,
+    artifactClass,
+    readiness: validation.readiness,
     files: await Promise.all(
       Object.entries(files).map(async ([name, bytes]) => ({
         name,
@@ -170,8 +331,7 @@ export async function prepareExport(project: BoardProject): Promise<PreparedExpo
       })),
     ),
   }
-  const manifestText = stableStringify(manifest)
-  const manifestHash = await sha256(manifestText)
+  const manifestHash = await sha256(stableStringify(manifest))
   files["manifest.json"] = encode(JSON.stringify({ ...manifest, manifestHash }, null, 2))
   const bundleZip = new JSZip()
   for (const [name, bytes] of Object.entries(files)) bundleZip.file(name, bytes)

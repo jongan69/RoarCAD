@@ -1,11 +1,11 @@
 # RoarCAD
 
-RoarCAD is a browser PCB workbench where a human and an AI agent can inspect the same requirements, preview the same changes, and pass through the same validation gates. The MVP compiles a small two-layer power-indicator board with [tscircuit](https://tscircuit.com), renders PCB and schematic views, produces manufacturing artifacts, and exposes five page-bound [WebMCP](https://learn.chatgpt.com/docs/webmcp) tools.
+RoarCAD is a local-first browser PCB workbench where a human and an AI agent operate the same versioned `BoardGraph`. It supports custom 1–10 layer boards, exact parts and pin maps, library or embedded footprints, nets, differential pairs, placement, checks, editable PCB and schematic views, engineering/fabrication exports, and five page-bound [WebMCP](https://developer.chrome.com/docs/ai/webmcp/) tools.
 
 - [Verified preview](https://roarcad-e64j06b89-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
 
-The included PocketRoar Capture Bridge is a requirements package, not a fabrication-ready design. It stays blocked until its camera, device, OS, transport, video-mode, charging, and physical-validation inputs are proven.
+The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a complex design and exports a clearly marked engineering package. It cannot request a quote until its electrical, physical, licensing, and compatibility gates are proven.
 
 ## Run
 
@@ -27,12 +27,13 @@ bun run build
 
 ## Workflow
 
-1. Inspect requirements, exact MPNs, official evidence, and unresolved risks.
-2. Preview a bounded change. A preview never mutates the design.
-3. Approve and apply the preview to create an immutable revision.
-4. Validate the requirements and generated Circuit JSON.
-5. Prepare Gerber, BOM, placement, validation, project, and hash-manifest artifacts.
-6. Explicitly download the package or request a JLCPCB quote.
+1. Draft or import a structured custom `BoardGraph` containing geometry, parts, footprints, pins, nets, and constraints.
+2. Inspect requirements, exact MPNs, official evidence, and unresolved risks.
+3. Preview a structured change or drag a PCB component. A preview never mutates stored design state.
+4. Approve and apply the preview to create an immutable revision.
+5. Validate the graph and generated Circuit JSON.
+6. Prepare engineering or fabrication Gerber, BOM, placement, validation, project, and hash-manifest artifacts.
+7. Explicitly download the package or request a JLCPCB quote.
 
 Browsers without WebMCP retain the complete manual workflow. Agents cannot order, pay, store an address, or accept a substitution.
 
@@ -44,11 +45,26 @@ Browsers without WebMCP retain the complete manual workflow. Agents cannot order
 - `apply_design_change`
 - `validate_and_export`
 
+`draft_board` accepts requirements plus an optional structured `design`. `preview_design_change` accepts allowlisted operations. Supplier and agent evidence always enters unreviewed; only the visible manual UI can approve evidence, parts, and footprints.
+
 Enable WebMCP in Chrome 149+ or open the hosted app in ChatGPT's in-app browser. Direct tool calls can be exercised in DevTools with `document.modelContext.executeTool(toolName, JSON.stringify(input))`.
 
 ## Manufacturing status
 
-The JLCPCB server boundary validates a current artifact package and supports bare-PCB and PCBA configurations. Without approved credentials and an account-specific API contract, it returns no invented price and directs the human to [JLCPCB's upload flow](https://jlcpcb.com/quote). Live cart handoff remains intentionally disabled until it can be verified against an approved API account.
+The JLCPCB server boundary receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. It supports bare-PCB and PCBA configurations, server-side JLC signing, and expiring confirmed handoff tokens. Without an approved account-specific quote endpoint, it returns no invented price and directs the human to [JLCPCB's upload flow](https://jlcpcb.com/quote).
+
+Server variables:
+
+```text
+JLCPCB_APP_ID
+JLCPCB_ACCESS_KEY
+JLCPCB_SECRET_KEY
+JLCPCB_TOKENIZATION_PUBLIC_KEY
+JLCPCB_TOKENIZATION_PRIVATE_KEY
+JLCPCB_QUOTE_ENABLED=false
+```
+
+The tokenization keys remain unused unless an approved endpoint explicitly requires them. Protect `/api/manufacturing/jlcpcb/quote` with a Vercel WAF fixed-window rule of three requests per ten minutes per IP before enabling live quoting.
 
 See [architecture](docs/ARCHITECTURE.md), [safety limits](docs/SAFETY.md), and the [demo script](docs/DEMO.md).
 
