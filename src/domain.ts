@@ -24,6 +24,7 @@ export const componentSchema = z.object({
   manufacturer: z.string().min(1).max(120),
   value: z.string().max(80).optional(),
   footprint: z.string().min(1).max(80),
+  status: z.enum(["candidate", "verified"]).default("verified"),
   evidenceIds: z.array(z.string()).min(1).max(10),
 })
 
@@ -48,6 +49,8 @@ export const snapshotSchema = z.object({
   architecture: z.array(z.string().min(1).max(240)).max(30),
   components: z.array(componentSchema).max(100),
   evidence: z.array(evidenceSchema).max(100),
+  constraints: z.array(z.string().min(1).max(500)).max(100).default([]),
+  validationPlan: z.array(z.string().min(1).max(500)).max(30).default([]),
   boardSpec: boardSpecSchema.optional(),
   unresolvedRisks: z.array(z.string().min(1).max(500)).max(50),
 })
@@ -147,6 +150,7 @@ export const indicatorSnapshot: DesignSnapshot = {
       manufacturer: "Bourns",
       value: "1 kΩ",
       footprint: "0805",
+      status: "verified",
       evidenceIds: ["ev-resistor-datasheet"],
     },
     {
@@ -155,6 +159,7 @@ export const indicatorSnapshot: DesignSnapshot = {
       manufacturer: "Lite-On",
       value: "Green LED",
       footprint: "0805",
+      status: "verified",
       evidenceIds: ["ev-led-datasheet"],
     },
     {
@@ -163,10 +168,13 @@ export const indicatorSnapshot: DesignSnapshot = {
       manufacturer: "Samtec",
       value: "2-pin power input",
       footprint: "pinrow2, 2.54 mm pitch",
+      status: "verified",
       evidenceIds: ["ev-connector-product"],
     },
   ],
   evidence: indicatorEvidence,
+  constraints: [],
+  validationPlan: [],
   boardSpec: {
     template: "power-indicator",
     widthMm: 25,
@@ -192,23 +200,144 @@ const captureQuestions = [
 ] as const
 
 export const captureBridgeSnapshot: DesignSnapshot = {
-  requirements: captureQuestions.map(([id, label]) => ({
-    id: `req-${id}`,
-    label,
-    required: true,
-    status: "blocked" as const,
-    evidenceIds: [],
-  })),
+  requirements: captureQuestions.map(([id, label]) => {
+    const known: Record<
+      string,
+      Pick<DesignSnapshot["requirements"][number], "value" | "status">
+    > = {
+      "apple-device": {
+        value: "USB-C iPad is documented; candidate iPhone Air still requires physical UVC proof",
+        status: "unverified",
+      },
+      "os-version": {
+        value: "Candidate iOS 26.6; UVC discovery not physically tested",
+        status: "unverified",
+      },
+      transport: {
+        value: "Candidate USB 3 UVC; requires exact-host physical proof",
+        status: "unverified",
+      },
+      "video-mode": { value: "1080p30 YUY2; 720p60 fallback", status: "verified" },
+      charging: {
+        value: "No phone charging or backfeed; external regulated 5 V",
+        status: "verified",
+      },
+    }
+    return {
+      id: `req-${id}`,
+      label,
+      required: true,
+      status: known[id]?.status ?? ("blocked" as const),
+      value: known[id]?.value,
+      evidenceIds: id === "apple-device" ? ["ev-apple-external-camera"] : [],
+    }
+  }),
   architecture: [
-    "Camera video output (unknown) → receiver/bridge (candidate) → Apple device transport (unverified)",
-    "Power input → regulated rails → bridge and protection",
+    "Clean non-HDCP HDMI → TC358743XBG → four-lane MIPI CSI-2 → CYUSB3065-BZXC",
+    "CYUSB3065 UVC output → HD3SS3220 USB-C UFP/mux → exact Apple host (unverified)",
+    "External 5 V → input protection → unresolved 3.3 V, 2.5 V, 1.8 V, and 1.2 V rails",
+    "PocketRoar native source handle → existing native compositor/encoder; no frames cross JavaScript",
   ],
-  components: [],
-  evidence: [],
+  components: [
+    {
+      reference: "U1",
+      mpn: "TC358743XBG(EL,NOK",
+      manufacturer: "Toshiba",
+      value: "HDMI 1.4 to four-lane MIPI CSI-2",
+      footprint: "P-TFBGA64-0606-0.65-001",
+      status: "candidate",
+      evidenceIds: ["ev-toshiba-tc358743"],
+    },
+    {
+      reference: "U2",
+      mpn: "CYUSB3065-BZXC",
+      manufacturer: "Infineon",
+      value: "EZ-USB CX3 MIPI CSI-2 to USB 3 UVC bridge",
+      footprint: "PG-LFBGA-121",
+      status: "candidate",
+      evidenceIds: ["ev-infineon-cx3", "ev-infineon-cx3-trm"],
+    },
+    {
+      reference: "U3",
+      mpn: "HD3SS3220",
+      manufacturer: "Texas Instruments",
+      value: "USB-C UFP controller and SuperSpeed mux",
+      footprint: "RNH (WQFN-30)",
+      status: "candidate",
+      evidenceIds: ["ev-ti-hd3ss3220"],
+    },
+  ],
+  evidence: [
+    {
+      id: "ev-apple-external-camera",
+      title: "Apple AVCaptureDevice external camera documentation",
+      sourceUrl:
+        "https://developer.apple.com/documentation/avfoundation/avcapturedevice/devicetype-swift.struct/external",
+      kind: "standard",
+      official: true,
+    },
+    {
+      id: "ev-toshiba-tc358743",
+      title: "Toshiba TC358743XBG official datasheet",
+      sourceUrl:
+        "https://toshiba.semicon-storage.com/info/docget.jsp?did=35655&prodName=TC358743XBG",
+      revision: "Rev. 2.20, 2026-05-11",
+      kind: "datasheet",
+      official: true,
+    },
+    {
+      id: "ev-infineon-cx3",
+      title: "Infineon CYUSB3065-BZXC product page",
+      sourceUrl: "https://www.infineon.com/part/CYUSB3065-BZXC",
+      kind: "datasheet",
+      official: true,
+    },
+    {
+      id: "ev-infineon-cx3-trm",
+      title: "Infineon EZ-USB CX3 technical reference manual",
+      sourceUrl:
+        "https://www.infineon.com/dgdl/Infineon-EZ-USB_CX3_Technical_Reference_Manual-AdditionalTechnicalInformation-v03_00-EN.pdf?fileId=8ac78c8c7d0d8da4017d0f908b877d50",
+      revision: "Rev. *K",
+      kind: "datasheet",
+      official: true,
+    },
+    {
+      id: "ev-ti-hd3ss3220",
+      title: "Texas Instruments HD3SS3220 product page",
+      sourceUrl: "https://www.ti.com/product/HD3SS3220",
+      revision: "Rev. E, 2025-07-18",
+      kind: "datasheet",
+      official: true,
+    },
+    {
+      id: "ev-usb-uvc",
+      title: "USB-IF Video Class 1.5 document set",
+      sourceUrl: "https://www.usb.org/document-library/video-class-v15-document-set",
+      kind: "standard",
+      official: true,
+    },
+  ],
+  constraints: [
+    "Candidate eight-layer stack: signal / ground / signal / power / power / signal / ground / signal; manufacturer must approve the final stackup.",
+    "Route USB SuperSpeed at 90 Ω differential and MIPI CSI-2 at 100 Ω ±10%; use the fabricator's field-solver geometry.",
+    "Keep MIPI intra-pair mismatch under 0.5 mm, inter-lane mismatch under 1.5 mm, and each lane under 100 mm.",
+    "Do not add probe stubs to HDMI, MIPI, or USB SuperSpeed pairs; expose only low-speed and rail test points.",
+    "Use external regulated 5 V with current limit, reverse/backfeed protection, rail measurement links, and maximum-load power budgeting.",
+  ],
+  validationPlan: [
+    "No-board gate: prove a known UVC device is discovered and renders on the exact Apple device, OS, cable, and orientation.",
+    "Two-board proof: validate HDMI-to-CSI hardware with a CX3 reference design on macOS, then the exact Apple host.",
+    "Resolve every rail, pin, clock, reset, strap, EDID device, connector, protection part, footprint, and firmware boot path; run ERC.",
+    "Review impedance, return paths, connector launches, pair matching, thermal plan, and power integrity with a qualified hardware engineer; run DRC.",
+    "Bring up rails independently, then HDMI lock, CSI counters, UVC enumeration, pattern-generator media, camera media, reconnect, and five-hour soak.",
+    "Feed native frames through PocketRoar's existing source-handle boundary and prove preview, encode, remote ingest, recovery, and bounded memory.",
+  ],
   unresolvedRisks: [
-    "The camera, Apple device, OS, transport, video mode, and charging requirements are unknown.",
-    "Candidate bridge parts and Apple-device compatibility are not validated.",
-    "No integrated board may be drafted or described as fabrication-ready until the transport ladder passes.",
+    "The exact camera model and clean-HDMI timing are unknown.",
+    "Apple's public documentation establishes UVC external cameras on iPad, not iPhone; exact-host discovery is unverified.",
+    "Power tree, clocks, EDID storage, connectors, protection, passives, pin mapping, footprints, firmware, thermal behavior, and signal integrity are unresolved.",
+    "USB VID/PID rights and HDMI adopter/licensing obligations must be resolved before distribution.",
+    "No integrated board may be exported, quoted, or described as fabrication-ready until every validation gate passes.",
   ],
 }
 
@@ -279,6 +408,7 @@ export function validateSnapshot(snapshot: DesignSnapshot): Validation {
     }
   }
   for (const component of snapshot.components) {
+    if (component.status !== "verified") errors.push(`${component.reference} is a candidate part.`)
     const officialEvidence = component.evidenceIds.some((id) =>
       snapshot.evidence.some((item) => item.id === id && item.official),
     )

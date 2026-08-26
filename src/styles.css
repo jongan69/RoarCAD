@@ -228,6 +228,9 @@ main {
 .dot.verified {
   background: var(--good);
 }
+.dot.candidate {
+  background: var(--warn);
+}
 .dot.blocked {
   background: var(--bad);
 }

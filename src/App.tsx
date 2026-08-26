@@ -281,6 +281,46 @@ export default function App() {
               <li key={line}>{line}</li>
             ))}
           </ol>
+          {revision.snapshot.components.length > 0 && (
+            <>
+              <h2>Selected parts</h2>
+              <div className="requirements-list">
+                {revision.snapshot.components.map((component) => (
+                  <article key={component.reference}>
+                    <span className={`dot ${component.status}`} title={component.status} />
+                    <div>
+                      <strong>
+                        {component.reference} · {component.mpn}
+                      </strong>
+                      <small>
+                        {component.manufacturer} · {component.footprint} · {component.status}
+                      </small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+          {revision.snapshot.constraints.length > 0 && (
+            <>
+              <h2>Board constraints</h2>
+              <ol>
+                {revision.snapshot.constraints.map((constraint) => (
+                  <li key={constraint}>{constraint}</li>
+                ))}
+              </ol>
+            </>
+          )}
+          {revision.snapshot.validationPlan.length > 0 && (
+            <>
+              <h2>Validation ladder</h2>
+              <ol>
+                {revision.snapshot.validationPlan.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </>
+          )}
           <h2>Official evidence</h2>
           {revision.snapshot.evidence.length ? (
             revision.snapshot.evidence.map((item) => (

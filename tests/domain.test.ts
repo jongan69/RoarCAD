@@ -28,6 +28,10 @@ describe("revision workflow", () => {
     const second = await createProject("indicator", "Power indicator", indicatorSnapshot)
     expect(first.currentRevisionId).toBe(second.currentRevisionId)
     expect(validateSnapshot(captureBridgeSnapshot).status).toBe("blocked")
+    expect(captureBridgeSnapshot.components.every(({ status }) => status === "candidate")).toBe(
+      true,
+    )
+    expect(captureBridgeSnapshot.validationPlan.length).toBeGreaterThan(0)
     expect(validateSnapshot(indicatorSnapshot).status).toBe("passed")
   })
 })
