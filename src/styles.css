@@ -630,6 +630,7 @@ dd {
     max-height: 560px;
   }
   .canvas-panel {
+    height: 680px;
     min-height: 680px;
   }
   .canvas-toolbar {
