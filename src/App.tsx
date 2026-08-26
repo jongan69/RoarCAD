@@ -169,25 +169,26 @@ export default function App() {
   useEffect(() => registerWebMcpTools(actions), [actions])
 
   const compileKey = project ? `${project.id}:${project.currentRevisionId}` : ""
-  const activeSnapshot = project ? currentRevision(project).snapshot : null
 
   useEffect(() => {
-    if (!compileKey || !activeSnapshot) return
+    const current = projectRef.current
+    if (!compileKey || !current) return
+    const snapshot = currentRevision(current).snapshot
     setPrepared(null)
     setQuote(null)
     setEditEvents([])
-    if (!activeSnapshot.design) {
+    if (!snapshot.design) {
       setCircuitJson([])
       setNotice("Requirements are blocked; no BoardGraph was compiled.")
       return
     }
-    compileSnapshot(activeSnapshot)
+    compileSnapshot(snapshot)
       .then((json) => {
         setCircuitJson(json)
         setNotice("BoardGraph compiled to Circuit JSON. Validate before export.")
       })
       .catch((error) => setNotice(error instanceof Error ? error.message : "Compilation failed."))
-  }, [compileKey, activeSnapshot])
+  }, [compileKey])
 
   if (!project) return <main className="loading">Preparing RoarCAD…</main>
   const revision = currentRevision(project)
