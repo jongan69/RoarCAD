@@ -8,13 +8,15 @@ Git-like PCB handoff for people and their agents, with immutable checkpoints and
 
 ## Problem
 
-PocketRoar Mobile began with a software problem that could not be solved honestly in software alone: getting live HDMI video into an Apple mobile device. An iPhone is not a generic HDMI capture host, and USB-C does not by itself prove that iOS exposes a UVC camera, sustains the required bandwidth, or can power the accessory. The defensible first target became narrower—unprotected 1080p30 HDMI converted to standards-compliant UVC for a specific USB-C iPad—so I needed a custom capture-board candidate and a way to keep every unproven assumption visible.
+PocketRoar Mobile needed a direct, wired video path from a Sony or other dedicated camera into an iPhone so the phone could monitor, record, and ultimately stream that feed. Sony cameras can expose USB Video Class output in USB Streaming mode, but Apple documents external UVC camera access for USB-C iPads—not iPhones—and explicitly says only iPad supports external cameras through AVFoundation. An iPad can already consume that class of source without a custom board; the iPhone is the missing host.
+
+The product benchmark is Accsoon SeeMo 4K. It accepts a camera's HDMI output, compresses the video as H.264, sends it over USB, and exposes it inside Accsoon's own iOS app. PocketRoar needs the same core outcome: bridge clean camera HDMI into a format and accessory transport that PocketRoar Mobile can receive on an iPhone. That is why I needed to design a PCB rather than treat this as an app-only integration.
 
 That exposed a second problem. AI-generated PCB designs can look complete while hiding missing requirements, unverified component evidence, incorrect footprints, stale edits, or unresolved physical constraints. A visual render or clean DRC result is not enough to justify fabrication, especially when a bad handoff can become an expensive board spin.
 
 ## Solution
 
-RoarCAD is a local-first, agent-native PCB review and handoff system built from that need. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
+RoarCAD is a local-first, agent-native PCB review and handoff system built to develop that iPhone capture bridge without hiding the remaining engineering risk. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
 
 ## Why WebMCP
 
@@ -32,7 +34,7 @@ The browser agent converts natural-language PCB requests into bounded `BoardGrap
 
 ## How We Used Codex
 
-Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-UVC candidate, and the JLCPCB trust boundary. It implemented and debugged the typed domain model, generic compiler, viewers, immutable revision flow, server-side manufacturing revalidation, tests, deployment, documentation, and submission materials. Jonathan Gan directed the product, claims, safety boundaries, and approval decisions.
+Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-iPhone bridge, the SeeMo 4K comparison, and the JLCPCB trust boundary. It implemented and debugged the typed domain model, generic compiler, viewers, immutable revision flow, server-side manufacturing revalidation, tests, deployment, documentation, and submission materials. Jonathan Gan directed the product, claims, safety boundaries, and approval decisions.
 
 ## Key Features
 
@@ -59,7 +61,9 @@ Three boards demonstrate one project-independent compiler:
 | Environmental monitor | Starts from a new structured brief and completes the bounded engineering workflow with agent inputs visibly unreviewed. |
 | PocketRoar Capture Bridge | Compiles an eight-layer engineering candidate and prepares review artifacts while fabrication export and quoting remain blocked. |
 
-PocketRoar is the deliberate stress test. Its candidate path is clean non-HDCP HDMI into a Toshiba `TC358743XBG`, four-lane MIPI CSI-2 into an Infineon `CYUSB3065-BZXC` CX3 bridge, then UVC over a USB-C orientation mux. RoarCAD compiles the eight-layer graph and produces engineering-review artifacts, but blocks fabrication because connector-thickness, power, firmware, signal-integrity, licensing, and physical Apple-host evidence remain unresolved. That refusal is intentional proof that an ambitious design can be useful without being falsely certified for manufacture.
+PocketRoar is the deliberate stress test. The current eight-layer graph explores clean non-HDCP HDMI into a Toshiba `TC358743XBG`, four-lane MIPI CSI-2 into an Infineon `CYUSB3065-BZXC` CX3 bridge, then UVC over USB-C. RoarCAD compiles it and produces engineering-review artifacts, but the research exposed a decisive limitation: standard UVC is a supported native path on USB-C iPads, not a demonstrated iPhone ingest path.
+
+The intended PocketRoar product therefore needs a SeeMo-class architecture—HDMI ingest, hardware video compression, an iPhone-compatible USB/accessory transport, and a native PocketRoar Mobile integration—rather than merely shipping the current UVC candidate. RoarCAD blocks fabrication because that transport architecture, connector mechanics, power, firmware, signal integrity, licensing, and physical iPhone evidence remain unresolved. That refusal is intentional proof that an ambitious design can be useful without being falsely certified for manufacture.
 
 ## Architecture
 
@@ -118,6 +122,7 @@ Guidelines checks.
 - Devpost accepted submission `1154859` on August 26, 2026 at 10:37:25 EDT and live
   readback confirmed the public project at `https://devpost.com/software/roarcad`.
 - On August 28, Devpost project version 3 replaced the original five-tool writeup with the checkpoint-first architecture, production proof, tested-client evidence, value case, and the honest PocketRoar/Apple-host origin story; a post-submit live readback confirmed the project remained published and submitted.
+- Devpost project version 4 corrected that origin story to the actual iPhone requirement: USB-C iPad is the already-supported UVC control case, SeeMo 4K is the functional comparison, and the current CX3/UVC graph is explicitly an unfinished engineering study rather than the final iPhone bridge.
 
 ## Known Limitations
 
@@ -125,8 +130,15 @@ Guidelines checks.
 - It does not replace professional schematic, SI/PI, DFM, compliance, or physical validation.
 - JLCPCB live quoting remains disabled until the approved endpoint contract is verified.
 - PocketRoar is an engineering candidate, not a fabrication-ready or physically validated product.
-- iPhone UVC capture support is unknown and is not claimed. USB-C connector presence or advertised link speed is not physical AVFoundation compatibility evidence.
-- The current target is an 11-inch iPad Pro, third generation (`iPad13,4`), but iPadOS, cable, UVC, thermal, and sustained-frame evidence remain open.
+- The current CX3/UVC graph is not the final iPhone bridge. It does not yet implement SeeMo-class H.264 compression or an app-specific iPhone accessory transport.
+- iPhone ingest, accessory/compliance requirements, cable behavior, thermals, sustained frames, reconnects, and simultaneous cellular streaming all require physical proof before compatibility is claimed.
+
+## Inspiration Sources
+
+- [Apple: Support external cameras in your iPadOS app](https://developer.apple.com/videos/play/wwdc2023/10106/)
+- [Sony: Connecting via HDMI/UVC](https://helpguide.sony.net/promobile/mc/v1/en/contents/connecting_hdmi_uvc.html)
+- [Accsoon SeeMo 4K iOS HDMI Adapter](https://accsoonusa.com/accsoon-seemo-4k-ios-hdmi-adapter/)
+- [Accsoon SeeMo 4K user manual](https://accsoon.com/wp-content/uploads/2024/10/SeeMo-4K-User-Manual-ENCN.pdf)
 
 ## Official Form Fields
 
