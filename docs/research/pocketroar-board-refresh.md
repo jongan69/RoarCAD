@@ -1,5 +1,7 @@
 # PocketRoar capture-board research refresh
 
+> **Scope correction (August 28, 2026):** this document evaluates the standards-based HDMI-to-UVC board candidate. USB-C iPad is the supported comparison case, not the PocketRoar product target. PocketRoar targets iPhone and needs a proven SeeMo-class HDMI/compression/accessory path; see [`pocketroar-iphone-capture-inspiration.md`](./pocketroar-iphone-capture-inspiration.md). The current CX3/UVC graph must not be presented as the finished iPhone bridge.
+
 Checked: 2026-08-25. This note uses current manufacturer, platform-owner, standards-body, and fabricator sources only.
 
 ## Decision
