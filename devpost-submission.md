@@ -140,7 +140,7 @@ React builds the visible interface, and TypeScript helps catch incorrect data wh
 - An **end-to-end test** follows a whole user journey across the real product. RoarCAD passed a production A → B → A handoff: one browser shared a checkpoint, another continued it, and the first reviewed and adopted the returned revision.
 - **CI (continuous integration)** is an automated robot that checks every proposed code change. RoarCAD's CI passed type checking, formatting and code-quality checks, all Bun tests, and the production build.
 - A **regression test** proves that an old bug did not return. The 390×844 mobile test passed without sideways scrolling or an endlessly growing schematic.
-- Twenty-eight focused local tests covered the board model, checkpoints, WebMCP tools, electronics compilation, browser storage, manufacturing gates, and interface contracts.
+- Thirty focused tests across nine files covered the board model, checkpoints, WebMCP tools, electronics compilation, browser storage, manufacturing gates, and interface contracts.
 - Chrome 149 executed the four live WebMCP tools. ChatGPT's in-app browser completed the clean-profile checkpoint journey and the manual fallback interface.
 
 ## Testing Instructions
@@ -176,7 +176,7 @@ Guidelines checks.
 
 1. Power indicator at fabrication-ready with prepared artifacts: `docs/screenshots/indicator-fabrication.jpg`.
 2. PocketRoar at engineering readiness with visible blockers: `docs/screenshots/pocketroar-engineering.jpg`.
-3. WebMCP-ready PocketRoar workspace: `docs/screenshots/pocketroar-webmcp-engineering.png`.
+3. Replace the stale PocketRoar workspace capture with the current `c204a71b354abeff` view showing **0 errors**, the iPhone blocker, exact HDMI/USB-C connector footprints, and the 19.2 MHz CX3 clock.
 4. Environmental-monitor generic-board proof: `docs/screenshots/environment-monitor-webmcp.png`.
 5. Non-mutating PocketRoar preview: `docs/screenshots/pocketroar-preview.jpg`.
 6. Approved immutable PocketRoar revision: `docs/screenshots/pocketroar-applied-revision.jpg`.
@@ -184,11 +184,12 @@ Guidelines checks.
 ## Submission Readiness Notes
 
 - Devpost authentication and registration were verified live on August 26, 2026.
-- The checkpoint-first release is on production `main` at merge commit `4f3e1b42140b34ca905491ac9771d26cd2b5b922`; GitHub Actions run `33205270075` passed the full test, build, typecheck, and Biome gate before Vercel deployment `6147517275` succeeded.
+- The zero-error PocketRoar release is on production `main` at commit `16f3e1600998a2a35644e32a0dbc7b388de81cce`. GitHub Actions run `33217786830` passed typecheck, Biome, every Bun test, and the production build; Vercel deployed the same commit as production deployment `roarcad-jp63mhv62-jongan69s-projects.vercel.app` and marked it `READY`.
+- The release candidate's in-app-browser smoke showed PocketRoar revision `c204a71b354abeff`, exact corrected connector/clock data, four WebMCP tools, a bounded validation inspection, and **0 viewer errors**. A clean Chrome production profile independently loaded `https://roarcad.vercel.app/` with `WebMCP ready` and the fabrication-ready indicator.
 - Production exposes exactly four WebMCP tools. `apply_design_change` is absent, preview output is bounded to the six safe summary fields, and only the visible **Approve & apply** control creates a revision.
 - A clean production A → B → A handoff passed across Chrome and ChatGPT's in-app browser: read-only checkpoint open, explicit backup-gated fork, live inspection and preview, human apply, common-ancestor return diff, and manual immutable adoption.
 - The 390×844 production regression passed without horizontal overflow or application console errors.
-- Twenty-eight targeted local tests passed across seven files, and the complete remote CI gate passed independently.
+- Thirty tests passed across nine files in the complete remote CI gate.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
 - The final local video master is 2:24 at 1920×1080 with audible Grady narration and 234 Whisper-timed caption cards. Its SHA-256 is `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
 - Production is live at `https://roarcad.vercel.app/`, `main` passed CI, and GitHub detects the MIT license.
@@ -198,6 +199,7 @@ Guidelines checks.
 - On August 28, Devpost project version 3 replaced the original five-tool writeup with the checkpoint-first architecture, production proof, tested-client evidence, value case, and the honest PocketRoar/Apple-host origin story; a post-submit live readback confirmed the project remained published and submitted.
 - Devpost project version 4 corrected that origin story to the actual iPhone requirement: USB-C iPad is the already-supported UVC control case, SeeMo 4K is the functional comparison, and the current CX3/UVC graph is explicitly an unfinished engineering study rather than the final iPhone bridge.
 - Devpost project version 5 rewrote the story in simple English, added a plain-language glossary for the browser, PCB, video, revision, and manufacturing terms, and preserved the full technical architecture and evidence limits. Live readback confirmed the simplified tagline, glossary, iPhone premise, and human-only approval boundary.
+- The next Devpost revision must add the zero-error PocketRoar paragraph already present in this canonical draft and replace the stale PocketRoar screenshot. Do not re-submit until the updated public page is read back and the replacement image is visually checked.
 
 ## Known Limitations
 

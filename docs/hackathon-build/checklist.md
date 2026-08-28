@@ -38,11 +38,11 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: No project-name/template branch and agent evidence remains unreviewed.
   Verify: the original 2026-08-26 submission produced engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`; the replacement production journey confirmed the four-tool contract and human-only apply boundary.
 
-- [ ] **7. Upgrade PocketRoar to the strongest defensible candidate**
+- [x] **7. Upgrade PocketRoar to the strongest defensible candidate**
   Spec ref: `scope.md > PocketRoar engineering-candidate package`
   What to build: Apply the product, vendor, mechanical, library, power, and schematic steps A1–A6 from the master plan without guessing missing data.
   Acceptance: Every remaining omission appears as an explicit blocker; no unsupported fabrication claim.
-  Verify: engineering export plus independent evidence review.
+  Verify: revision `c204a71b354abeff` compiles to 2,566 Circuit JSON elements with zero compiler errors and zero independent checker errors; fabrication remains blocked because eleven routes are not a complete schematic and the iPhone transport is unproven.
 
 - [x] **8. Capture the original-submission WebMCP proof**
   Spec ref: `prd.md > real browser agent`
@@ -92,4 +92,4 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
 - [ ] **16. Replace and freeze the submission**
   What to build: Record the checkpoint-first video, update screenshots and Devpost copy, then obtain explicit confirmation before resubmission.
   Acceptance: Public video and live Devpost readback match the verified production build.
-  Verify: freeze only after the September 2 evidence review.
+  Verify: zero-error production commit `16f3e1600998a2a35644e32a0dbc7b388de81cce` is live, but the current public video and PocketRoar screenshot predate that repair. Freeze only after those assets and the Devpost readback match the release.
