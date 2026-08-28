@@ -4,33 +4,93 @@ RoarCAD
 
 ## One-line Summary
 
-Git-like PCB handoff for people and their agents, with immutable checkpoints and human-only manufacturing gates.
+RoarCAD is a browser workbench where people and AI design circuit boards together, save tamper-evident versions, and keep manufacturing under human control.
 
 ## Problem
 
-PocketRoar Mobile needed a direct, wired video path from a Sony or other dedicated camera into an iPhone so the phone could monitor, record, and ultimately stream that feed. Sony cameras can expose USB Video Class output in USB Streaming mode, but Apple documents external UVC camera access for USB-C iPads—not iPhones—and explicitly says only iPad supports external cameras through AVFoundation. An iPad can already consume that class of source without a custom board; the iPhone is the missing host.
+PocketRoar Mobile needed a direct cable connection from a Sony or other dedicated camera into an iPhone. The goal was to let the iPhone see the camera's live picture so it could monitor, record, and eventually stream it.
 
-The product benchmark is Accsoon SeeMo 4K. It accepts a camera's HDMI output, compresses the video as H.264, sends it over USB, and exposes it inside Accsoon's own iOS app. PocketRoar needs the same core outcome: bridge clean camera HDMI into a format and accessory transport that PocketRoar Mobile can receive on an iPhone. That is why I needed to design a PCB rather than treat this as an app-only integration.
+Sony cameras can send video using **UVC**, short for USB Video Class. UVC is the common language used by many USB webcams. Apple lets USB-C iPads expose those external cameras to apps, but does not document the same native camera-input path for iPhone. An iPad can already accept this kind of feed without a custom circuit board. The iPhone is the missing host.
 
-That exposed a second problem. AI-generated PCB designs can look complete while hiding missing requirements, unverified component evidence, incorrect footprints, stale edits, or unresolved physical constraints. A visual render or clean DRC result is not enough to justify fabrication, especially when a bad handoff can become an expensive board spin.
+The product benchmark is Accsoon SeeMo 4K. It accepts **HDMI**—the digital video signal sent by many cameras—compresses that video as **H.264**, a widely used format that makes video smaller, and sends it over USB to Accsoon's own iPhone app. PocketRoar needs the same basic outcome: translate a camera's output into a form that PocketRoar Mobile can receive on an iPhone. That translation needs dedicated electronics, so this could not be solved by an iPhone app alone.
+
+That exposed a second problem. AI-generated circuit boards can look finished while still hiding missing requirements, unverified parts, incorrect physical pad layouts, old edits, or parts that cannot physically fit together. A clean picture or automated rule check does not prove a board is safe to manufacture. One missed detail can cause an expensive **board spin**, which means paying to manufacture another corrected version.
 
 ## Solution
 
-RoarCAD is a local-first, agent-native PCB review and handoff system built to develop that iPhone capture bridge without hiding the remaining engineering risk. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
+RoarCAD is a local-first circuit-board review and handoff system built to develop that iPhone capture bridge without hiding the remaining risk. **Local-first** means the project stays in the user's browser unless the user chooses to share it.
+
+The workflow is like passing a save file to a teammate. One person shares a protected checkpoint. A teammate opens it without changing their own work, creates a separate copy, and continues with an AI agent. The first person can then compare the returned board with the version both people started from. Nothing is silently merged. The person must choose whether to adopt the returned board.
+
+RoarCAD gives the AI four narrow WebMCP tools to draft, inspect, preview, and validate. The AI cannot apply its own proposal. Only the visible **Approve & apply** button can create a new saved version.
+
+## Plain-English Definitions
+
+- **PCB (printed circuit board):** the flat board that holds electronic parts and connects them with copper paths.
+- **Agent:** AI software that can reason about a task and call approved tools.
+- **WebMCP:** a browser standard that lets a web page offer named, structured tools to an AI. The AI receives exact data instead of guessing from pixels and mouse clicks.
+- **Revision:** one saved version of a project.
+- **Immutable:** unable to be secretly changed after it is saved. RoarCAD creates a new revision instead of rewriting an old one.
+- **Checkpoint:** a portable package containing one board revision and its history information. It works like a save point that can be handed to another person.
+- **Read-only:** viewable but not editable. Incoming checkpoints always start this way.
+- **Fork:** a separate working copy made from a checkpoint. Changes to the fork do not change the sender's project.
+- **Common ancestor:** the last revision that two copies share. It tells RoarCAD where the work split.
+- **Semantic diff:** a list of meaningful engineering changes, such as a moved component or changed connection, rather than a list of changed text characters.
+- **Adopt:** deliberately copy an incoming board snapshot into the local project as a new revision.
+- **Provenance:** the recorded history of where a revision came from.
+- **Schema:** a set of rules describing what valid data must contain and what type each value must be.
+- **Hash:** a short digital fingerprint calculated from data. If the data changes, the fingerprint changes.
+- **SHA-256:** the specific, widely used fingerprint algorithm RoarCAD uses for revisions, checkpoints, and export manifests.
+- **Tamper-evident:** able to show that content changed. A hash proves unchanged content; it does not prove who sent it.
+- **BoardGraph:** RoarCAD's structured map of a board, including parts, pins, connections, layers, placement, holes, and safety constraints.
+- **Component:** a physical electronic part, such as a resistor, connector, or chip.
+- **Pin:** one electrical contact on a component.
+- **Net:** a named electrical connection joining one or more pins.
+- **Footprint:** the exact copper pads and physical space a component needs on the board.
+- **Differential pair:** two carefully matched copper paths that carry one high-speed signal together and reject noise.
+- **Copper pour:** a larger filled copper area, often used for ground or power.
+- **Keepout:** an area where parts or copper are not allowed.
+- **Compile:** turn RoarCAD's structured board description into diagrams, checks, and manufacturing files.
+- **tscircuit:** the open-source electronics toolchain RoarCAD uses to compile and render boards.
+- **DRC (design-rule check):** an automated check for layout problems such as copper paths being too close together. Passing DRC does not prove the whole product works.
+- **Evidence:** a source or test result supporting an engineering claim, such as a manufacturer datasheet or physical measurement.
+- **Engineering candidate:** a design useful for review and testing that still has known unanswered questions.
+- **Fabrication-ready:** a design that has passed RoarCAD's required evidence and validation gates for preparing manufacturing files.
+- **Preview:** a proposed change shown before it is saved.
+- **Non-mutating:** unable to change stored project data. Agent previews are non-mutating.
+- **Stale change:** a proposal created from an older revision after the board has already changed. RoarCAD rejects it.
+- **JSON:** a common text format for structured data.
+- **IndexedDB:** the database built into modern browsers. RoarCAD uses it for local project history.
+- **gzip:** a standard way to compress data so it takes less space.
+- **base64url:** a way to turn compressed data into characters that are safe inside a web link.
+- **URL fragment:** the part of a link after `#`. Browsers do not send this fragment to the web server, so checkpoint data stays client-side.
+- **Server-side:** code that runs on a hosted server instead of inside the user's browser.
+- **Vercel function:** a small server-side program. RoarCAD uses one to independently recheck manufacturing requests.
+- **HDMI:** a digital connection that carries video and often audio from cameras and other devices.
+- **UVC (USB Video Class):** the standard language that makes many USB cameras behave like webcams.
+- **H.264:** a common video-compression format that reduces the amount of data needed to carry video.
+- **MIPI CSI-2:** a fast chip-to-chip connection commonly used to move camera pixels inside hardware.
+- **USB-C:** the reversible connector shape. The connector alone does not guarantee that a device supports every USB feature or video format.
+- **Gerber files:** the layer-by-layer drawing files a PCB factory uses to make the board.
+- **BOM (bill of materials):** the shopping list of electronic parts.
+- **CPL or placement file:** the list telling an assembly machine where each part goes and how it is rotated.
+- **SI (signal integrity):** whether fast electrical signals arrive clearly enough to be understood.
+- **PI (power integrity):** whether every chip receives clean, stable power.
+- **DFM (design for manufacturing):** checking that a factory can reliably build the design.
 
 ## Why WebMCP
 
-PCB work is a poor fit for agents guessing their way through buttons or editing opaque files. WebMCP gives the agent four bounded operations over the exact board revision already open in the browser. The agent can reason over a focused slice of requirements or design state and propose a deterministic change, while the person sees the semantic diff and remains the only authority that can apply it.
+Circuit-board work is a poor fit for AI that guesses by looking at buttons. A wrong click could move the wrong part or edit an old version. WebMCP gives the agent four clearly named tools over the exact revision already open in the browser. The agent can inspect one small area, propose a repeatable change, and explain the result. The person sees the meaningful difference and remains the only one who can save it.
 
-This was difficult to do safely with ordinary browser automation. A visual agent could move the wrong component, act on a stale revision, or mistake a clean-looking render for manufacturing approval. RoarCAD's schemas, revision hashes, non-mutating previews, and human-only evidence review turn those hidden assumptions into explicit product state.
+Ordinary browser automation mostly sees pixels and clickable areas. RoarCAD instead gives the AI validated data. Schemas reject malformed inputs, hashes detect changed content, previews cannot change storage, and evidence stays untrusted until a person reviews it.
 
 ## Why This Matters
 
-Hardware mistakes cost money and time after a file leaves the browser. RoarCAD shortens the path from an engineering question to a reviewable board while preserving the provenance and approval trail needed to reject unsafe exports. Teams can hand work to a coauthor or agent without deploying accounts, a database, or realtime infrastructure, and without letting the agent silently certify supplier data or cross irreversible manufacturing boundaries.
+Software can often be fixed after release. Hardware mistakes become physical objects. They cost parts, factory time, shipping, and another board spin. RoarCAD helps people reach a reviewable design faster while preserving who changed what and why. It also keeps the final manufacturing decision with a person.
 
 ## How We Used AI
 
-The browser agent converts natural-language PCB requests into bounded `BoardGraph` objects and allowlisted change operations. It can inspect evidence and risks, prepare non-mutating previews, and request validation/export preparation. AI-created supplier or datasheet information remains untrusted until reviewed in the visible UI, and no AI tool can quote, order, pay, store shipping details, or accept substitutions.
+The browser agent turns plain-English requests into a bounded `BoardGraph`, RoarCAD's structured board map. **Bounded** means the agent can only use supported parts and operations. It can inspect risks, prepare a preview, and ask RoarCAD to run validation. Information suggested by AI stays marked as unreviewed until a person checks it. No AI tool can download manufacturing files, request a quote, place an order, pay, store shipping details, or accept replacement parts.
 
 ## How We Used Codex
 
@@ -38,16 +98,16 @@ Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-
 
 ## Key Features
 
-- Four focused WebMCP tools sharing the manual UI’s validated domain actions, with no agent-callable apply operation.
-- Immutable, integrity-checked checkpoint links and JSON files for read-only review, explicit local forks, semantic comparison, return, and adoption.
-- Generic 1–10 layer `BoardGraph` with bounded components, pins, nets, footprints, placement, differential pairs, pours, holes, keepouts, and constraints.
-- tscircuit PCB and schematic compilation, viewing, checks, and manufacturing exports.
-- Deterministic preview hashes, stale-change rejection, and immutable revisions.
-- Human-only requirements, evidence, part, and footprint review.
-- Engineering versus fabrication readiness with visible blockers.
-- Gerber, BOM, placement, Circuit JSON, validation, project, and SHA-256 manifest bundles.
-- Server-side JLCPCB recompile and quote gate with an honest manual fallback.
-- Complete manual workflow in browsers without WebMCP.
+- Four focused WebMCP tools that use the same checked actions as the buttons in the app. There is no AI-callable apply tool.
+- Checkpoint links and JSON files for safe review, separate forks, meaningful comparison, return, and deliberate adoption.
+- A generic 1–10 layer `BoardGraph` covering parts, pins, connections, physical pad layouts, placement, copper, holes, and safety rules.
+- PCB and schematic diagrams, automated checks, and manufacturing-file preparation through tscircuit.
+- Digital fingerprints for previews and revisions, plus rejection of proposals based on old work.
+- Human-only review of requirements, evidence, parts, and footprints.
+- Clear separation between an engineering candidate and a fabrication-ready board.
+- Gerber factory drawings, BOM part lists, CPL placement lists, structured project data, validation reports, and SHA-256 manifests.
+- A server-side manufacturing recheck so changing a browser label cannot unlock a quote.
+- A complete manual workflow when WebMCP is unavailable.
 
 ## What Works Today
 
@@ -67,7 +127,16 @@ The intended PocketRoar product therefore needs a SeeMo-class architecture—HDM
 
 ## Architecture
 
-React and TypeScript own the workspace. Zod validates every project and tool argument. One `compileBoardGraph()` path maps allowlisted primitives to tscircuit; it has no project-name branches. IndexedDB stores capped revision metadata while generated artifacts are regenerated. Page-bound WebMCP tools call the same actions as the UI. Vercel functions independently parse, recompile, validate, and gate manufacturing requests; credentials never enter browser code.
+React builds the visible interface, and TypeScript helps catch incorrect data while the code is being written. Zod checks every project and tool input at runtime. One `compileBoardGraph()` function translates every supported board into tscircuit; there is no hidden special-case compiler for PocketRoar. IndexedDB stores limited revision history inside the browser. The WebMCP tools call the same checked actions as the buttons. Vercel functions independently read, compile, and validate manufacturing requests, and private credentials never enter browser code.
+
+## Production Proof
+
+- A **smoke test** is a quick check that the most important parts of a product start and respond. RoarCAD's public production URL passed its clean-browser smoke test.
+- An **end-to-end test** follows a whole user journey across the real product. RoarCAD passed a production A → B → A handoff: one browser shared a checkpoint, another continued it, and the first reviewed and adopted the returned revision.
+- **CI (continuous integration)** is an automated robot that checks every proposed code change. RoarCAD's CI passed type checking, formatting and code-quality checks, all Bun tests, and the production build.
+- A **regression test** proves that an old bug did not return. The 390×844 mobile test passed without sideways scrolling or an endlessly growing schematic.
+- Twenty-eight focused local tests covered the board model, checkpoints, WebMCP tools, electronics compilation, browser storage, manufacturing gates, and interface contracts.
+- Chrome 149 executed the four live WebMCP tools. ChatGPT's in-app browser completed the clean-profile checkpoint journey and the manual fallback interface.
 
 ## Testing Instructions
 
@@ -123,6 +192,7 @@ Guidelines checks.
   readback confirmed the public project at `https://devpost.com/software/roarcad`.
 - On August 28, Devpost project version 3 replaced the original five-tool writeup with the checkpoint-first architecture, production proof, tested-client evidence, value case, and the honest PocketRoar/Apple-host origin story; a post-submit live readback confirmed the project remained published and submitted.
 - Devpost project version 4 corrected that origin story to the actual iPhone requirement: USB-C iPad is the already-supported UVC control case, SeeMo 4K is the functional comparison, and the current CX3/UVC graph is explicitly an unfinished engineering study rather than the final iPhone bridge.
+- Devpost project version 5 rewrote the story in simple English, added a plain-language glossary for the browser, PCB, video, revision, and manufacturing terms, and preserved the full technical architecture and evidence limits. Live readback confirmed the simplified tagline, glossary, iPhone premise, and human-only approval boundary.
 
 ## Known Limitations
 
