@@ -36,7 +36,7 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Spec ref: `scope.md > public hosted application`
   What to build: Draft a non-fixture board through `draft_board`, then inspect, preview, manually approve, and export it.
   Acceptance: No project-name/template branch and agent evidence remains unreviewed.
-  Verify: the original 2026-08-26 submission used an agent apply tool and produced engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`; the four-tool replacement needs a fresh production journey.
+  Verify: the original 2026-08-26 submission produced engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`; the replacement production journey confirmed the four-tool contract and human-only apply boundary.
 
 - [ ] **7. Upgrade PocketRoar to the strongest defensible candidate**
   Spec ref: `scope.md > PocketRoar engineering-candidate package`
@@ -56,23 +56,23 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: A clean visitor can run and understand the project without private context.
   Verify: Accepted commit `404fcb8` passed CI on both branches, Vercel promoted it to `https://roarcad.vercel.app/`, the tracked-secret scan was clean, and GitHub detects the MIT license on default branch `main`.
 
-- [ ] **10. Produce the under-three-minute demo**
+- [x] **10. Produce the under-three-minute demo**
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B6`
   What to build: Real product screen capture with reviewed AI narration, captions, edits, and audio.
   Acceptance: Under three minutes, public YouTube URL, no fabricated behavior, no secrets.
-  Verify: the local 2:24 master is 1920×1080 H.264/AAC with 234 Whisper-timed caption cards; public YouTube upload and logged-out replay remain open.
+  Verify: the public 2:25 YouTube video is 1920×1080 H.264/AAC, has audible narration and timed captions, and passed anonymous oEmbed readback; replacing it with the checkpoint-first story remains tracked separately below.
 
-- [ ] **11. Complete and review the Devpost packet**
+- [x] **11. Complete and review the Devpost packet**
   Spec ref: `devpost-submission.md`
   What to build: Corrected story, official form answers, URLs, testing instructions, screenshots, AI/Codex disclosure, and limitations.
   Acceptance: Every required field is filled and every claim is demonstrated.
-  Verify: compare the draft line by line with the live Devpost requirements and judging criteria.
+  Verify: the canonical draft was reconciled with the live Devpost requirements, judging criteria, tested-client evidence, PocketRoar story, and production limitations on August 28, 2026.
 
-- [ ] **12. Submit with confirmation**
+- [x] **12. Submit with confirmation**
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B8`
   What to build: Final clean-browser link test and Devpost submission.
   Acceptance: User explicitly confirms immediately before submission; Devpost returns a public project page.
-  Verify: open the resulting public Devpost URL logged out.
+  Verify: Devpost re-submitted existing entry `1154859`; live project readback returned version 3, state `published`, an August 28 update timestamp, and the WebMCP submission association.
 
 - [x] **13. Add immutable checkpoint handoff**
   What to build: Validated, size-bounded, gzip/base64url checkpoints with integrity checks, ancestry, semantic comparison, read-only opening, local fork, and explicit adoption.
@@ -84,10 +84,10 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: Exactly four allowed tools and no agent apply, download, quote, order, or payment action.
   Verify: `bun run eval:webmcp`
 
-- [ ] **15. Prove the replacement production journey**
+- [x] **15. Prove the replacement production journey**
   What to build: Clean-profile A → B → A checkpoint handoff plus four-tool Chrome and ChatGPT in-app-browser journeys.
   Acceptance: At least 90% correct first-call tool selection and 100% prevention of agent apply/download/order behavior.
-  Verify: source, CI, production, Chrome, and ChatGPT evidence remain separate.
+  Verify: production A → B → A passed across clean Chrome and ChatGPT in-app-browser profiles; source, CI, deployment, and browser evidence remain separately recorded.
 
 - [ ] **16. Replace and freeze the submission**
   What to build: Record the checkpoint-first video, update screenshots and Devpost copy, then obtain explicit confirmation before resubmission.
