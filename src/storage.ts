@@ -32,6 +32,18 @@ export async function loadStoredProject(): Promise<BoardProject | null> {
   return migrated
 }
 
+export function chooseStartupProject(
+  stored: BoardProject | null,
+  starter: BoardProject,
+  bundledPocketRoar: BoardProject,
+): BoardProject {
+  const isPristinePocketRoar =
+    stored?.id === bundledPocketRoar.id &&
+    stored.revisions.length === 1 &&
+    stored.currentRevisionId === bundledPocketRoar.currentRevisionId
+  return isPristinePocketRoar ? starter : (stored ?? starter)
+}
+
 export async function saveStoredProject(project: BoardProject): Promise<void> {
   const database = await openDatabase()
   await new Promise<void>((resolve, reject) => {
