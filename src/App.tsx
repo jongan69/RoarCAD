@@ -41,7 +41,7 @@ import {
 import { inspectProject } from "./inspection"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
 import { environmentMonitorGraph, environmentMonitorRequirements } from "./samples"
-import { loadStoredProject, saveStoredProject } from "./storage"
+import { chooseStartupProject, loadStoredProject, saveStoredProject } from "./storage"
 import { type InspectFocus, registerWebMcpTools } from "./webmcp"
 
 function downloadText(value: string, filename: string): void {
@@ -84,10 +84,12 @@ export default function App() {
   useEffect(() => {
     const load = async () => {
       try {
-        setProject(
-          (await loadStoredProject()) ??
-            (await createProject("indicator", "Power indicator", indicatorSnapshot)),
-        )
+        const [stored, starter, bundledPocketRoar] = await Promise.all([
+          loadStoredProject(),
+          createProject("indicator", "Power indicator", indicatorSnapshot),
+          createProject("capture", "PocketRoar Capture Bridge", captureBridgeSnapshot),
+        ])
+        setProject(chooseStartupProject(stored, starter, bundledPocketRoar))
       } catch {
         setProject(await createProject("indicator", "Power indicator", indicatorSnapshot))
       }
