@@ -4,15 +4,17 @@ RoarCAD
 
 ## One-line Summary
 
-A WebMCP PCB workbench where agents draft, humans approve, and unsafe designs cannot reach manufacturing.
+Git-like PCB handoff for people and their agents, with immutable checkpoints and human-only manufacturing gates.
 
 ## Problem
 
-AI-generated PCB designs can look complete while hiding missing requirements, unverified component evidence, incorrect footprints, stale edits, or unresolved physical constraints. A visual render or clean DRC result is not enough to justify fabrication.
+PocketRoar Mobile began with a software problem that could not be solved honestly in software alone: getting live HDMI video into an Apple mobile device. An iPhone is not a generic HDMI capture host, and USB-C does not by itself prove that iOS exposes a UVC camera, sustains the required bandwidth, or can power the accessory. The defensible first target became narrower—unprotected 1080p30 HDMI converted to standards-compliant UVC for a specific USB-C iPad—so I needed a custom capture-board candidate and a way to keep every unproven assumption visible.
+
+That exposed a second problem. AI-generated PCB designs can look complete while hiding missing requirements, unverified component evidence, incorrect footprints, stale edits, or unresolved physical constraints. A visual render or clean DRC result is not enough to justify fabrication, especially when a bad handoff can become an expensive board spin.
 
 ## Solution
 
-RoarCAD is a local-first, agent-native PCB review and handoff system. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
+RoarCAD is a local-first, agent-native PCB review and handoff system built from that need. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
 
 ## Why WebMCP
 
@@ -22,7 +24,7 @@ This was difficult to do safely with ordinary browser automation. A visual agent
 
 ## Why This Matters
 
-Hardware mistakes cost money and time after a file leaves the browser. RoarCAD makes the agent useful without letting it silently certify supplier data or cross irreversible manufacturing boundaries. The workflow is useful for makers, hardware startups, educators, and engineers who want faster iteration with visible provenance and review gates.
+Hardware mistakes cost money and time after a file leaves the browser. RoarCAD shortens the path from an engineering question to a reviewable board while preserving the provenance and approval trail needed to reject unsafe exports. Teams can hand work to a coauthor or agent without deploying accounts, a database, or realtime infrastructure, and without letting the agent silently certify supplier data or cross irreversible manufacturing boundaries.
 
 ## How We Used AI
 
@@ -57,7 +59,7 @@ Three boards demonstrate one project-independent compiler:
 | Environmental monitor | Starts from a new structured brief and completes the bounded engineering workflow with agent inputs visibly unreviewed. |
 | PocketRoar Capture Bridge | Compiles an eight-layer engineering candidate and prepares review artifacts while fabrication export and quoting remain blocked. |
 
-PocketRoar's refusal is intentional proof of the product's safety model: an ambitious design can be useful for engineering review without being falsely certified for manufacture.
+PocketRoar is the deliberate stress test. Its candidate path is clean non-HDCP HDMI into a Toshiba `TC358743XBG`, four-lane MIPI CSI-2 into an Infineon `CYUSB3065-BZXC` CX3 bridge, then UVC over a USB-C orientation mux. RoarCAD compiles the eight-layer graph and produces engineering-review artifacts, but blocks fabrication because connector-thickness, power, firmware, signal-integrity, licensing, and physical Apple-host evidence remain unresolved. That refusal is intentional proof that an ambitious design can be useful without being falsely certified for manufacture.
 
 ## Architecture
 
@@ -104,15 +106,18 @@ Guidelines checks.
 ## Submission Readiness Notes
 
 - Devpost authentication and registration were verified live on August 26, 2026.
-- The accepted `dev` revision passed CI and deployed successfully.
-- The original submitted build exposed five tools; the contest update intentionally removes agent-callable apply and requires a new four-tool Chrome and ChatGPT browser acceptance run before publication.
-- ChatGPT's in-app browser completed the manual fallback journey without horizontal overflow or application console errors.
+- The checkpoint-first release is on production `main` at merge commit `4f3e1b42140b34ca905491ac9771d26cd2b5b922`; GitHub Actions run `33205270075` passed the full test, build, typecheck, and Biome gate before Vercel deployment `6147517275` succeeded.
+- Production exposes exactly four WebMCP tools. `apply_design_change` is absent, preview output is bounded to the six safe summary fields, and only the visible **Approve & apply** control creates a revision.
+- A clean production A → B → A handoff passed across Chrome and ChatGPT's in-app browser: read-only checkpoint open, explicit backup-gated fork, live inspection and preview, human apply, common-ancestor return diff, and manual immutable adoption.
+- The 390×844 production regression passed without horizontal overflow or application console errors.
+- Twenty-eight targeted local tests passed across seven files, and the complete remote CI gate passed independently.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
 - The final local video master is 2:24 at 1920×1080 with audible Grady narration and 234 Whisper-timed caption cards. Its SHA-256 is `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
 - Production is live at `https://roarcad.vercel.app/`, `main` passed CI, and GitHub detects the MIT license.
 - The public video was verified through YouTube's anonymous oEmbed endpoint.
 - Devpost accepted submission `1154859` on August 26, 2026 at 10:37:25 EDT and live
   readback confirmed the public project at `https://devpost.com/software/roarcad`.
+- On August 28, Devpost project version 3 replaced the original five-tool writeup with the checkpoint-first architecture, production proof, tested-client evidence, value case, and the honest PocketRoar/Apple-host origin story; a post-submit live readback confirmed the project remained published and submitted.
 
 ## Known Limitations
 
@@ -120,9 +125,10 @@ Guidelines checks.
 - It does not replace professional schematic, SI/PI, DFM, compliance, or physical validation.
 - JLCPCB live quoting remains disabled until the approved endpoint contract is verified.
 - PocketRoar is an engineering candidate, not a fabrication-ready or physically validated product.
-- The target iPad is identified as an 11-inch iPad Pro, third generation (`iPad13,4`), but iPadOS, cable, UVC, thermal, and sustained-frame evidence remain open.
+- iPhone UVC capture support is unknown and is not claimed. USB-C connector presence or advertised link speed is not physical AVFoundation compatibility evidence.
+- The current target is an 11-inch iPad Pro, third generation (`iPad13,4`), but iPadOS, cable, UVC, thermal, and sustained-frame evidence remain open.
 
-## TODO Official Form Fields
+## Official Form Fields
 
 - `28249` — Submitter Type: `Individual`
 - `28250` — Country: `United States`
@@ -132,7 +138,7 @@ Guidelines checks.
 - `28254` — Live URL: `https://roarcad.vercel.app/`
 - `28255` — Testing instructions: use the eight numbered steps above; no credentials required
 - `28256` — Public repository: `https://github.com/jongan69/RoarCAD`
-- `28257` — Tested clients: update only after the four-tool Chrome and ChatGPT in-app-browser checkpoint journeys pass against production.
+- `28257` — Tested clients: `Chrome 149 with WebMCP testing enabled and ChatGPT's in-app browser. Both completed the production checkpoint journey; Chrome executed the four live tools and ChatGPT completed the clean-profile handoff and manual fallback surfaces.`
 - `28258` — AI tools: `Codex and ChatGPT. Codex assisted research, implementation, debugging, browser acceptance testing, documentation, and submission preparation. ChatGPT supported product exploration and the in-app-browser fallback review.`
 - `28259` — Learning: `Significant`
 - `28260` — Career AI value: `Yes`
