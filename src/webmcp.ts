@@ -33,7 +33,7 @@ const draftInput = z.object({
   requirements: z.string().min(1).max(5_000),
   design: boardGraphSchema.optional(),
 })
-export const inspectFocusSchema = z.enum([
+export const INSPECT_FOCUSES = [
   "overview",
   "requirements",
   "components",
@@ -42,7 +42,8 @@ export const inspectFocusSchema = z.enum([
   "risks",
   "validation",
   "history",
-])
+] as const
+export const inspectFocusSchema = z.enum(INSPECT_FOCUSES)
 export type InspectFocus = z.infer<typeof inspectFocusSchema>
 const inspectInput = z.object({
   revisionId: z.string(),
@@ -328,16 +329,7 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
         {
           revisionId: { type: "string" },
           focus: {
-            enum: [
-              "overview",
-              "requirements",
-              "components",
-              "nets",
-              "evidence",
-              "risks",
-              "validation",
-              "history",
-            ],
+            enum: INSPECT_FOCUSES,
           },
           ids: { type: "array", maxItems: 20, items: { type: "string", maxLength: 120 } },
           cursor: { type: "integer", minimum: 0 },
@@ -378,8 +370,6 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
         const change = await actions.preview(parsed.revisionId, parsed.request, parsed.operations)
         return text({
           changeId: change.id,
-          baseRevisionId: change.baseRevisionId,
-          summary: change.summary,
           candidateHash: change.candidateHash,
           readinessBefore: change.readinessBefore,
           readinessAfter: change.readinessAfter,

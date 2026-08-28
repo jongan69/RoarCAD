@@ -19,6 +19,7 @@ test("returns focused, paginated inspection results within the tool budget", asy
     const result = inspectProject(project, project.currentRevisionId, focus)
     expect(result.revisionId).toBe(project.currentRevisionId)
     expect(result.focus).toBe(focus)
+    expect(result.nextAction.length).toBeGreaterThan(0)
     expect(JSON.stringify(result).length).toBeLessThanOrEqual(1_500)
   }
 
@@ -26,8 +27,8 @@ test("returns focused, paginated inspection results within the tool budget", asy
     items: unknown[]
     nextCursor?: number
   }
-  expect(first.nextCursor).toBe(5)
-  const second = inspectProject(project, project.currentRevisionId, "components", undefined, 5) as {
+  expect(first.nextCursor).toBe(2)
+  const second = inspectProject(project, project.currentRevisionId, "components", undefined, 2) as {
     items: unknown[]
   }
   expect(second.items).not.toEqual(first.items)

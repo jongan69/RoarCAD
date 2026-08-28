@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import {
   adoptCheckpoint,
+  checkpointSchema,
   compareCheckpoint,
   createCheckpoint,
   decodeCheckpoint,
@@ -44,6 +45,21 @@ test("rejects corrupted and oversized checkpoint links", async () => {
   await expect(
     parseCheckpointFile(JSON.stringify({ ...checkpoint, note: "modified after hashing" })),
   ).rejects.toThrow("integrity")
+})
+
+test("rejects oversized ancestry IDs and non-HTTP evidence URLs", async () => {
+  const project = await createProject("indicator", "Power indicator", indicatorSnapshot)
+  const checkpoint = await createCheckpoint(project)
+
+  expect(
+    checkpointSchema.safeParse({ ...checkpoint, ancestorRevisionIds: ["x".repeat(81)] }).success,
+  ).toBe(false)
+
+  const unsafeSnapshot = structuredClone(indicatorSnapshot)
+  unsafeSnapshot.evidence[0].sourceUrl = "javascript:alert(1)"
+  const unsafeProject = await createProject("unsafe", "Unsafe evidence", unsafeSnapshot)
+  const unsafeCheckpoint = await createCheckpoint(unsafeProject)
+  await expect(encodeCheckpoint(unsafeCheckpoint)).rejects.toThrow("HTTP")
 })
 
 test("classifies returned and stale checkpoints without merging them", async () => {

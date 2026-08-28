@@ -10,6 +10,7 @@ import {
   createCheckpoint,
   decodeCheckpoint,
   forkCheckpoint,
+  MAX_CHECKPOINT_BYTES,
   parseCheckpointFile,
 } from "./checkpoints"
 import {
@@ -76,6 +77,8 @@ export default function App() {
     null,
   )
   const [incomingCheckpoint, setIncomingCheckpoint] = useState<Checkpoint | null>(null)
+  const incomingCheckpointRef = useRef<Checkpoint | null>(null)
+  const [backupPreparedKey, setBackupPreparedKey] = useState<string | null>(null)
   const lastViewerMoveRef = useRef("")
 
   useEffect(() => {
@@ -110,14 +113,26 @@ export default function App() {
       void saveStoredProject(project).catch(() => setNotice("Project persistence failed."))
   }, [project])
 
+  useEffect(() => {
+    incomingCheckpointRef.current = incomingCheckpoint
+    setBackupPreparedKey(null)
+  }, [incomingCheckpoint])
+
   const requireProject = useCallback(() => {
     if (!projectRef.current) throw new Error("Project is not loaded.")
     return projectRef.current
   }, [])
 
+  const requireWritableWorkspace = useCallback(() => {
+    if (incomingCheckpointRef.current) {
+      throw new Error("Dismiss, continue, or adopt the incoming checkpoint before changing state.")
+    }
+  }, [])
+
   const actions = useMemo(
     () => ({
       draft: async (requirements: string, design?: BoardGraph) => {
+        requireWritableWorkspace()
         const next = await createProject(
           design ? "custom-board" : "requirements-draft",
           design ? "Custom PCB board" : "Blocked requirements draft",
@@ -141,6 +156,7 @@ export default function App() {
         request: string,
         operations: Parameters<typeof previewChange>[3],
       ) => {
+        requireWritableWorkspace()
         const next = await previewChange(
           requireProject(),
           revisionId,
@@ -153,6 +169,7 @@ export default function App() {
         return next
       },
       prepare: async (revisionId: string, targets: string[], requestedClass: ArtifactClass) => {
+        requireWritableWorkspace()
         const current = requireProject()
         if (current.currentRevisionId !== revisionId)
           throw new Error("Only the current revision can export.")
@@ -172,7 +189,7 @@ export default function App() {
         }
       },
     }),
-    [requireProject],
+    [requireProject, requireWritableWorkspace],
   )
 
   useEffect(() => registerWebMcpTools(actions), [actions])
@@ -373,7 +390,8 @@ export default function App() {
         setNotice("Checkpoint link prepared below. Copy it manually or download the file.")
       }
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Checkpoint sharing failed.")
+      const message = error instanceof Error ? error.message : "Checkpoint sharing failed."
+      setNotice(`${message} Use Download checkpoint for the JSON fallback.`)
     }
   }
 
@@ -395,19 +413,33 @@ export default function App() {
     history.replaceState(null, "", `${location.pathname}${location.search}`)
   }
 
+  const incomingBackupKey = incomingCheckpoint
+    ? `${project.id}:${revision.id}:${incomingCheckpoint.head.id}`
+    : null
+
+  const downloadLocalBackup = () => {
+    if (!incomingBackupKey) return
+    downloadText(
+      JSON.stringify(project, null, 2),
+      `${project.id}-${revision.id}-backup.roarcad.json`,
+    )
+    setBackupPreparedKey(incomingBackupKey)
+    setNotice("Local backup downloaded. Confirm it is saved, then continue the checkpoint.")
+  }
+
   const continueCheckpoint = async () => {
     if (!incomingCheckpoint) return
+    if (backupPreparedKey !== incomingBackupKey) {
+      setNotice("Download the current local project backup before continuing.")
+      return
+    }
     try {
-      downloadText(
-        JSON.stringify(project, null, 2),
-        `${project.id}-${revision.id}-backup.roarcad.json`,
-      )
       const fork = await forkCheckpoint(incomingCheckpoint)
       setProject(fork)
       setChange(null)
       changeRef.current = null
       clearIncomingCheckpoint()
-      setNotice("Checkpoint continued as a local fork. The previous project was downloaded.")
+      setNotice("Checkpoint continued as a local fork after the explicit backup step.")
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Checkpoint fork failed.")
     }
@@ -449,11 +481,12 @@ export default function App() {
           >
             Export project
           </button>
-          <label className="button">
+          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
             Import project
             <input
               className="visually-hidden"
               type="file"
+              disabled={Boolean(incomingCheckpoint)}
               accept=".json,.roarcad.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -473,6 +506,7 @@ export default function App() {
         <button
           className={project.id === "indicator" ? "active" : ""}
           type="button"
+          disabled={Boolean(incomingCheckpoint)}
           onClick={() => void selectReference("indicator")}
         >
           Indicator vertical slice
@@ -480,6 +514,7 @@ export default function App() {
         <button
           className={project.id === "capture" ? "active" : ""}
           type="button"
+          disabled={Boolean(incomingCheckpoint)}
           onClick={() => void selectReference("capture")}
         >
           PocketRoar engineering example
@@ -502,24 +537,37 @@ export default function App() {
             maxLength={500}
             placeholder="Optional handoff note"
             value={checkpointNote}
+            disabled={Boolean(incomingCheckpoint)}
             onChange={(event) => setCheckpointNote(event.target.value)}
           />
-          <button type="button" onClick={() => void shareCheckpoint()}>
+          <button
+            type="button"
+            disabled={Boolean(incomingCheckpoint)}
+            onClick={() => void shareCheckpoint()}
+          >
             Copy checkpoint link
           </button>
-          <button type="button" onClick={() => void downloadCheckpoint()}>
+          <button
+            type="button"
+            disabled={Boolean(incomingCheckpoint)}
+            onClick={() => void downloadCheckpoint()}
+          >
             Download checkpoint
           </button>
-          <label className="button">
+          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
             Import checkpoint
             <input
               className="visually-hidden"
               type="file"
+              disabled={Boolean(incomingCheckpoint)}
               accept=".json,.roarcad-checkpoint.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
                 if (!file) return
                 try {
+                  if (file.size > MAX_CHECKPOINT_BYTES) {
+                    throw new Error("Checkpoint file is too large.")
+                  }
                   setIncomingCheckpoint(await parseCheckpointFile(await file.text()))
                   setNotice("Checkpoint file loaded for read-only review.")
                 } catch (error) {
@@ -566,7 +614,7 @@ export default function App() {
               <strong>Semantic diff</strong>
               {incomingChanges.length ? (
                 <ul>
-                  {incomingChanges.slice(0, 20).map((item) => (
+                  {incomingChanges.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -579,7 +627,14 @@ export default function App() {
               unreviewed, and divergent PCB state is never auto-merged.
             </p>
             <div className="checkpoint-actions">
-              <button type="button" onClick={() => void continueCheckpoint()}>
+              <button type="button" onClick={downloadLocalBackup}>
+                Download local backup
+              </button>
+              <button
+                type="button"
+                disabled={backupPreparedKey !== incomingBackupKey}
+                onClick={() => void continueCheckpoint()}
+              >
                 Continue as local fork
               </button>
               <button
@@ -602,7 +657,7 @@ export default function App() {
         )}
       </section>
 
-      <section className="workspace">
+      <section className="workspace" inert={incomingCheckpoint ? true : undefined}>
         <aside className="panel requirements">
           <div className="panel-heading">
             <span>01</span>

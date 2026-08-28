@@ -1,7 +1,7 @@
 import { type BoardProject, boardProjectSchema, validateSnapshot } from "./domain"
 import type { InspectFocus } from "./webmcp"
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 2
 const short = (value: string, maximum = 120) =>
   value.length <= maximum ? value : `${value.slice(0, maximum - 1)}…`
 
@@ -32,6 +32,7 @@ export function inspectProject(
     revisionId,
     focus,
     readiness: validation.readiness,
+    nextAction: "Inspect another page or preview a focused change.",
   }
 
   if (focus === "overview") {
@@ -59,11 +60,11 @@ export function inspectProject(
         .filter(({ id }) => !selected || selected.has(id))
         .map(({ id, label, value, required, status, evidenceIds }) => ({
           id,
-          label: short(label),
-          value: value ? short(value) : undefined,
+          label: short(label, 80),
+          value: value ? short(value, 80) : undefined,
           required,
           status,
-          evidenceIds,
+          evidenceIds: evidenceIds.slice(0, 6).map((id) => short(id, 40)),
         })),
       cursor,
     )
@@ -76,10 +77,10 @@ export function inspectProject(
         .filter(({ reference }) => !selected || selected.has(reference))
         .map(({ reference, mpn, manufacturer, value, footprint, placement, reviewStatus }) => ({
           reference,
-          mpn: short(mpn),
-          manufacturer: short(manufacturer),
-          value,
-          footprint: short(footprint.identifier),
+          mpn: short(mpn, 80),
+          manufacturer: short(manufacturer, 80),
+          value: value ? short(value, 80) : undefined,
+          footprint: short(footprint.identifier, 80),
           footprintReviewed: footprint.reviewed,
           reviewStatus,
           placement,
@@ -96,7 +97,7 @@ export function inspectProject(
         .map(({ name, className, members }) => ({
           name,
           className,
-          members: members.slice(0, 12),
+          members: members.slice(0, 6).map((member) => short(member, 40)),
           memberCount: members.length,
         })),
       cursor,
@@ -110,7 +111,7 @@ export function inspectProject(
         .filter(({ id }) => !selected || selected.has(id))
         .map(({ id, title, kind, official, reviewed, revision: sourceRevision }) => ({
           id,
-          title: short(title),
+          title: short(title, 80),
           kind,
           sourceRevision,
           official,
@@ -123,7 +124,7 @@ export function inspectProject(
 
   if (focus === "risks") {
     const result = page(
-      snapshot.unresolvedRisks.map((risk) => short(risk, 240)),
+      snapshot.unresolvedRisks.map((risk) => short(risk, 180)),
       cursor,
     )
     return { ...base, summary: "Unresolved engineering risks.", ...result }
@@ -134,11 +135,11 @@ export function inspectProject(
       [
         ...validation.errors.map((message) => ({
           severity: "error",
-          message: short(message, 240),
+          message: short(message, 180),
         })),
         ...validation.warnings.map((message) => ({
           severity: "warning",
-          message: short(message, 240),
+          message: short(message, 180),
         })),
       ],
       cursor,

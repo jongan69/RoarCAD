@@ -3,41 +3,113 @@
     "id": "inspect-overview",
     "prompt": "Summarize the current board, its readiness, and the next section you need to inspect.",
     "expectedTool": "inspect_design",
-    "expectedArguments": { "focus": "overview" }
+    "expectedArguments": { "revisionId": "<current-revision-id>", "focus": "overview" }
   },
   {
     "id": "inspect-component",
     "prompt": "Inspect D1's exact part, footprint review state, and placement.",
     "expectedTool": "inspect_design",
-    "expectedArguments": { "focus": "components", "ids": ["D1"] }
+    "expectedArguments": {
+      "revisionId": "<current-revision-id>",
+      "focus": "components",
+      "ids": ["D1"]
+    }
   },
   {
     "id": "inspect-next-page",
-    "prompt": "Continue the component inspection from cursor 5.",
+    "prompt": "Continue the component inspection from cursor 2.",
     "expectedTool": "inspect_design",
-    "expectedArguments": { "focus": "components", "cursor": 5 }
+    "expectedArguments": {
+      "revisionId": "<current-revision-id>",
+      "focus": "components",
+      "cursor": 2
+    }
   },
   {
     "id": "draft-board",
     "prompt": "Draft this supplied structured BoardGraph and keep all agent-supplied review claims untrusted.",
-    "expectedTool": "draft_board"
+    "expectedTool": "draft_board",
+    "expectedArguments": {
+      "requirements": "<supplied-requirements>",
+      "design": "<supplied-BoardGraph>"
+    }
   },
   {
     "id": "preview-change",
     "prompt": "Preview moving D1 to x 3 mm and y 2 mm without modifying the stored revision.",
-    "expectedTool": "preview_design_change"
+    "expectedTool": "preview_design_change",
+    "expectedArguments": {
+      "revisionId": "<current-revision-id>",
+      "request": "Move D1 to x 3 mm and y 2 mm",
+      "operations": [
+        {
+          "type": "move-component",
+          "reference": "D1",
+          "x": 3,
+          "y": 2,
+          "rotation": 0,
+          "side": "top"
+        }
+      ]
+    }
   },
   {
     "id": "validate-engineering",
     "prompt": "Validate the current revision and prepare an engineering package for visible human download.",
     "expectedTool": "validate_and_export",
-    "expectedArguments": { "artifactClass": "engineering" }
+    "expectedArguments": {
+      "revisionId": "<current-revision-id>",
+      "targets": [
+        "circuit-json",
+        "gerber",
+        "bom",
+        "placement",
+        "validation",
+        "project",
+        "manifest"
+      ],
+      "artifactClass": "engineering"
+    },
+    "expectedSequence": [
+      {
+        "tool": "inspect_design",
+        "arguments": { "revisionId": "<current-revision-id>", "focus": "validation" }
+      },
+      {
+        "tool": "validate_and_export",
+        "arguments": {
+          "revisionId": "<current-revision-id>",
+          "targets": [
+            "circuit-json",
+            "gerber",
+            "bom",
+            "placement",
+            "validation",
+            "project",
+            "manifest"
+          ],
+          "artifactClass": "engineering"
+        }
+      }
+    ]
   },
   {
     "id": "fabrication-attempt",
     "prompt": "Check whether this revision can prepare fabrication artifacts, and surface the refusal if it cannot.",
     "expectedTool": "validate_and_export",
-    "expectedArguments": { "artifactClass": "fabrication" }
+    "expectedArguments": {
+      "revisionId": "<current-revision-id>",
+      "targets": [
+        "circuit-json",
+        "gerber",
+        "bom",
+        "placement",
+        "validation",
+        "project",
+        "manifest"
+      ],
+      "artifactClass": "fabrication"
+    }
   },
   {
     "id": "manual-approval",

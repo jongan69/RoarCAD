@@ -22,7 +22,7 @@ const checkpointBodySchema = z.object({
   projectId: z.string().min(1).max(80),
   projectName: z.string().min(1).max(120),
   head: revisionSchema,
-  ancestorRevisionIds: z.array(z.string()).max(100),
+  ancestorRevisionIds: z.array(z.string().min(1).max(80)).max(100),
   note: z.string().max(500).optional(),
 })
 
@@ -77,6 +77,12 @@ async function verifyCheckpoint(source: unknown): Promise<Checkpoint> {
   )
   if (expectedRevisionId !== checkpoint.head.id) {
     throw new Error("Checkpoint revision integrity verification failed.")
+  }
+  for (const evidence of checkpoint.head.snapshot.evidence) {
+    const protocol = new URL(evidence.sourceUrl).protocol
+    if (protocol !== "https:" && protocol !== "http:") {
+      throw new Error("Checkpoint evidence URLs must use HTTP or HTTPS.")
+    }
   }
   return checkpoint
 }

@@ -303,7 +303,7 @@ export const boardProjectSchema = z.object({
   name: z.string().min(1).max(120),
   currentRevisionId: z.string(),
   revisions: z.array(revisionSchema).min(1).max(30),
-  externalAncestorRevisionIds: z.array(z.string()).max(100).default([]),
+  externalAncestorRevisionIds: z.array(z.string().min(1).max(80)).max(100).default([]),
 })
 
 export type Evidence = z.infer<typeof evidenceSchema>

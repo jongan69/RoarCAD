@@ -185,6 +185,14 @@ test("executes the agent journey without applying the preview", async () => {
     operationCount: number
     waitingForHumanApproval: boolean
   }
+  expect(Object.keys(previewText).sort()).toEqual([
+    "candidateHash",
+    "changeId",
+    "operationCount",
+    "readinessAfter",
+    "readinessBefore",
+    "waitingForHumanApproval",
+  ])
   expect(previewText.changeId).toMatch(/^[a-f0-9]{16}$/)
   expect(previewText.operationCount).toBe(1)
   expect(previewText.waitingForHumanApproval).toBe(true)
@@ -196,7 +204,7 @@ test("executes the agent journey without applying the preview", async () => {
   expect(requireProject().revisions).toHaveLength(1)
 }, 15_000)
 
-test("keeps descriptions and every tool output within Chrome budgets", async () => {
+test("keeps descriptions and representative tool outputs within Chrome budgets", async () => {
   const tools = new Map<string, RegisteredTool>()
   Object.defineProperty(globalThis, "document", {
     configurable: true,
@@ -210,8 +218,13 @@ test("keeps descriptions and every tool output within Chrome budgets", async () 
     },
   })
   registerWebMcpTools({
-    draft: async () => ({ message: "x".repeat(2_000) }),
-    inspect: async () => ({ message: "x".repeat(2_000) }),
+    draft: async () => ({ revisionId: "revision-1", status: "drafted", nextAction: "Inspect." }),
+    inspect: async () => ({
+      revisionId: "revision-1",
+      focus: "overview",
+      summary: "Power indicator: fabrication-ready",
+      nextAction: "Inspect a focused section before proposing a change.",
+    }),
     preview: async () => ({
       id: "change-1",
       baseRevisionId: "revision-1",
@@ -225,16 +238,37 @@ test("keeps descriptions and every tool output within Chrome budgets", async () 
       readinessBefore: "engineering",
       readinessAfter: "engineering",
     }),
-    prepare: async () => ({ message: "x".repeat(2_000) }),
+    prepare: async () => ({
+      revisionId: "revision-1",
+      artifactClass: "engineering",
+      readiness: "engineering",
+      manifestHash: "b".repeat(64),
+      humanDownloadRequired: true,
+    }),
   })
   await Promise.resolve()
 
   for (const tool of tools.values()) expect(tool.description.length).toBeLessThanOrEqual(500)
-  const inspect = tools.get("inspect_design")
-  if (!inspect) throw new Error("inspect_design was not registered.")
-  await expect(inspect.execute({ revisionId: "revision-1", focus: "overview" })).rejects.toThrow(
-    "1,500",
-  )
+  const inputs = {
+    draft_board: { requirements: "green LED" },
+    inspect_design: { revisionId: "revision-1", focus: "overview" },
+    preview_design_change: {
+      revisionId: "revision-1",
+      request: "Move D1",
+      operations: [
+        { type: "move-component", reference: "D1", x: 3, y: 2, rotation: 0, side: "top" },
+      ],
+    },
+    validate_and_export: {
+      revisionId: "revision-1",
+      targets: ["validation"],
+      artifactClass: "engineering",
+    },
+  } as const
+  for (const [name, tool] of tools) {
+    const result = await tool.execute(inputs[name as keyof typeof inputs])
+    expect(result.content[0].text.length).toBeLessThanOrEqual(1_500)
+  }
 })
 
 test("registration is idempotent when Chrome cannot unregister tools", async () => {
