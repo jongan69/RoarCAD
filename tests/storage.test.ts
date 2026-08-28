@@ -51,7 +51,6 @@ test("a pristine PocketRoar reference never becomes the live demo startup", asyn
   unrelatedSnapshot.requirements[0].value = "A different imported design"
   const unrelated = await createProject("capture", "Imported capture design", unrelatedSnapshot)
   expect(chooseStartupProject(unrelated, indicator, pocketRoar)).toBe(unrelated)
-
   const preview = await previewChange(pocketRoar, pocketRoar.currentRevisionId, "Move U1", [
     { type: "move-component", reference: "U1", x: 1, y: 1, rotation: 0, side: "top" },
   ])
