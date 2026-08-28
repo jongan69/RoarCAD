@@ -36,3 +36,13 @@ Jonathan chose an AI-led demo centered on visibly building the PocketRoar design
 - Whisper timed 405 authored words into 234 clean caption cards with 0.936 authored-text similarity; the sidecar is `artifacts/demo/roarcad-demo-final.srt`.
 - Every product frame comes from the deployed application. The preview and approved revision captures were regenerated through the live Chrome WebMCP page before assembly.
 - Jonathan still owns the public YouTube upload, logged-out replay, URL handoff, and final Devpost submit action.
+
+## 2026-08-28 zero-error PocketRoar production release
+
+- The shared footprint compiler was the root cause of the large false-error count: raw pad arrays created copper pads without routable PCB ports.
+- The repaired fixture uses exact KiCad-derived HDMI and USB-C pad geometry, corrected bridge-critical BGA balls, the correct 19.2 MHz CX3 clock part, net-class widths, and explicit BGA escape paths.
+- PocketRoar revision `c204a71b354abeff` produces 2,566 Circuit JSON elements with zero compiler errors and zero independent checker errors. It still models only eleven routes and remains engineering-only.
+- PR `#6` merged to production as `16f3e1600998a2a35644e32a0dbc7b388de81cce`; GitHub Actions run `33217786830` passed 30 tests across nine files plus typecheck, Biome, and build, and the matching Vercel production deployment reached `READY`.
+- The in-app-browser release-candidate smoke showed zero viewer errors, stable 390×844 schematic height, exactly four WebMCP tools, and bounded focused inspection. A clean Chrome profile independently loaded the public production origin with WebMCP ready.
+- Existing edited IndexedDB projects remain preserved. A previously edited browser profile can therefore show an older PocketRoar fork until the user explicitly selects the current reference or opens a clean profile; RoarCAD does not silently delete that work.
+- The canonical Devpost draft now includes the zero-error evidence. The public entry and replacement screenshot remain separate, confirmation-gated publication work.
