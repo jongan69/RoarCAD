@@ -7,6 +7,7 @@
 - The PocketRoar capture project compiles and exports for engineering review, but must not be represented as iPhone-, iPad-, camera-, transport-, or fabrication-compatible.
 - PocketRoar artifacts include `ENGINEERING_ONLY.md`; the quote route independently rejects the project.
 - Agents cannot mark evidence, parts, or footprints reviewed. Those approvals require explicit visible human actions and create immutable revisions.
+- Beginner definitions explain general terms but never count as reviewed, part-specific engineering evidence.
 - Agents cannot apply a preview, create or adopt a shared checkpoint, download artifacts, quote, order, or pay. Those actions remain visible manual controls.
 - Checkpoint hashes detect changed content but do not identify the sender. Anyone with a checkpoint link can read its design, and all incoming approvals are reset before local readiness is calculated.
 - Divergent checkpoints require a semantic-diff review and whole-snapshot adoption; RoarCAD does not auto-merge PCB graphs.

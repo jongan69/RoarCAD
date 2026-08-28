@@ -23,8 +23,27 @@ describe("generic board domain", () => {
     expect(captureBridgeSnapshot.requirements).toContainEqual(
       expect.objectContaining({ id: "req-video-only", status: "verified" }),
     )
+    expect(captureBridgeSnapshot.requirements).toContainEqual(
+      expect.objectContaining({
+        id: "req-host",
+        status: "blocked",
+        label: expect.stringContaining("iPhone"),
+      }),
+    )
     expect(captureBridgeSnapshot.design?.components).toContainEqual(
       expect.objectContaining({ reference: "U10", mpn: "TPD1S514-1YZR" }),
+    )
+    expect(captureBridgeSnapshot.design?.components).toContainEqual(
+      expect.objectContaining({ reference: "Y2", mpn: "ECS-2520MVLC-192-BN-TR" }),
+    )
+    expect(captureBridgeSnapshot.design?.nets).toContainEqual(
+      expect.objectContaining({ name: "CSI_CLK_P", members: ["U1.pin24", "U2.pin95"] }),
+    )
+    expect(captureBridgeSnapshot.design?.nets).toContainEqual(
+      expect.objectContaining({ name: "USB_TX_P", members: ["U2.pin5", "U3.pin1"] }),
+    )
+    expect(validateSnapshot(captureBridgeSnapshot).warnings).toContain(
+      "Differential-pair impedance, coupling, and routed-length skew are recorded constraints but are not verified by the current compiler.",
     )
   })
 

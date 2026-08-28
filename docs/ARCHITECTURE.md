@@ -8,6 +8,8 @@ An immutable `CheckpointV1` contains one revision, bounded ancestor IDs, an opti
 
 Readiness is independent from a clean compile: `blocked` cannot compile, `engineering` can export a watermarked review package, and `fabrication-ready` may request manufacturing. Evidence, parts, and footprints supplied by an agent are forcibly downgraded to unreviewed; only visible human actions can approve them.
 
+Plain-language component definitions are presentation aids only. They do not add evidence, resolve requirements, identify a part's exact circuit role, or change readiness.
+
 The browser sends a size-bounded project and manufacturing configuration to same-origin Vercel functions. The server parses `BoardProjectV2`, verifies the current revision and layer count, recompiles a fabrication package, and only then considers JLCPCB. Credentials, request signing, and expiring quote tokens remain server-only. The current provider adapter returns an honest manual-upload fallback until the approved quote contract is known.
 
 Both the indicator and PocketRoar are ordinary fixture data using the same compiler. PocketRoar remains a separate, untouched codebase; its RoarCAD project is an engineering candidate and preserves every physical and provider evidence gate.

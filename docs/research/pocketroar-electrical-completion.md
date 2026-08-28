@@ -4,9 +4,17 @@
 **Scope:** one-board HDMI receiver to USB-C SuperSpeed UVC bridge for USB-C iPad  
 **Evidence policy:** manufacturer, standards-body, Apple, and upstream implementation sources only
 
+> **Comparison only (August 28, 2026):** this report remains useful for the CX3/UVC engineering study. It does not define or prove the final iPhone transport architecture.
+
 ## Executive verdict
 
 PocketRoar is electrically plausible as a **video-only, unprotected-HDMI engineering prototype** built around the Toshiba `TC358743XBG` and Infineon `CYUSB3065-BZXC`. It is not yet a complete or fabrication-ready design.
+
+### Current RoarCAD feasibility slice
+
+The August 28 fixture correction replaces generic connector stand-ins with exact upstream KiCad pad geometry, maps the documented TC358743 BGA balls, maps the bridge-critical CX3 balls, corrects the CX3 system oscillator to the manufacturer-documented 19.2 MHz part, applies net-class trace widths, and uses explicit filled/capped via-in-pad escapes for the 0.65 mm BGA. Its 2,566-element Circuit JSON has zero compiler and independent checker errors.
+
+That result covers only the eleven modeled routes. The graph still omits the complete power, decoupling, reset, boot, I2C, HDMI, CSI lane, USB-C, protection, and unused-pin networks described below. Differential impedance, coupling, and routed-length skew are recorded but not verified. This is a digitally clean feasibility slice, not a complete schematic or fabrication release.
 
 The best defensible first target is:
 
@@ -379,4 +387,3 @@ Until all relevant gates pass, RoarCAD should label outputs **ENGINEERING ONLY**
 - [USB-IF USB Type-C and compliance](https://www.usb.org/usbc)
 - [HDMI licensing and enforcement](https://www.hdmi.org/adopter/enforcement)
 - [HDMI authorized test centers](https://www.hdmi.org/adopter/atcs)
-

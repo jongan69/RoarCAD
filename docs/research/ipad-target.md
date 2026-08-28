@@ -1,5 +1,7 @@
 # PocketRoar iPad target evidence
 
+> **Comparison only (August 28, 2026):** this record supports the UVC engineering study. The PocketRoar product target is an iPhone, so this iPad evidence cannot establish product compatibility.
+
 ## Paired-device identity
 
 - Name: Jons iPad Pro

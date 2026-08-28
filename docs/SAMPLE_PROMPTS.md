@@ -24,4 +24,4 @@ Then use the visible **Approve & apply** button. There is deliberately no agent-
 
 ## PocketRoar stress test
 
-> Inspect the current PocketRoar revision. Separate compile/check results from missing electrical, firmware, SI/PI, DFM, and physical iPad evidence. Prepare an engineering package, then explain why fabrication and quoting remain blocked.
+> Inspect the current PocketRoar UVC bridge study. Separate compile/check results from the missing final iPhone transport, electrical, firmware, SI/PI, DFM, and physical-device evidence. Prepare an engineering package, then explain why fabrication and quoting remain blocked.

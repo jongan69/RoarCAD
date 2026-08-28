@@ -38,6 +38,7 @@ import {
   type PreparedExport,
   prepareExport,
 } from "./eda"
+import { componentDefinition } from "./explanations"
 import { inspectProject } from "./inspection"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
 import { environmentMonitorGraph, environmentMonitorRequirements } from "./samples"
@@ -87,7 +88,7 @@ export default function App() {
         const [stored, starter, bundledPocketRoar] = await Promise.all([
           loadStoredProject(),
           createProject("indicator", "Power indicator", indicatorSnapshot),
-          createProject("capture", "PocketRoar Capture Bridge", captureBridgeSnapshot),
+          createProject("capture", "PocketRoar UVC Bridge Study", captureBridgeSnapshot),
         ])
         setProject(chooseStartupProject(stored, starter, bundledPocketRoar))
       } catch {
@@ -253,7 +254,7 @@ export default function App() {
   const selectReference = async (reference: "indicator" | "capture") => {
     const next = await createProject(
       reference,
-      reference === "indicator" ? "Power indicator" : "PocketRoar Capture Bridge",
+      reference === "indicator" ? "Power indicator" : "PocketRoar UVC Bridge Study",
       reference === "indicator" ? indicatorSnapshot : captureBridgeSnapshot,
     )
     setArtifactClass(reference === "indicator" ? "fabrication" : "engineering")
@@ -519,7 +520,7 @@ export default function App() {
           disabled={Boolean(incomingCheckpoint)}
           onClick={() => void selectReference("capture")}
         >
-          PocketRoar engineering example
+          PocketRoar engineering study
         </button>
         <span>{notice}</span>
       </section>
@@ -674,6 +675,33 @@ export default function App() {
                 : "No board graph"}
             </span>
           </div>
+          <details className="plain-language-guide">
+            <summary>New to circuit boards? Start here</summary>
+            <p>
+              The schematic explains which parts are electrically connected. The PCB view shows
+              where those physical parts and copper paths sit on the manufactured board.
+            </p>
+            <dl>
+              <div>
+                <dt>Part</dt>
+                <dd>A physical item such as a resistor, connector, or chip.</dd>
+              </div>
+              <div>
+                <dt>Connection</dt>
+                <dd>A named electrical path between part pins. Engineers call it a net.</dd>
+              </div>
+              <div>
+                <dt>Footprint</dt>
+                <dd>The exact pad pattern and space used to solder a part onto the board.</dd>
+              </div>
+              <div>
+                <dt>Engineering</dt>
+                <dd>
+                  Reviewable, but still blocked from manufacturing until its open risks close.
+                </dd>
+              </div>
+            </dl>
+          </details>
           <div className="requirements-list">
             {revision.snapshot.requirements.map((item) => (
               <article key={item.id}>
@@ -694,7 +722,7 @@ export default function App() {
               </article>
             ))}
           </div>
-          <h2>Architecture</h2>
+          <h2>How it works</h2>
           <ol>
             {revision.snapshot.architecture.map((line) => (
               <li key={line}>{line}</li>
@@ -702,7 +730,7 @@ export default function App() {
           </ol>
           {design && (
             <>
-              <h2>Components & footprints</h2>
+              <h2>Parts</h2>
               <div className="requirements-list">
                 {design.components.map((component) => (
                   <article key={component.reference}>
@@ -713,8 +741,9 @@ export default function App() {
                       <strong>
                         {component.reference} · {component.mpn}
                       </strong>
+                      <small>{componentDefinition(component.kind)}</small>
                       <small>
-                        {component.kind} · {component.footprint.source}:
+                        Technical: {component.kind} · {component.footprint.source}:
                         {component.footprint.identifier}
                       </small>
                       {(component.reviewStatus !== "reviewed" || !component.footprint.reviewed) && (
@@ -735,7 +764,7 @@ export default function App() {
                   </article>
                 ))}
               </div>
-              <h2>Nets & constraints</h2>
+              <h2>Connections & constraints</h2>
               <ol>
                 {design.nets.map((net) => (
                   <li key={net.name}>
@@ -745,7 +774,7 @@ export default function App() {
               </ol>
             </>
           )}
-          <h2>Evidence</h2>
+          <h2>Evidence: why we trust it</h2>
           {revision.snapshot.evidence.length ? (
             revision.snapshot.evidence.map((item) => (
               <div className="evidence-row" key={item.id}>
@@ -831,7 +860,7 @@ export default function App() {
                     lastViewerMoveRef.current = ""
                   }}
                 >
-                  {canvasEditing ? "Lock placement" : "Unlock placement"}
+                  {canvasEditing ? "Finish moving parts" : "Move parts on the board"}
                 </button>
               )}
             </div>

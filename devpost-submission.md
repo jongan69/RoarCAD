@@ -102,6 +102,7 @@ Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-
 - Checkpoint links and JSON files for safe review, separate forks, meaningful comparison, return, and deliberate adoption.
 - A generic 1–10 layer `BoardGraph` covering parts, pins, connections, physical pad layouts, placement, copper, holes, and safety rules.
 - PCB and schematic diagrams, automated checks, and manufacturing-file preparation through tscircuit.
+- Plain-English definitions for every supported part kind, with exact part and footprint details retained for technical review.
 - Digital fingerprints for previews and revisions, plus rejection of proposals based on old work.
 - Human-only review of requirements, evidence, parts, and footprints.
 - Clear separation between an engineering candidate and a fabrication-ready board.
@@ -119,11 +120,15 @@ Three boards demonstrate one project-independent compiler:
 | --- | --- |
 | Power indicator | Compiles, passes the fabrication gate, and prepares Gerber/BOM/CPL artifacts for a human-controlled download. |
 | Environmental monitor | Starts from a new structured brief and completes the bounded engineering workflow with agent inputs visibly unreviewed. |
-| PocketRoar Capture Bridge | Compiles an eight-layer engineering candidate and prepares review artifacts while fabrication export and quoting remain blocked. |
+| PocketRoar Capture Bridge | Compiles a 2,566-element eight-layer feasibility slice with zero compiler/checker errors and prepares review artifacts while fabrication export and quoting remain blocked. |
 
-PocketRoar is the deliberate stress test. The current eight-layer graph explores clean non-HDCP HDMI into a Toshiba `TC358743XBG`, four-lane MIPI CSI-2 into an Infineon `CYUSB3065-BZXC` CX3 bridge, then UVC over USB-C. RoarCAD compiles it and produces engineering-review artifacts, but the research exposed a decisive limitation: standard UVC is a supported native path on USB-C iPads, not a demonstrated iPhone ingest path.
+PocketRoar is the deliberate stress test. The current eight-layer graph explores clean non-HDCP HDMI into a Toshiba `TC358743XBG`, four-lane MIPI CSI-2 into an Infineon `CYUSB3065-BZXC` CX3 bridge, then UVC over USB-C. The repaired feasibility slice uses exact upstream KiCad connector geometry, documented bridge-critical BGA balls, the correct 19.2 MHz CX3 clock part, net-class widths, and explicit via-in-pad escapes. RoarCAD deterministically produces 2,566 Circuit JSON elements with zero compiler or independent checker errors.
+
+That is useful digital evidence, not a claim that the complete product works. Only eleven routes are modeled; the full support schematic, differential impedance/coupling/skew, power behavior, firmware, manufacturing process, and physical hardware remain unproven. The research also exposed a decisive product limitation: standard UVC is a supported native path on USB-C iPads, not a demonstrated iPhone ingest path.
 
 The intended PocketRoar product therefore needs a SeeMo-class architecture—HDMI ingest, hardware video compression, an iPhone-compatible USB/accessory transport, and a native PocketRoar Mobile integration—rather than merely shipping the current UVC candidate. RoarCAD blocks fabrication because that transport architecture, connector mechanics, power, firmware, signal integrity, licensing, and physical iPhone evidence remain unresolved. That refusal is intentional proof that an ambitious design can be useful without being falsely certified for manufacture.
+
+RoarCAD also begins translating the engineering surface for newcomers. The app explains what each general kind of part normally does and uses clearer labels such as **How it works**, **Parts**, and **Connections**, while preserving exact manufacturer data, footprints, nets, evidence, and validation results for expert audit. It never guesses a part's exact purpose from its type alone.
 
 ## Architecture
 
@@ -200,8 +205,15 @@ Guidelines checks.
 - It does not replace professional schematic, SI/PI, DFM, compliance, or physical validation.
 - JLCPCB live quoting remains disabled until the approved endpoint contract is verified.
 - PocketRoar is an engineering candidate, not a fabrication-ready or physically validated product.
+- PocketRoar's zero-error feasibility slice is not a complete schematic; differential-pair impedance, coupling, and skew remain unverified.
 - The current CX3/UVC graph is not the final iPhone bridge. It does not yet implement SeeMo-class H.264 compression or an app-specific iPhone accessory transport.
 - iPhone ingest, accessory/compliance requirements, cable behavior, thermals, sustained frames, reconnects, and simultaneous cellular streaming all require physical proof before compatibility is claimed.
+
+## What's Next
+
+The next RoarCAD usability step is clickable schematic auditing: select a part, read its general definition, see its exact BoardGraph connections, and keep proposed design intent separate from reviewed evidence. Functional drag-and-drop blocks such as USB power or a status light are research ideas, not shipped features; any future visual edit must still become a typed preview and wait for visible human approval.
+
+For PocketRoar, the next gate is transport proof on the exact Sony camera, iPhone, iOS version, cable, and PocketRoar app. After that comes a complete reviewed schematic, zero unexplained ERC and DRC findings, vendor-model power and high-speed analysis, fabricator DFM review, current-limited prototype bring-up, and sustained physical-device testing. A clean render or manufacturing-file export cannot replace those gates.
 
 ## Inspiration Sources
 

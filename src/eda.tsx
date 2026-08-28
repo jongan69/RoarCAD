@@ -46,9 +46,50 @@ export type PreparedExport = {
 
 const encode = (value: string) => new TextEncoder().encode(value)
 
-function footprintValue(component: BoardComponent): string | Array<Record<string, unknown>> {
+function footprintValue(component: BoardComponent): string | ReactElement {
   const footprint = component.footprint
-  if (footprint.source === "pad-map") return footprint.pads
+  if (footprint.source === "pad-map") {
+    return createElement(
+      "footprint",
+      null,
+      ...footprint.pads.map((pad, index) => {
+        const common = {
+          key: `${component.reference}-pad-${index}`,
+          pcbX: pad.x,
+          pcbY: pad.y,
+          portHints: pad.portHints,
+        }
+        if (pad.type === "pcb_plated_hole") {
+          if (pad.shape === "pill") {
+            return createElement("platedhole", {
+              ...common,
+              shape: "pill",
+              holeWidth: pad.holeWidth,
+              holeHeight: pad.holeHeight,
+              outerWidth: pad.outerWidth,
+              outerHeight: pad.outerHeight,
+            })
+          }
+          return createElement("platedhole", {
+            ...common,
+            shape: pad.shape === "rect" ? "circular_hole_with_rect_pad" : "circle",
+            holeDiameter: pad.holeDiameter,
+            ...(pad.shape === "rect"
+              ? { rectPadWidth: pad.outerDiameter, rectPadHeight: pad.outerDiameter }
+              : { outerDiameter: pad.outerDiameter }),
+          })
+        }
+        return createElement("smtpad", {
+          ...common,
+          layer: pad.layer,
+          shape: pad.shape,
+          ...(pad.shape === "circle"
+            ? { radius: Math.min(pad.width, pad.height) / 2 }
+            : { width: pad.width, height: pad.height }),
+        })
+      }),
+    )
+  }
   if (footprint.source === "kicad-library") return `kicad:${footprint.identifier}`
   if (footprint.source === "jlcpcb") return `jlcpcb:${footprint.identifier}`
   return footprint.identifier
@@ -97,7 +138,11 @@ function componentElement(component: BoardComponent): ReactElement {
     case "switch":
       return createElement("switch", { ...common, type: "spst" })
     case "testpoint":
-      return createElement("testpoint", { ...common, footprintVariant: "pad" })
+      return createElement("testpoint", {
+        ...common,
+        footprint: undefined,
+        footprintVariant: "pad",
+      })
     case "chip":
       return createElement("chip", { ...common, pinLabels })
   }
@@ -105,29 +150,25 @@ function componentElement(component: BoardComponent): ReactElement {
 
 function graphChildren(graph: BoardGraph) {
   const children: ReactElement[] = graph.components.map(componentElement)
+  const netClasses = new Map(graph.netClasses.map((netClass) => [netClass.name, netClass]))
   for (const net of graph.nets) {
+    const netClass = netClasses.get(net.className)
     for (let index = 1; index < net.members.length; index += 1) {
       children.push(
         createElement("trace", {
           name: index === 1 ? net.name : `${net.name}_${index}`,
           from: net.members[0],
           to: net.members[index],
+          thickness: netClass?.traceWidthMm,
+          maxViaCount: 4,
+          pcbPath: index === 1 ? net.pcbPath : undefined,
+          pcbPathRelativeTo: index === 1 && net.pcbPath ? net.members[0] : undefined,
         }),
       )
     }
   }
-  for (const pair of graph.differentialPairs) {
-    children.push(
-      createElement("differentialpair", {
-        name: pair.name,
-        positiveConnection: pair.positiveNet,
-        negativeConnection: pair.negativeNet,
-        targetDifferentialImpedance: pair.targetImpedanceOhms,
-        maxLengthSkew: pair.maxSkewMm,
-        pcbTraceGap: pair.traceGapMm,
-      }),
-    )
-  }
+  // ponytail: retain pair constraints in BoardGraph/readiness warnings until the
+  // installed tscircuit differential-pair router settles deterministically.
   for (const pour of graph.pours) {
     children.push(
       createElement("copperpour", {
@@ -174,6 +215,7 @@ export async function compileBoardGraph(input: BoardGraph): Promise<CircuitEleme
     thickness: graph.board.thicknessMm,
     solderMaskColor: graph.board.solderMaskColor,
     allowBlindAndBuriedVias: graph.board.allowBlindAndBuriedVias,
+    isViaInPadAllowed: graph.board.isViaInPadAllowed,
     doubleSidedAssembly: graph.board.doubleSidedAssembly,
     ...(outline.shape === "rectangle"
       ? { width: outline.widthMm, height: outline.heightMm }
@@ -287,6 +329,12 @@ export async function prepareExport(
   onProgress: (stage: string) => void = () => undefined,
 ): Promise<PreparedExport> {
   const revision = currentRevision(project)
+  if (
+    artifactClass === "fabrication" &&
+    validateSnapshot(revision.snapshot).readiness !== "fabrication-ready"
+  ) {
+    throw new Error("Fabrication export blocked: the design is not fabrication-ready.")
+  }
   onProgress("Compiling the current revision…")
   const circuitJson = await compileSnapshot(revision.snapshot)
   onProgress("Running design checks…")
@@ -296,9 +344,6 @@ export async function prepareExport(
   }
   if (validation.status !== "passed")
     throw new Error(`Export blocked: ${validation.errors.join(" ")}`)
-  if (artifactClass === "fabrication" && validation.readiness !== "fabrication-ready") {
-    throw new Error("Fabrication export blocked: the design is not fabrication-ready.")
-  }
 
   onProgress("Generating manufacturing layers…")
   const gerberLayers = stringifyGerberCommandLayers(

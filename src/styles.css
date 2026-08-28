@@ -640,6 +640,32 @@ dt {
 dd {
   margin: 0;
 }
+.plain-language-guide {
+  margin-bottom: 18px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.plain-language-guide summary {
+  cursor: pointer;
+  color: var(--copper);
+  font-size: 11px;
+  font-weight: 700;
+}
+.plain-language-guide p,
+.plain-language-guide dd {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.plain-language-guide dl {
+  margin-bottom: 0;
+}
+.plain-language-guide dt {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
 .quote {
   margin-top: 12px;
   border: 1px solid var(--warn);
