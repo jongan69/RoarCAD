@@ -48,6 +48,10 @@ button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 a {
   color: #d9b28f;
 }
@@ -162,6 +166,103 @@ main {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.collaboration {
+  margin: 14px 20px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(440px, 2fr);
+  gap: 16px;
+}
+.collaboration h2 {
+  margin: 4px 0 8px;
+  color: #e8e6df;
+}
+.collaboration p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.checkpoint-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.checkpoint-controls input:not(.visually-hidden),
+.checkpoint-link textarea {
+  color: inherit;
+  background: #121210;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.checkpoint-controls input:not(.visually-hidden) {
+  min-width: 220px;
+  flex: 1;
+}
+.checkpoint-link,
+.checkpoint-review {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.checkpoint-link summary {
+  cursor: pointer;
+  color: #d9b28f;
+  font-size: 12px;
+}
+.checkpoint-link textarea {
+  width: 100%;
+  min-height: 76px;
+  margin-top: 8px;
+  resize: vertical;
+}
+.checkpoint-review {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(260px, 1fr) minmax(280px, 1.4fr);
+  gap: 16px;
+}
+.checkpoint-review > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.checkpoint-review dl {
+  margin: 0;
+}
+.checkpoint-review dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+.checkpoint-diff {
+  font-size: 11px;
+}
+.checkpoint-diff ul {
+  max-height: 112px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #c7c3b9;
+}
+.checkpoint-warning,
+.checkpoint-actions {
+  grid-column: 1 / -1;
+}
+.checkpoint-warning {
+  border-left: 2px solid var(--warn);
+  padding-left: 10px;
+}
+.checkpoint-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .workspace {
   display: grid;
@@ -523,7 +624,7 @@ fieldset legend {
 .manufacture fieldset label {
   font-size: 11px;
 }
-dl {
+.manufacture dl {
   border-top: 1px solid var(--line);
 }
 .manufacture dl div {
@@ -618,6 +719,22 @@ dd {
     margin-left: 0;
     max-width: 100%;
   }
+  .collaboration,
+  .checkpoint-review {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .checkpoint-controls {
+    justify-content: flex-start;
+  }
+  .checkpoint-controls input:not(.visually-hidden) {
+    flex-basis: 100%;
+  }
+  .checkpoint-link,
+  .checkpoint-review,
+  .checkpoint-warning,
+  .checkpoint-actions {
+    grid-column: 1;
+  }
   .workspace {
     grid-template-columns: minmax(0, 1fr);
     height: auto;
@@ -630,6 +747,7 @@ dd {
     max-height: 560px;
   }
   .canvas-panel {
+    height: 680px;
     min-height: 680px;
   }
   .canvas-toolbar {

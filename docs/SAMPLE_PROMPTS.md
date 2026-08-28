@@ -16,7 +16,7 @@ The resulting design must stay at engineering readiness because agent-provided r
 
 > Inspect revision `<revision-id>` for readiness and unresolved risks. Preview moving U1 to x 3 mm, y 1 mm without changing stored state. Return the change ID and readiness transition, then wait for human approval.
 
-> Apply change `<change-id>` to revision `<revision-id>`.
+Then use the visible **Approve & apply** button. There is deliberately no agent-callable apply tool.
 
 ## Export boundary
 

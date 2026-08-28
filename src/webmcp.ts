@@ -33,13 +33,29 @@ const draftInput = z.object({
   requirements: z.string().min(1).max(5_000),
   design: boardGraphSchema.optional(),
 })
-const inspectInput = z.object({ revisionId: z.string(), query: z.string().min(1).max(1_000) })
+export const INSPECT_FOCUSES = [
+  "overview",
+  "requirements",
+  "components",
+  "nets",
+  "evidence",
+  "risks",
+  "validation",
+  "history",
+] as const
+export const inspectFocusSchema = z.enum(INSPECT_FOCUSES)
+export type InspectFocus = z.infer<typeof inspectFocusSchema>
+const inspectInput = z.object({
+  revisionId: z.string(),
+  focus: inspectFocusSchema,
+  ids: z.array(z.string().min(1).max(120)).max(20).optional(),
+  cursor: z.number().int().min(0).optional(),
+})
 const previewInput = z.object({
   revisionId: z.string(),
   request: z.string().min(1).max(500),
   operations: z.array(changeOperationSchema).min(1).max(50),
 })
-const applyInput = z.object({ revisionId: z.string(), changeId: z.string() })
 const exportInput = z.object({
   revisionId: z.string(),
   targets: z
@@ -53,9 +69,13 @@ const exportInput = z.object({
 
 export type WebMcpActions = {
   draft(requirements: string, design?: BoardGraph): Promise<unknown>
-  inspect(revisionId: string, query: string): Promise<unknown>
+  inspect(
+    revisionId: string,
+    focus: InspectFocus,
+    ids?: string[],
+    cursor?: number,
+  ): Promise<unknown>
   preview(revisionId: string, request: string, operations: ChangeOperation[]): Promise<DesignChange>
-  apply(revisionId: string, changeId: string): Promise<unknown>
   prepare(revisionId: string, targets: string[], artifactClass: ArtifactClass): Promise<unknown>
 }
 
@@ -265,9 +285,15 @@ const operationJsonSchema = {
   },
 } as const
 
-const text = (value: unknown): ToolResult => ({
-  content: [{ type: "text", text: JSON.stringify(value, null, 2) }],
-})
+const MAX_TOOL_OUTPUT_CHARACTERS = 1_500
+
+const text = (value: unknown): ToolResult => {
+  const output = JSON.stringify(value)
+  if (output.length > MAX_TOOL_OUTPUT_CHARACTERS) {
+    throw new Error("WebMCP tool output exceeds the 1,500 character budget.")
+  }
+  return { content: [{ type: "text", text: output }] }
+}
 
 export function registerWebMcpTools(actions: WebMcpActions): () => void {
   const context = document.modelContext
@@ -298,15 +324,24 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
       name: "inspect_design",
       title: "Inspect design",
       description:
-        "Read requirements, evidence, risks, validation, and revision state without changing it.",
+        "Read one focused, paginated section of a board revision without changing project state.",
       inputSchema: objectSchema(
-        { revisionId: { type: "string" }, query: { type: "string", maxLength: 1000 } },
-        ["revisionId", "query"],
+        {
+          revisionId: { type: "string" },
+          focus: {
+            enum: INSPECT_FOCUSES,
+          },
+          ids: { type: "array", maxItems: 20, items: { type: "string", maxLength: 120 } },
+          cursor: { type: "integer", minimum: 0 },
+        },
+        ["revisionId", "focus"],
       ),
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input) => {
         const parsed = inspectInput.parse(input)
-        return text(await actions.inspect(parsed.revisionId, parsed.query))
+        return text(
+          await actions.inspect(parsed.revisionId, parsed.focus, parsed.ids, parsed.cursor),
+        )
       },
     },
     {
@@ -332,20 +367,15 @@ export function registerWebMcpTools(actions: WebMcpActions): () => void {
       annotations: { untrustedContentHint: true },
       execute: async (input) => {
         const parsed = previewInput.parse(input)
-        return text(await actions.preview(parsed.revisionId, parsed.request, parsed.operations))
-      },
-    },
-    {
-      name: "apply_design_change",
-      title: "Apply design change",
-      description: "Apply a previously previewed change to its current base revision.",
-      inputSchema: objectSchema({ revisionId: { type: "string" }, changeId: { type: "string" } }, [
-        "revisionId",
-        "changeId",
-      ]),
-      execute: async (input) => {
-        const parsed = applyInput.parse(input)
-        return text(await actions.apply(parsed.revisionId, parsed.changeId))
+        const change = await actions.preview(parsed.revisionId, parsed.request, parsed.operations)
+        return text({
+          changeId: change.id,
+          candidateHash: change.candidateHash,
+          readinessBefore: change.readinessBefore,
+          readinessAfter: change.readinessAfter,
+          operationCount: change.operations.length,
+          waitingForHumanApproval: true,
+        })
       },
     },
     {

@@ -135,8 +135,9 @@ Position RoarCAD as the product: a transparent browser PCB workbench where human
 
 ### B2. Close the live product journey
 
-- Verify the five tools in deployed WebMCP-enabled Chrome.
-- Prove draft → inspect → preview → apply → validate/export.
+- Verify the four bounded tools in deployed WebMCP-enabled Chrome.
+- Prove draft → focused inspect → non-mutating preview → visible human approval → validate/export.
+- Complete a clean-profile share → continue → return → compare → adopt checkpoint handoff.
 - Show the indicator reaching fabrication-ready.
 - Show PocketRoar exporting engineering-only artifacts while fabrication and quoting remain blocked.
 - Verify manual mode in the ChatGPT in-app browser and zero console errors.

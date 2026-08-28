@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json --pretty false && tsc --noEmit -p tsconfig.node.json --pretty false",
     "check": "biome check .",
     "check:write": "biome check --write .",
+    "eval:webmcp": "bun test tests/webmcp-evals.test.ts",
     "test": "bun test"
   },
   "dependencies": {

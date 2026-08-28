@@ -12,11 +12,11 @@ AI-generated PCB designs can look complete while hiding missing requirements, un
 
 ## Solution
 
-RoarCAD is a local-first browser PCB workbench where a person and an AI agent operate the same structured, versioned `BoardGraph`. The agent can draft, inspect, preview, apply, validate, and prepare exports through five page-bound WebMCP tools. The person sees the same requirements, evidence, diff, readiness, artifacts, and manufacturing boundary and retains the approval decisions.
+RoarCAD is a local-first, agent-native PCB review and handoff system. One engineer shares an immutable checkpoint, a coauthor continues it with an agent, and the original author reviews the common ancestry and semantic diff before adopting the returned revision. Four page-bound WebMCP tools let agents draft, inspect, preview, and validate designs; only the visible human approval control can create the proposed revision.
 
 ## Why WebMCP
 
-PCB work is a poor fit for agents guessing their way through buttons or editing opaque files. WebMCP gives the agent five bounded operations over the exact board revision already open in the browser. That creates a shared, inspectable workflow: the agent can reason over requirements and propose a deterministic change, while the person can see its evidence, semantic diff, generated board, readiness, and manufacturing consequences before approving it.
+PCB work is a poor fit for agents guessing their way through buttons or editing opaque files. WebMCP gives the agent four bounded operations over the exact board revision already open in the browser. The agent can reason over a focused slice of requirements or design state and propose a deterministic change, while the person sees the semantic diff and remains the only authority that can apply it.
 
 This was difficult to do safely with ordinary browser automation. A visual agent could move the wrong component, act on a stale revision, or mistake a clean-looking render for manufacturing approval. RoarCAD's schemas, revision hashes, non-mutating previews, and human-only evidence review turn those hidden assumptions into explicit product state.
 
@@ -34,7 +34,8 @@ Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-
 
 ## Key Features
 
-- Exactly five WebMCP tools sharing the manual UI’s validated actions.
+- Four focused WebMCP tools sharing the manual UI’s validated domain actions, with no agent-callable apply operation.
+- Immutable, integrity-checked checkpoint links and JSON files for read-only review, explicit local forks, semantic comparison, return, and adoption.
 - Generic 1–10 layer `BoardGraph` with bounded components, pins, nets, footprints, placement, differential pairs, pours, holes, keepouts, and constraints.
 - tscircuit PCB and schematic compilation, viewing, checks, and manufacturing exports.
 - Deterministic preview hashes, stale-change rejection, and immutable revisions.
@@ -46,14 +47,14 @@ Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-
 
 ## What Works Today
 
-The deployed app completes the full `draft_board` → `inspect_design` → `preview_design_change` → `apply_design_change` → `validate_and_export` journey in WebMCP-enabled Chrome. The same app remains fully usable in manual mode when WebMCP is unavailable.
+The contest update supports `draft_board` → focused `inspect_design` → `preview_design_change` → visible **Approve & apply** → `validate_and_export`. Checkpoint links open read-only and never overwrite IndexedDB; continuing or adopting requires an explicit human action. The same app remains fully usable in manual mode when WebMCP is unavailable.
 
 Three boards demonstrate one project-independent compiler:
 
 | Board | Demonstrated result |
 | --- | --- |
 | Power indicator | Compiles, passes the fabrication gate, and prepares Gerber/BOM/CPL artifacts for a human-controlled download. |
-| Environmental monitor | Starts from a new structured brief and completes the five-tool engineering workflow with agent inputs visibly unreviewed. |
+| Environmental monitor | Starts from a new structured brief and completes the bounded engineering workflow with agent inputs visibly unreviewed. |
 | PocketRoar Capture Bridge | Compiles an eight-layer engineering candidate and prepares review artifacts while fabrication export and quoting remain blocked. |
 
 PocketRoar's refusal is intentional proof of the product's safety model: an ambitious design can be useful for engineering review without being falsely certified for manufacture.
@@ -66,10 +67,12 @@ React and TypeScript own the workspace. Zod validates every project and tool arg
 
 1. Open the live URL in ChatGPT’s in-app browser, or enable `chrome://flags/#enable-webmcp-testing` in Chrome and relaunch.
 2. Confirm the header says `WebMCP ready` when the browser exposes `document.modelContext`; otherwise use the complete manual workflow.
-3. Open the indicator, preview moving D1, confirm the revision ID is unchanged, approve it, and observe a new revision.
-4. Prepare a fabrication bundle and confirm the browser requires a visible download click.
-5. Open PocketRoar, prepare an engineering bundle, then confirm fabrication export and quoting remain blocked.
-6. In the manual BoardGraph editor, load the environmental-monitor sample, draft it, and confirm its agent-supplied requirements, parts, footprints, and evidence are unreviewed.
+3. Open the indicator, create a checkpoint link, and open it in a clean browser profile. Confirm it starts read-only.
+4. Continue the checkpoint as a local fork, preview moving D1 with an agent, confirm the revision ID is unchanged, then click **Approve & apply** and observe a new revision.
+5. Return the new checkpoint to the original profile. Confirm the common ancestor and semantic diff, then manually adopt it as a new local revision.
+6. Prepare a fabrication bundle and confirm the browser requires a visible download click.
+7. Open PocketRoar, prepare an engineering bundle, then confirm fabrication export and quoting remain blocked.
+8. Load the environmental-monitor sample and confirm its agent-supplied requirements, parts, footprints, and evidence are unreviewed.
 
 No credentials are required.
 
@@ -102,7 +105,7 @@ Guidelines checks.
 
 - Devpost authentication and registration were verified live on August 26, 2026.
 - The accepted `dev` revision passed CI and deployed successfully.
-- WebMCP-enabled Chrome exposed exactly five tools and completed the full generic-board journey with no application console errors.
+- The original submitted build exposed five tools; the contest update intentionally removes agent-callable apply and requires a new four-tool Chrome and ChatGPT browser acceptance run before publication.
 - ChatGPT's in-app browser completed the manual fallback journey without horizontal overflow or application console errors.
 - Indicator, PocketRoar, and environmental-monitor screenshots are tracked in the public repository.
 - The final local video master is 2:24 at 1920×1080 with audible Grady narration and 234 Whisper-timed caption cards. Its SHA-256 is `b40d8626f7bdceb93daab855df8ec064db786f21b1897386922e05e043c3bcb0`.
@@ -127,9 +130,9 @@ Guidelines checks.
 - `28252` — App Status: `New`
 - `28253` — Existing-project explanation: leave blank. The repository began August 25, 2026 at 23:34 UTC, after the submission period opened.
 - `28254` — Live URL: `https://roarcad.vercel.app/`
-- `28255` — Testing instructions: use the six numbered steps above; no credentials required
+- `28255` — Testing instructions: use the eight numbered steps above; no credentials required
 - `28256` — Public repository: `https://github.com/jongan69/RoarCAD`
-- `28257` — Tested clients: `Google Chrome 149+ with WebMCP enabled for all five tools; ChatGPT in-app browser for the complete manual progressive-enhancement workflow.`
+- `28257` — Tested clients: update only after the four-tool Chrome and ChatGPT in-app-browser checkpoint journeys pass against production.
 - `28258` — AI tools: `Codex and ChatGPT. Codex assisted research, implementation, debugging, browser acceptance testing, documentation, and submission preparation. ChatGPT supported product exploration and the in-app-browser fallback review.`
 - `28259` — Learning: `Significant`
 - `28260` — Career AI value: `Yes`
@@ -137,7 +140,7 @@ Guidelines checks.
 
 ## Judging-Criteria Review
 
-- **WebMCP Leverage:** five non-trivial page-bound tools expose a complete, stateful engineering workflow rather than a prompt wrapper.
+- **WebMCP Leverage:** four non-trivial page-bound tools expose bounded engineering work while the absence of agent-callable apply makes the human authorization boundary verifiable.
 - **Execution:** the live product compiles three boards, renders PCB and schematic views, creates immutable revisions, runs checks, and prepares internally hashed artifacts.
 - **Potential Impact:** visible evidence and manufacturing gates reduce the cost and safety risk of hidden assumptions in AI-assisted hardware design.
 - **Creativity & Ambition:** RoarCAD combines browser agents, typed PCB modeling, EDA compilation, provenance, and manufacturing authorization in one human-agent workspace.
