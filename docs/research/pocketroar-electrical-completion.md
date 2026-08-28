@@ -4,6 +4,8 @@
 **Scope:** one-board HDMI receiver to USB-C SuperSpeed UVC bridge for USB-C iPad  
 **Evidence policy:** manufacturer, standards-body, Apple, and upstream implementation sources only
 
+> **Comparison only (August 28, 2026):** this report remains useful for the CX3/UVC engineering study. It does not define or prove the final iPhone transport architecture.
+
 ## Executive verdict
 
 PocketRoar is electrically plausible as a **video-only, unprotected-HDMI engineering prototype** built around the Toshiba `TC358743XBG` and Infineon `CYUSB3065-BZXC`. It is not yet a complete or fabrication-ready design.
@@ -379,4 +381,3 @@ Until all relevant gates pass, RoarCAD should label outputs **ENGINEERING ONLY**
 - [USB-IF USB Type-C and compliance](https://www.usb.org/usbc)
 - [HDMI licensing and enforcement](https://www.hdmi.org/adopter/enforcement)
 - [HDMI authorized test centers](https://www.hdmi.org/adopter/atcs)
-

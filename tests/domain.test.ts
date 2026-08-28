@@ -23,6 +23,13 @@ describe("generic board domain", () => {
     expect(captureBridgeSnapshot.requirements).toContainEqual(
       expect.objectContaining({ id: "req-video-only", status: "verified" }),
     )
+    expect(captureBridgeSnapshot.requirements).toContainEqual(
+      expect.objectContaining({
+        id: "req-host",
+        status: "blocked",
+        label: expect.stringContaining("iPhone"),
+      }),
+    )
     expect(captureBridgeSnapshot.design?.components).toContainEqual(
       expect.objectContaining({ reference: "U10", mpn: "TPD1S514-1YZR" }),
     )

@@ -867,10 +867,10 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     },
     {
       id: "req-host",
-      label: "Exact USB-C iPad and iPadOS version",
-      value: "iPad Pro 11-inch (3rd generation), iPad13,4; iPadOS and cable pending",
+      label: "Exact iPhone transport and iOS version",
+      value: "SeeMo-class compressed-video accessory path is not yet proven",
       required: true,
-      status: "unverified",
+      status: "blocked",
       evidenceIds: ["ev-apple-external-camera"],
     },
     {
@@ -891,7 +891,8 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
   ],
   architecture: [
     "Clean non-HDCP HDMI → TC358743XBG → four-lane MIPI CSI-2 → CYUSB3065-BZXC",
-    "CYUSB3065 UVC output → HD3SS3212 mux → USB-C iPad host",
+    "CYUSB3065 UVC output → HD3SS3212 mux → USB-C UVC comparison path",
+    "Final iPhone path requires proven video compression and app-compatible accessory transport",
     "USB-C VBUS protection → current limit → 1.2 V / 1.8 V / 3.3 V → 2.5 V analog rail",
   ],
   evidence: captureEvidence,
@@ -905,7 +906,7 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     "Resolve the 1.6 mm HDMI versus 0.8 mm USB-C connector thickness conflict.",
     "Run regulator transient SPICE with vendor models and the CX3 PHY startup load.",
     "Run HDMI, MIPI, and USB channel analysis with the approved stackup and public models.",
-    "Prove known UVC capture on the exact iPad, OS, cable, and orientation.",
+    "Prove the final transport on the exact iPhone, iOS, cable, and PocketRoar app; UVC comparison results are not sufficient.",
     "Measure HDMI lock, CSI counters, UVC enumeration, reconnect, thermal behavior, and five-hour soak.",
     "Review stackup, impedance, power integrity, return paths, EMI/ESD, enclosure, licensing, and DFM.",
   ],
@@ -982,7 +983,7 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     "TC358743-to-CX3 timing and the target 1080p30 mode are unmeasured.",
     "USB-C current policy and CX3 1.2 V startup transient are unverified.",
     "Order-specific stackup, SI/DFM, licensing, thermal, EMI/ESD, and enclosure mechanics remain open.",
-    "Exact iPad compatibility requires physical-device proof.",
+    "Exact iPhone transport, decoding, app integration, and compatibility require physical-device proof.",
   ],
 })
 

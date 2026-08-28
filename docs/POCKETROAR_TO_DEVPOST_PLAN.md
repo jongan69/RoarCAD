@@ -2,6 +2,8 @@
 
 > **Product correction (August 28, 2026):** the iPad/UVC work below is an engineering comparison, not the PocketRoar target. PocketRoar exists to bring a Sony or other camera feed into an iPhone through a SeeMo-class HDMI/compression/accessory bridge. The current CX3/UVC graph does not prove that goal and must remain blocked. Use [`research/pocketroar-iphone-capture-inspiration.md`](./research/pocketroar-iphone-capture-inspiration.md) before revising the hardware plan.
 
+> **Status:** this plan is retained as historical engineering research. Its iPad-focused workstream is not the active product architecture. Start with [`PROJECT_CHECKPOINT.md`](./PROJECT_CHECKPOINT.md), prove the iPhone transport on development hardware, and only then write the final PCB plan.
+
 ## Objective
 
 Ship RoarCAD as the complete hackathon product and use PocketRoar as its ambitious, evidence-gated reference design. The demo must show an agent drafting, inspecting, changing, validating, and exporting a real board while RoarCAD blocks unsupported fabrication claims.

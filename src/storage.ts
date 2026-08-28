@@ -4,6 +4,7 @@ const DB_NAME = "roarcad"
 const STORE_NAME = "projects"
 const CURRENT_KEY = "current"
 const LEGACY_KEY = "roarcad-project-v1"
+const LEGACY_POCKETROAR_REVISION_IDS = new Set(["56147af9ff46a3ee"])
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -40,7 +41,10 @@ export function chooseStartupProject(
   const isPristinePocketRoar =
     stored?.id === bundledPocketRoar.id &&
     stored.revisions.length === 1 &&
-    stored.currentRevisionId === bundledPocketRoar.currentRevisionId
+    stored.currentRevisionId === stored.revisions[0].id &&
+    (stored.currentRevisionId === bundledPocketRoar.currentRevisionId ||
+      LEGACY_POCKETROAR_REVISION_IDS.has(stored.currentRevisionId)) &&
+    stored.revisions[0].summary === "Initial design"
   return isPristinePocketRoar ? starter : (stored ?? starter)
 }
 
