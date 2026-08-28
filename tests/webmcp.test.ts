@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import {
-  applyChange,
   type BoardProject,
   boardGraphSchema,
   createDraftSnapshot,
@@ -17,12 +16,13 @@ import { registerWebMcpTools } from "../src/webmcp"
 
 type RegisteredTool = {
   name: string
+  description: string
   inputSchema: Record<string, unknown>
   annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean }
   execute(input: unknown): Promise<{ content: Array<{ type: "text"; text: string }> }>
 }
 
-test("registers and directly executes exactly five page tools", async () => {
+test("registers four bounded tools and keeps approval human-only", async () => {
   const tools = new Map<string, RegisteredTool>()
   const context = {
     registerTool(tool: RegisteredTool) {
@@ -57,13 +57,11 @@ test("registers and directly executes exactly five page tools", async () => {
     draft: async () => ({ status: "drafted" }),
     inspect: async () => ({ status: "inspected" }),
     preview: async () => change,
-    apply: async () => ({ status: "applied" }),
     prepare: async () => ({ status: "prepared", humanDownloadRequired: true }),
   })
   await Promise.resolve()
 
   expect([...tools.keys()].sort()).toEqual([
-    "apply_design_change",
     "draft_board",
     "inspect_design",
     "preview_design_change",
@@ -90,7 +88,7 @@ test("registers and directly executes exactly five page tools", async () => {
   )
   await context.executeTool(
     tool("inspect_design"),
-    JSON.stringify({ revisionId: "revision-1", query: "risks" }),
+    JSON.stringify({ revisionId: "revision-1", focus: "risks" }),
   )
   await context.executeTool(
     tool("preview_design_change"),
@@ -101,10 +99,6 @@ test("registers and directly executes exactly five page tools", async () => {
         { type: "move-component", reference: "D1", x: 3, y: 2, rotation: 0, side: "top" },
       ],
     }),
-  )
-  await context.executeTool(
-    tool("apply_design_change"),
-    JSON.stringify({ revisionId: "revision-1", changeId: "change-1" }),
   )
   await context.executeTool(
     tool("validate_and_export"),
@@ -119,7 +113,7 @@ test("registers and directly executes exactly five page tools", async () => {
   expect(tools.size).toBe(0)
 })
 
-test("executes the complete five-tool journey against real domain actions", async () => {
+test("executes the agent journey without applying the preview", async () => {
   const tools = new Map<string, RegisteredTool>()
   const context = {
     registerTool(tool: RegisteredTool) {
@@ -152,20 +146,14 @@ test("executes the complete five-tool journey against real domain actions", asyn
       )
       return { revisionId: project.currentRevisionId }
     },
-    inspect: async (revisionId) => {
+    inspect: async (revisionId, focus) => {
       const revision = project?.revisions.find(({ id }) => id === revisionId)
       if (!revision) throw new Error("Revision not found.")
-      return validateSnapshot(revision.snapshot)
+      return { focus, validation: validateSnapshot(revision.snapshot) }
     },
     preview: async (revisionId, request, operations) => {
       pending = await previewChange(requireProject(), revisionId, request, operations)
       return pending
-    },
-    apply: async (revisionId, changeId) => {
-      if (!pending || pending.id !== changeId || pending.baseRevisionId !== revisionId)
-        throw new Error("Preview mismatch.")
-      project = await applyChange(requireProject(), pending)
-      return { revisionId: project.currentRevisionId }
     },
     prepare: async (revisionId, _targets, artifactClass) => {
       const current = requireProject()
@@ -186,24 +174,68 @@ test("executes the complete five-tool journey against real domain actions", asyn
     design: environmentMonitorGraph,
   })
   const draftedRevision = currentRevision(requireProject()).id
-  await execute("inspect_design", { revisionId: draftedRevision, query: "readiness and evidence" })
+  await execute("inspect_design", { revisionId: draftedRevision, focus: "validation" })
   const previewResult = await execute("preview_design_change", {
     revisionId: draftedRevision,
     request: "Move U1 for airflow",
     operations: [{ type: "move-component", reference: "U1", x: 3, y: 1, rotation: 0, side: "top" }],
   })
-  const previewText = JSON.parse(previewResult.content[0].text) as DesignChange
-  await execute("apply_design_change", {
-    revisionId: draftedRevision,
-    changeId: previewText.id,
-  })
+  const previewText = JSON.parse(previewResult.content[0].text) as {
+    changeId: string
+    operationCount: number
+    waitingForHumanApproval: boolean
+  }
+  expect(previewText.changeId).toMatch(/^[a-f0-9]{16}$/)
+  expect(previewText.operationCount).toBe(1)
+  expect(previewText.waitingForHumanApproval).toBe(true)
   await execute("validate_and_export", {
-    revisionId: currentRevision(requireProject()).id,
+    revisionId: draftedRevision,
     targets: ["circuit-json", "gerber", "bom", "placement", "validation", "project", "manifest"],
     artifactClass: "engineering",
   })
-  expect(requireProject().revisions).toHaveLength(2)
+  expect(requireProject().revisions).toHaveLength(1)
 }, 15_000)
+
+test("keeps descriptions and every tool output within Chrome budgets", async () => {
+  const tools = new Map<string, RegisteredTool>()
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: {
+      modelContext: {
+        registerTool(tool: RegisteredTool) {
+          tools.set(tool.name, tool)
+        },
+        getTools: () => Promise.resolve([...tools.values()]),
+      },
+    },
+  })
+  registerWebMcpTools({
+    draft: async () => ({ message: "x".repeat(2_000) }),
+    inspect: async () => ({ message: "x".repeat(2_000) }),
+    preview: async () => ({
+      id: "change-1",
+      baseRevisionId: "revision-1",
+      request: "Move D1",
+      summary: "Move D1",
+      evidenceIds: [],
+      operations: [
+        { type: "move-component", reference: "D1", x: 3, y: 2, rotation: 0, side: "top" },
+      ],
+      candidateHash: "a".repeat(64),
+      readinessBefore: "engineering",
+      readinessAfter: "engineering",
+    }),
+    prepare: async () => ({ message: "x".repeat(2_000) }),
+  })
+  await Promise.resolve()
+
+  for (const tool of tools.values()) expect(tool.description.length).toBeLessThanOrEqual(500)
+  const inspect = tools.get("inspect_design")
+  if (!inspect) throw new Error("inspect_design was not registered.")
+  await expect(inspect.execute({ revisionId: "revision-1", focus: "overview" })).rejects.toThrow(
+    "1,500",
+  )
+})
 
 test("registration is idempotent when Chrome cannot unregister tools", async () => {
   const tools = new Map<string, RegisteredTool>()
@@ -224,12 +256,11 @@ test("registration is idempotent when Chrome cannot unregister tools", async () 
     draft: async () => ({}),
     inspect: async () => ({}),
     preview: async () => ({}) as DesignChange,
-    apply: async () => ({}),
     prepare: async () => ({}),
   }
   registerWebMcpTools(actions)
   await Promise.resolve()
   registerWebMcpTools(actions)
   await Promise.resolve()
-  expect(tools.size).toBe(5)
+  expect(tools.size).toBe(4)
 })

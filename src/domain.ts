@@ -303,6 +303,7 @@ export const boardProjectSchema = z.object({
   name: z.string().min(1).max(120),
   currentRevisionId: z.string(),
   revisions: z.array(revisionSchema).min(1).max(30),
+  externalAncestorRevisionIds: z.array(z.string()).max(100).default([]),
 })
 
 export type Evidence = z.infer<typeof evidenceSchema>
@@ -1065,13 +1066,22 @@ export function validateSnapshot(snapshot: DesignSnapshot): Validation {
   }
 }
 
-async function createRevision(
+export async function computeRevisionId(
+  parentId: string | null,
+  summary: string,
+  snapshot: DesignSnapshot,
+): Promise<string> {
+  const parsed = snapshotSchema.parse(snapshot)
+  return (await sha256(stableStringify({ parentId, summary, snapshot: parsed }))).slice(0, 16)
+}
+
+export async function createRevision(
   parentId: string | null,
   summary: string,
   snapshot: DesignSnapshot,
 ): Promise<Revision> {
   const parsed = snapshotSchema.parse(snapshot)
-  const id = (await sha256(stableStringify({ parentId, summary, snapshot: parsed }))).slice(0, 16)
+  const id = await computeRevisionId(parentId, summary, parsed)
   return {
     id,
     parentId,

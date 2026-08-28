@@ -1,6 +1,6 @@
 # RoarCAD
 
-RoarCAD is a local-first browser PCB workbench where a human and an AI agent operate the same versioned `BoardGraph`. It supports custom 1–10 layer boards, exact parts and pin maps, library or embedded footprints, nets, differential pairs, placement, checks, editable PCB and schematic views, engineering/fabrication exports, and five page-bound [WebMCP](https://developer.chrome.com/docs/ai/webmcp/) tools.
+RoarCAD is a local-first browser PCB workbench where people and AI agents operate the same versioned `BoardGraph`. It supports custom 1–10 layer boards, exact parts and pin maps, library or embedded footprints, nets, differential pairs, placement, checks, editable PCB and schematic views, engineering/fabrication exports, four page-bound [WebMCP](https://developer.chrome.com/docs/ai/webmcp/) tools, and immutable team checkpoints.
 
 - [Production app](https://roarcad.vercel.app)
 - [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
@@ -23,6 +23,7 @@ Quality gates:
 bun run typecheck
 bun run check
 bun test
+bun run eval:webmcp
 bun run build
 ```
 
@@ -31,7 +32,7 @@ bun run build
 1. Draft or import a structured custom `BoardGraph` containing geometry, parts, footprints, pins, nets, and constraints.
 2. Inspect requirements, exact MPNs, official evidence, and unresolved risks.
 3. Preview a structured change or explicitly unlock placement and drag a PCB component. The canvas is locked by default and a preview never mutates stored design state.
-4. Approve and apply the preview to create an immutable revision.
+4. A person approves and applies the preview in the visible UI to create an immutable revision.
 5. Validate the graph and generated Circuit JSON.
 6. Prepare engineering or fabrication Gerber, BOM, placement, validation, digital-verification, project, and hash-manifest artifacts.
 7. Explicitly download the package or request a JLCPCB quote.
@@ -43,14 +44,19 @@ Browsers without WebMCP retain the complete manual workflow. Agents cannot order
 - `draft_board`
 - `inspect_design`
 - `preview_design_change`
-- `apply_design_change`
 - `validate_and_export`
 
-`draft_board` accepts requirements plus an optional structured `design`. `preview_design_change` accepts allowlisted operations. Supplier and agent evidence always enters unreviewed; only the visible manual UI can approve evidence, parts, and footprints.
+`draft_board` accepts requirements plus an optional structured `design`. `inspect_design` returns one focused, paginated section at a time. `preview_design_change` accepts allowlisted operations but cannot commit them. Supplier, agent, and shared-checkpoint evidence always enters unreviewed; only the visible manual UI can approve evidence, parts, footprints, or a pending change.
 
 The complete structured schemas are exposed on the registered tools and are revalidated by Zod inside the application. Reproducible prompts for requirements-only, custom-board, change, export, and PocketRoar journeys are in [sample prompts](docs/SAMPLE_PROMPTS.md).
 
 In Chrome, enable `chrome://flags/#enable-webmcp-testing` and relaunch before opening the hosted app. Unsupported browsers show **Manual mode** and retain the full workflow. Direct tool calls use the current Chrome contract: resolve the registered tool with `await document.modelContext.getTools()`, then call `document.modelContext.executeTool(tool, JSON.stringify(input))`.
+
+## Team checkpoints
+
+**Copy checkpoint link** packages the current immutable revision and ancestry into a gzip-compressed URL fragment. The fragment is not sent to Vercel, but anyone who receives it can read the design. A `.roarcad-checkpoint.json` download is available as a portable fallback.
+
+A recipient reviews the checkpoint before choosing **Continue as local fork**. They can make and human-approve changes, then share a new checkpoint back. The original author sees the common ancestor and semantic diff before choosing **Adopt as new revision**. Divergent PCB graphs are never auto-merged, checkpoint integrity does not prove sender identity, and all incoming review claims are reset to unreviewed.
 
 ## Manufacturing status
 

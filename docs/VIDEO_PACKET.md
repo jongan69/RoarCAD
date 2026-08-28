@@ -12,27 +12,26 @@ Confident technical founder, neutral American accent, warm dry timbre, brisk but
 
 | Window | Narration | Real capture |
 | --- | --- | --- |
-| 0:00–0:09 | AI can generate a PCB that looks finished while hiding bad footprints, missing evidence, stale edits, and unsafe manufacturing assumptions. RoarCAD makes every one of those risks visible. | Open on PocketRoar warnings and engineering badge. |
-| 0:09–0:18 | This is a browser PCB workbench where a person and an agent share the same requirements, board graph, schematic, validation results, and immutable revision history. | Pan across left requirements, center viewer, right checks, bottom history. |
-| 0:18–0:27 | The board is real structured data, compiled through tscircuit. The agent never edits arbitrary code, and the manual interface still works when WebMCP is unavailable. | Show PCB, schematic tab, and Manual/WebMCP badge. |
-| 0:27–0:36 | With WebMCP enabled, RoarCAD exposes exactly five bounded tools: draft, inspect, preview, apply, and validate or export. They call the same actions as the visible interface. | Show Chrome WebMCP tool list. |
-| 0:36–0:45 | First the agent inspects PocketRoar, an HDMI-to-USB-C capture bridge candidate. It sees exact parts, official evidence, unresolved risks, and why the design is engineering-only. | Execute `inspect_design`; show result and evidence. |
-| 0:45–0:54 | Next it proposes a low-risk placement change. The preview is deterministic and non-mutating, so the current revision stays unchanged while the human reviews the semantic diff. | Execute `preview_design_change`; show unchanged revision and diff. |
-| 0:54–1:03 | Only after visible approval does RoarCAD apply the change. A new content-addressed revision appears, and stale previews are rejected instead of silently overwriting newer work. | Click Apply; show new revision in history. |
-| 1:03–1:12 | The agent can validate and prepare an engineering bundle containing Circuit JSON, Gerbers, BOM, placement, checks, project data, and a SHA-256 manifest. Download still requires a person. | Execute engineering `validate_and_export`; show prepared bundle and Download button. |
-| 1:12–1:21 | This is not a PocketRoar-specific demo. Here a fresh environmental monitor starts from a structured brief and enters the exact same compiler, viewers, checks, and revision workflow. | Execute `draft_board` with environmental-monitor design. |
-| 1:21–1:30 | Agent-provided requirements, supplier evidence, parts, and footprints enter as unreviewed candidates. No tool can mark its own homework or promote a board to fabrication-ready. | Inspect the new board and show unreviewed states. |
-| 1:30–1:39 | The small power indicator proves the complete fabrication path. It uses exact manufacturer part numbers, reviewed evidence, a two-layer board, and zero unresolved fabrication blockers. | Switch to indicator and prepare fabrication export. |
-| 1:39–1:48 | RoarCAD prepares manufacturing files, but the browser cannot order, pay, store shipping details, accept substitutions, or download anything without an explicit human action. | Show manufacturing panel and human Download button. |
-| 1:48–1:57 | Switch back to PocketRoar and the same boundary refuses fabrication export and JLCPCB quoting. That refusal is a product feature, not a failed demo. | Attempt fabrication export or quote; show blocked message. |
-| 1:57–2:06 | Under the hood, Zod validates every input, one generic compiler produces Circuit JSON, immutable hashes protect revisions, and Vercel functions independently recompile manufacturing requests. | Show architecture diagram or repository architecture section beside app. |
-| 2:06–2:15 | WebMCP turns an agent from a screen-scraping guesser into a constrained engineering collaborator, while the person keeps evidence review, approval, manufacturing, checkout, and payment authority. | Return to WebMCP-ready workspace and five-tool list. |
-| 2:15–2:24 | RoarCAD is live, open source, and tested on three different boards. Agents move faster, humans keep control, and unsafe designs cannot pretend they are ready to manufacture. | Show `roarcad.vercel.app`, GitHub URL, and closing mark. |
+| 0:00–0:05 | I share this exact PCB revision with a teammate. | Create a checkpoint link in profile A. |
+| 0:05–0:10 | They continue it locally with an agent and return a new immutable checkpoint. | In profile B, continue, show agent preview, click **Approve & apply**, then copy the returned link. |
+| 0:10–0:15 | I see our common ancestor and the semantic diff before I adopt anything. | Back in profile A, open the returned read-only review and adopt it. |
+| 0:15–0:28 | RoarCAD is Git-like PCB handoff for people and their agents. Links carry a hashed revision and ancestry in the URL fragment, so no account or server database is required. | Show checkpoint metadata, hash, ancestry, and URL fragment without exposing other browser data. |
+| 0:28–0:41 | An incoming checkpoint never overwrites local work. Continuing downloads a backup first; divergent boards are compared and deliberately replaced, never auto-merged. | Show read-only state, backup download, relation, and explicit Continue/Adopt controls. |
+| 0:41–0:54 | With WebMCP enabled, RoarCAD exposes four bounded tools: draft, focused inspection, preview, and validation or export preparation. Apply is intentionally absent. | Show the live four-tool Chrome list. |
+| 0:54–1:07 | The agent inspects only the requested revision slice, then proposes a deterministic placement change. Preview leaves the stored revision unchanged and returns no hidden operation payload. | Execute focused `inspect_design`, then `preview_design_change`; show unchanged revision and compact result. |
+| 1:07–1:20 | Only this visible approval click creates the new content-addressed revision. Stale or altered previews are rejected. | Click **Approve & apply** and show the new history entry. |
+| 1:20–1:33 | Shared requirements, evidence, parts, and footprints are untrusted again on arrival. A checkpoint hash proves unchanged content, not who sent it. | Show the checkpoint warning and readiness downgrade. |
+| 1:33–1:46 | The same typed BoardGraph, Zod schemas, immutable revisions, and tscircuit compiler power the human interface and every agent action. No arbitrary generated code is executed. | Show board, schematic, checks, and the architecture summary. |
+| 1:46–1:59 | The reviewed indicator demonstrates the fabrication path, while download, quoting, checkout, payment, and substitution decisions remain human-only. | Prepare the indicator bundle and show the visible Download control. |
+| 1:59–2:12 | PocketRoar is the stress test: an eight-layer HDMI-to-USB-C capture bridge candidate that compiles and exports an engineering package. | Switch to PocketRoar and prepare the engineering bundle. |
+| 2:12–2:25 | Its unresolved electrical, mechanical, thermal, and evidence risks prevent fabrication export and quoting. RoarCAD refuses to turn an impressive render into a false safety claim. | Attempt fabrication preparation or quote and show the blockers. |
+| 2:25–2:35 | RoarCAD is live and open source: immutable PCB handoff, faster agent iteration, and human authority where hardware mistakes become expensive. | Show the live URL, repository, and closing mark. |
 
 ## Capture acceptance
 
 - Record a fresh Chrome session with WebMCP enabled.
-- Show all five tools executing against the live production URL.
+- Show the four tools executing against the live production URL; confirm no apply, download, quote, order, or payment tool exists.
+- Complete the real A → B → A checkpoint handoff in clean browser profiles.
 - Keep the browser tab, product output, approval click, and revision change visible.
 - Include the indicator fabrication path and PocketRoar manufacturing rejection.
 - Hide provider consoles, credentials, notifications, other tabs, and personal data.
@@ -53,9 +52,9 @@ similarity, and a final spoken word at 2:23.700.
 
 **Description:**
 
-RoarCAD is a WebMCP-enabled PCB workbench where agents draft and inspect structured board designs, humans approve deterministic changes, and unsafe designs cannot cross the manufacturing boundary.
+RoarCAD is a WebMCP-enabled, Git-like PCB handoff system where teammates share immutable revisions, agents draft and inspect structured board designs, humans approve deterministic changes, and unsafe designs cannot cross the manufacturing boundary.
 
-This demo shows five real page-bound WebMCP tools, a generic custom-board journey, fabrication artifacts for a reviewed indicator board, and an engineering-only PocketRoar HDMI-to-USB-C capture bridge that RoarCAD correctly refuses to quote or manufacture.
+This demo shows four real page-bound WebMCP tools with a deliberately human-only apply boundary, an A → B → A checkpoint handoff, fabrication artifacts for a reviewed indicator board, and an engineering-only PocketRoar HDMI-to-USB-C capture bridge that RoarCAD correctly refuses to quote or manufacture.
 
 Live app: https://roarcad.vercel.app/
 

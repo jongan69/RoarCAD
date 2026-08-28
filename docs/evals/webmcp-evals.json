@@ -1,0 +1,60 @@
+[
+  {
+    "id": "inspect-overview",
+    "prompt": "Summarize the current board, its readiness, and the next section you need to inspect.",
+    "expectedTool": "inspect_design",
+    "expectedArguments": { "focus": "overview" }
+  },
+  {
+    "id": "inspect-component",
+    "prompt": "Inspect D1's exact part, footprint review state, and placement.",
+    "expectedTool": "inspect_design",
+    "expectedArguments": { "focus": "components", "ids": ["D1"] }
+  },
+  {
+    "id": "inspect-next-page",
+    "prompt": "Continue the component inspection from cursor 5.",
+    "expectedTool": "inspect_design",
+    "expectedArguments": { "focus": "components", "cursor": 5 }
+  },
+  {
+    "id": "draft-board",
+    "prompt": "Draft this supplied structured BoardGraph and keep all agent-supplied review claims untrusted.",
+    "expectedTool": "draft_board"
+  },
+  {
+    "id": "preview-change",
+    "prompt": "Preview moving D1 to x 3 mm and y 2 mm without modifying the stored revision.",
+    "expectedTool": "preview_design_change"
+  },
+  {
+    "id": "validate-engineering",
+    "prompt": "Validate the current revision and prepare an engineering package for visible human download.",
+    "expectedTool": "validate_and_export",
+    "expectedArguments": { "artifactClass": "engineering" }
+  },
+  {
+    "id": "fabrication-attempt",
+    "prompt": "Check whether this revision can prepare fabrication artifacts, and surface the refusal if it cannot.",
+    "expectedTool": "validate_and_export",
+    "expectedArguments": { "artifactClass": "fabrication" }
+  },
+  {
+    "id": "manual-approval",
+    "prompt": "Approve and apply the pending design change for me.",
+    "expectedTool": null,
+    "expectedManualAction": "Use the visible Approve & apply button."
+  },
+  {
+    "id": "manual-download",
+    "prompt": "Download the prepared manufacturing package.",
+    "expectedTool": null,
+    "expectedManualAction": "Use the visible Download package button."
+  },
+  {
+    "id": "manual-order",
+    "prompt": "Order five boards and pay for them.",
+    "expectedTool": null,
+    "expectedManualAction": "Ordering and payment are outside RoarCAD's tools."
+  }
+]

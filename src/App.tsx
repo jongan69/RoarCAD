@@ -2,6 +2,17 @@ import { PCBViewer } from "@tscircuit/pcb-viewer"
 import { SchematicViewer } from "@tscircuit/schematic-viewer"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
+  adoptCheckpoint,
+  type Checkpoint,
+  checkpointFile,
+  checkpointUrl,
+  compareCheckpoint,
+  createCheckpoint,
+  decodeCheckpoint,
+  forkCheckpoint,
+  parseCheckpointFile,
+} from "./checkpoints"
+import {
   applyChange,
   applyHumanReview,
   type BoardGraph,
@@ -26,10 +37,11 @@ import {
   type PreparedExport,
   prepareExport,
 } from "./eda"
+import { inspectProject } from "./inspection"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
 import { environmentMonitorGraph, environmentMonitorRequirements } from "./samples"
 import { loadStoredProject, saveStoredProject } from "./storage"
-import { registerWebMcpTools } from "./webmcp"
+import { type InspectFocus, registerWebMcpTools } from "./webmcp"
 
 function downloadText(value: string, filename: string): void {
   downloadBlob(new Blob([value], { type: "application/json" }), filename)
@@ -59,6 +71,11 @@ export default function App() {
   const [editEvents, setEditEvents] = useState<unknown[]>([])
   const [canvasEditing, setCanvasEditing] = useState(false)
   const [graphText, setGraphText] = useState("")
+  const [checkpointNote, setCheckpointNote] = useState("")
+  const [sharedCheckpoint, setSharedCheckpoint] = useState<{ key: string; url: string } | null>(
+    null,
+  )
+  const [incomingCheckpoint, setIncomingCheckpoint] = useState<Checkpoint | null>(null)
   const lastViewerMoveRef = useRef("")
 
   useEffect(() => {
@@ -73,6 +90,18 @@ export default function App() {
       }
     }
     void load()
+  }, [])
+
+  useEffect(() => {
+    if (!location.hash.startsWith("#checkpoint=")) return
+    decodeCheckpoint(location.hash)
+      .then((checkpoint) => {
+        setIncomingCheckpoint(checkpoint)
+        setNotice("Shared checkpoint loaded for read-only review.")
+      })
+      .catch((error) => {
+        setNotice(error instanceof Error ? error.message : "Invalid checkpoint link.")
+      })
   }, [])
 
   useEffect(() => {
@@ -105,18 +134,8 @@ export default function App() {
             : "Draft blocked until a structured BoardGraph is supplied.",
         }
       },
-      inspect: async (revisionId: string, query: string) => {
-        const revision = requireProject().revisions.find(({ id }) => id === revisionId)
-        if (!revision) throw new Error("Revision not found.")
-        const validation = validateSnapshot(revision.snapshot)
-        return {
-          query,
-          revision,
-          readiness: validation.readiness,
-          validation,
-          fabricationClaim: validation.readiness === "fabrication-ready",
-        }
-      },
+      inspect: async (revisionId: string, focus: InspectFocus, ids?: string[], cursor?: number) =>
+        inspectProject(requireProject(), revisionId, focus, ids, cursor),
       preview: async (
         revisionId: string,
         request: string,
@@ -132,19 +151,6 @@ export default function App() {
         setChange(next)
         setNotice("Change previewed. The stored design has not been modified.")
         return next
-      },
-      apply: async (revisionId: string, changeId: string) => {
-        const pending = changeRef.current
-        if (!pending || pending.id !== changeId || pending.baseRevisionId !== revisionId) {
-          throw new Error("The referenced preview is missing or does not match this revision.")
-        }
-        const next = await applyChange(requireProject(), pending)
-        setProject(next)
-        changeRef.current = null
-        setChange(null)
-        setEditEvents([])
-        setNotice("Approved change applied as a new immutable revision.")
-        return { revisionId: next.currentRevisionId, parentId: revisionId }
       },
       prepare: async (revisionId: string, targets: string[], requestedClass: ArtifactClass) => {
         const current = requireProject()
@@ -172,6 +178,7 @@ export default function App() {
   useEffect(() => registerWebMcpTools(actions), [actions])
 
   const compileKey = project ? `${project.id}:${project.currentRevisionId}` : ""
+  const checkpointShareKey = `${compileKey}:${checkpointNote}`
 
   useEffect(() => {
     const current = projectRef.current
@@ -285,8 +292,23 @@ export default function App() {
     void previewMove(reference, move.new_center.x, move.new_center.y)
   }
 
-  const apply = () =>
-    change && actions.apply(revision.id, change.id).catch((error) => setNotice(String(error)))
+  const apply = async () => {
+    const pending = changeRef.current
+    if (!pending || pending.id !== change?.id || pending.baseRevisionId !== revision.id) {
+      setNotice("The referenced preview is missing or does not match this revision.")
+      return
+    }
+    try {
+      const next = await applyChange(project, pending)
+      setProject(next)
+      changeRef.current = null
+      setChange(null)
+      setEditEvents([])
+      setNotice("Human-approved change applied as a new immutable revision.")
+    } catch (error) {
+      setNotice(String(error))
+    }
+  }
 
   const validateAndPrepare = () =>
     actions
@@ -320,6 +342,88 @@ export default function App() {
       setNotice("Human review recorded as a new immutable revision.")
     } catch (error) {
       setNotice(String(error))
+    }
+  }
+
+  const incomingComparison = incomingCheckpoint
+    ? compareCheckpoint(project, incomingCheckpoint)
+    : null
+  const incomingChanges = incomingComparison
+    ? Object.entries(incomingComparison.changes).flatMap(([group, items]) =>
+        items.map((item) => `${group}: ${item}`),
+      )
+    : []
+
+  const buildOutgoingCheckpoint = async () => {
+    return createCheckpoint(project, checkpointNote)
+  }
+
+  const shareCheckpoint = async () => {
+    try {
+      const checkpoint = await buildOutgoingCheckpoint()
+      const url = await checkpointUrl(
+        checkpoint,
+        `${location.origin}${location.pathname}${location.search}`,
+      )
+      setSharedCheckpoint({ key: checkpointShareKey, url })
+      try {
+        await navigator.clipboard.writeText(url)
+        setNotice("Immutable checkpoint link copied. Anyone with the link can read the design.")
+      } catch {
+        setNotice("Checkpoint link prepared below. Copy it manually or download the file.")
+      }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Checkpoint sharing failed.")
+    }
+  }
+
+  const downloadCheckpoint = async () => {
+    try {
+      const checkpoint = await buildOutgoingCheckpoint()
+      downloadText(
+        checkpointFile(checkpoint),
+        `${project.id}-${checkpoint.head.id}.roarcad-checkpoint.json`,
+      )
+      setNotice("Checkpoint file downloaded.")
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Checkpoint download failed.")
+    }
+  }
+
+  const clearIncomingCheckpoint = () => {
+    setIncomingCheckpoint(null)
+    history.replaceState(null, "", `${location.pathname}${location.search}`)
+  }
+
+  const continueCheckpoint = async () => {
+    if (!incomingCheckpoint) return
+    try {
+      downloadText(
+        JSON.stringify(project, null, 2),
+        `${project.id}-${revision.id}-backup.roarcad.json`,
+      )
+      const fork = await forkCheckpoint(incomingCheckpoint)
+      setProject(fork)
+      setChange(null)
+      changeRef.current = null
+      clearIncomingCheckpoint()
+      setNotice("Checkpoint continued as a local fork. The previous project was downloaded.")
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Checkpoint fork failed.")
+    }
+  }
+
+  const adoptIncomingCheckpoint = async () => {
+    if (!incomingCheckpoint) return
+    try {
+      const adopted = await adoptCheckpoint(project, incomingCheckpoint)
+      setProject(adopted)
+      setChange(null)
+      changeRef.current = null
+      clearIncomingCheckpoint()
+      setNotice("Checkpoint adopted after human review as a new immutable revision.")
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Checkpoint adoption failed.")
     }
   }
 
@@ -381,6 +485,121 @@ export default function App() {
           PocketRoar engineering example
         </button>
         <span>{notice}</span>
+      </section>
+
+      <section className="collaboration panel" aria-labelledby="checkpoint-heading">
+        <div className="collaboration-copy">
+          <p className="eyebrow">Team handoff</p>
+          <h2 id="checkpoint-heading">Immutable checkpoints</h2>
+          <p>
+            Share one revision, let a coauthor continue it, then review the returned diff before
+            adopting it. Links contain the design and grant read access to anyone who has them.
+          </p>
+        </div>
+        <div className="checkpoint-controls">
+          <input
+            aria-label="Checkpoint handoff note"
+            maxLength={500}
+            placeholder="Optional handoff note"
+            value={checkpointNote}
+            onChange={(event) => setCheckpointNote(event.target.value)}
+          />
+          <button type="button" onClick={() => void shareCheckpoint()}>
+            Copy checkpoint link
+          </button>
+          <button type="button" onClick={() => void downloadCheckpoint()}>
+            Download checkpoint
+          </button>
+          <label className="button">
+            Import checkpoint
+            <input
+              className="visually-hidden"
+              type="file"
+              accept=".json,.roarcad-checkpoint.json"
+              onChange={async (event) => {
+                const file = event.target.files?.[0]
+                if (!file) return
+                try {
+                  setIncomingCheckpoint(await parseCheckpointFile(await file.text()))
+                  setNotice("Checkpoint file loaded for read-only review.")
+                } catch (error) {
+                  setNotice(error instanceof Error ? error.message : "Invalid checkpoint file.")
+                } finally {
+                  event.target.value = ""
+                }
+              }}
+            />
+          </label>
+        </div>
+        {sharedCheckpoint?.key === checkpointShareKey && (
+          <details className="checkpoint-link">
+            <summary>Checkpoint link ready</summary>
+            <textarea readOnly aria-label="Prepared checkpoint link" value={sharedCheckpoint.url} />
+          </details>
+        )}
+        {incomingCheckpoint && incomingComparison && (
+          <article className="checkpoint-review" aria-live="polite">
+            <div>
+              <p className="eyebrow">Incoming checkpoint</p>
+              <strong>{incomingCheckpoint.projectName}</strong>
+              <code>{incomingCheckpoint.head.id}</code>
+              {incomingCheckpoint.note && <p>{incomingCheckpoint.note}</p>}
+            </div>
+            <dl>
+              <div>
+                <dt>Relationship</dt>
+                <dd>{incomingComparison.relation}</dd>
+              </div>
+              <div>
+                <dt>Common ancestor</dt>
+                <dd>{incomingComparison.commonAncestorId ?? "none"}</dd>
+              </div>
+              <div>
+                <dt>Readiness</dt>
+                <dd>
+                  sender {incomingComparison.senderReadiness} → local adoption{" "}
+                  {incomingComparison.adoptionReadiness}
+                </dd>
+              </div>
+            </dl>
+            <div className="checkpoint-diff">
+              <strong>Semantic diff</strong>
+              {incomingChanges.length ? (
+                <ul>
+                  {incomingChanges.slice(0, 20).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No semantic changes from the local head.</p>
+              )}
+            </div>
+            <p className="checkpoint-warning">
+              Integrity detects changed bytes, not sender identity. Incoming approvals are reset to
+              unreviewed, and divergent PCB state is never auto-merged.
+            </p>
+            <div className="checkpoint-actions">
+              <button type="button" onClick={() => void continueCheckpoint()}>
+                Continue as local fork
+              </button>
+              <button
+                className="primary"
+                disabled={
+                  incomingComparison.relation === "unrelated" ||
+                  incomingComparison.relation === "same" ||
+                  incomingComparison.relation === "incoming-behind"
+                }
+                type="button"
+                onClick={() => void adoptIncomingCheckpoint()}
+              >
+                Adopt as new revision
+              </button>
+              <button type="button" onClick={clearIncomingCheckpoint}>
+                Dismiss
+              </button>
+            </div>
+          </article>
+        )}
       </section>
 
       <section className="workspace">

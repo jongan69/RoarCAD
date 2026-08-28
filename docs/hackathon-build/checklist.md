@@ -10,8 +10,8 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
 
 - [x] **2. Complete the shared manual and WebMCP actions**
   Spec ref: `spec.md > WebMCP`
-  What to build: Exactly five tools sharing the same validated domain actions as the UI.
-  Acceptance: Draft, inspect, preview, apply, and validate/export work without duplicated logic.
+  What to build: Four bounded tools sharing the UI's validated domain actions, with apply available only through the visible control.
+  Acceptance: Draft, focused inspection, non-mutating preview, and validate/export work without duplicated logic; no WebMCP tool can apply a change.
   Verify: `bun test tests/webmcp.test.ts`
 
 - [x] **3. Complete compilation, checks, and exports**
@@ -34,9 +34,9 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
 
 - [x] **6. Demonstrate a third generic board**
   Spec ref: `scope.md > public hosted application`
-  What to build: Draft a non-fixture board through `draft_board`, then inspect, preview, apply, and export it.
+  What to build: Draft a non-fixture board through `draft_board`, then inspect, preview, manually approve, and export it.
   Acceptance: No project-name/template branch and agent evidence remains unreviewed.
-  Verify: deployed Chrome journey on 2026-08-26: `draft_board` → `inspect_design` → `preview_design_change` → `apply_design_change` → `validate_and_export`; engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`.
+  Verify: the original 2026-08-26 submission used an agent apply tool and produced engineering manifest `092f3c15d7cdf2d8ae38486c2bc0ae91ddcd71f1d7f827d9b61bebc91b19f120`; the four-tool replacement needs a fresh production journey.
 
 - [ ] **7. Upgrade PocketRoar to the strongest defensible candidate**
   Spec ref: `scope.md > PocketRoar engineering-candidate package`
@@ -44,11 +44,11 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: Every remaining omission appears as an explicit blocker; no unsupported fabrication claim.
   Verify: engineering export plus independent evidence review.
 
-- [x] **8. Capture the complete WebMCP proof**
+- [x] **8. Capture the original-submission WebMCP proof**
   Spec ref: `prd.md > real browser agent`
-  What to build: Record Chrome executing all five tools against the deployed app.
+  What to build: Record Chrome executing the original five-tool build against the deployed app.
   Acceptance: The recording shows preview non-mutation, human approval, new revision, export, and PocketRoar quote rejection.
-  Verify: the live five-tool Chrome journey passed; fresh preview and apply calls produced the tracked before/after revision captures used in the final video.
+  Verify: the original live five-tool Chrome journey passed; it must be replaced by the human-approval checkpoint story below.
 
 - [x] **9. Finish public repository evidence**
   Spec ref: `scope.md > source and documentation`
@@ -73,3 +73,23 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   What to build: Final clean-browser link test and Devpost submission.
   Acceptance: User explicitly confirms immediately before submission; Devpost returns a public project page.
   Verify: open the resulting public Devpost URL logged out.
+
+- [x] **13. Add immutable checkpoint handoff**
+  What to build: Validated, size-bounded, gzip/base64url checkpoints with integrity checks, ancestry, semantic comparison, read-only opening, local fork, and explicit adoption.
+  Acceptance: Incoming state never mutates local storage automatically, external trust is downgraded, and divergent graphs are never auto-merged.
+  Verify: `bun test tests/checkpoints.test.ts`
+
+- [x] **14. Add bounded WebMCP eval cases**
+  What to build: Ten natural-language cases covering tool selection, arguments, pagination, sequencing, and human-only no-call cases.
+  Acceptance: Exactly four allowed tools and no agent apply, download, quote, order, or payment action.
+  Verify: `bun run eval:webmcp`
+
+- [ ] **15. Prove the replacement production journey**
+  What to build: Clean-profile A → B → A checkpoint handoff plus four-tool Chrome and ChatGPT in-app-browser journeys.
+  Acceptance: At least 90% correct first-call tool selection and 100% prevention of agent apply/download/order behavior.
+  Verify: source, CI, production, Chrome, and ChatGPT evidence remain separate.
+
+- [ ] **16. Replace and freeze the submission**
+  What to build: Record the checkpoint-first video, update screenshots and Devpost copy, then obtain explicit confirmation before resubmission.
+  Acceptance: Public video and live Devpost readback match the verified production build.
+  Verify: freeze only after the September 2 evidence review.
