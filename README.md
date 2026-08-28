@@ -6,7 +6,7 @@ RoarCAD is a local-first browser PCB workbench where people and AI agents operat
 - [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
 
-The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a complex design and exports a clearly marked engineering package. A third environmental-monitor sample proves that a new structured brief uses the same compiler without a project-name branch. PocketRoar cannot request a quote until its electrical, physical, licensing, and compatibility gates are proven.
+The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a routed feasibility slice that has zero compiler/checker errors and exports a clearly marked engineering package. A third environmental-monitor sample proves that a new structured brief uses the same compiler without a project-name branch. PocketRoar remains incomplete and cannot request a quote until its full schematic, differential-pair, electrical, physical, licensing, and compatibility gates are proven.
 
 The current product status, precise readiness vocabulary, retained research, and PocketRoar verification ladder are collected in the [wrap-up checkpoint](docs/PROJECT_CHECKPOINT.md). The interface now pairs each general part type with a plain-English definition while keeping exact technical data visible.
 
@@ -77,7 +77,7 @@ JLCPCB_QUOTE_ENABLED=false
 
 The tokenization keys remain unused unless an approved endpoint explicitly requires them. Protect `/api/manufacturing/jlcpcb/quote` with a Vercel WAF fixed-window rule of three requests per ten minutes per IP before enabling live quoting.
 
-PocketRoar remains an **engineering-only UVC bridge study**. Its product target is iPhone, while USB-C iPad is the documented UVC comparison case. The current graph does not implement or prove the SeeMo-class compression and app-compatible iPhone transport that the product needs. The [iPhone inspiration research](docs/research/pocketroar-iphone-capture-inspiration.md), [electrical completion brief](docs/research/pocketroar-electrical-completion.md), and [verification ladder](docs/research/pcb-verification-ladder.md) record the transport, connector, power, firmware, simulation, compliance, manufacturing, and physical-test gates that still block fabrication and quoting.
+PocketRoar remains an **engineering-only UVC bridge study**. Its product target is iPhone, while USB-C iPad is the documented UVC comparison case. The routed feasibility slice has zero compiler/checker errors, but its eleven nets are not a complete schematic and its differential-pair impedance, coupling, and skew are not yet verified. The current graph also does not implement or prove the SeeMo-class compression and app-compatible iPhone transport that the product needs. The [iPhone inspiration research](docs/research/pocketroar-iphone-capture-inspiration.md), [electrical completion brief](docs/research/pocketroar-electrical-completion.md), and [verification ladder](docs/research/pcb-verification-ladder.md) record the transport, connector, power, firmware, simulation, compliance, manufacturing, and physical-test gates that still block fabrication and quoting.
 
 ## Screenshots
 

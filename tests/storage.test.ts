@@ -37,8 +37,15 @@ test("a pristine PocketRoar reference never becomes the live demo startup", asyn
     "PocketRoar Capture Bridge",
     previousSnapshot,
   )
-  expect(previousBundledPocketRoar.currentRevisionId).toBe("56147af9ff46a3ee")
-  expect(chooseStartupProject(previousBundledPocketRoar, indicator, pocketRoar)).toBe(indicator)
+  const legacyPocketRoar = structuredClone(previousBundledPocketRoar)
+  legacyPocketRoar.currentRevisionId = "56147af9ff46a3ee"
+  legacyPocketRoar.revisions[0].id = "56147af9ff46a3ee"
+  expect(chooseStartupProject(legacyPocketRoar, indicator, pocketRoar)).toBe(indicator)
+
+  const priorPocketRoar = structuredClone(previousBundledPocketRoar)
+  priorPocketRoar.currentRevisionId = "fbfe09aae1d80347"
+  priorPocketRoar.revisions[0].id = "fbfe09aae1d80347"
+  expect(chooseStartupProject(priorPocketRoar, indicator, pocketRoar)).toBe(indicator)
 
   const unrelatedSnapshot = structuredClone(captureBridgeSnapshot)
   unrelatedSnapshot.requirements[0].value = "A different imported design"

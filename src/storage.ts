@@ -4,7 +4,7 @@ const DB_NAME = "roarcad"
 const STORE_NAME = "projects"
 const CURRENT_KEY = "current"
 const LEGACY_KEY = "roarcad-project-v1"
-const LEGACY_POCKETROAR_REVISION_IDS = new Set(["56147af9ff46a3ee"])
+const LEGACY_POCKETROAR_REVISION_IDS = new Set(["56147af9ff46a3ee", "fbfe09aae1d80347"])
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

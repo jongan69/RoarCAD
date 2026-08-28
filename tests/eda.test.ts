@@ -1,10 +1,6 @@
 import { expect, test } from "bun:test"
-import {
-  boardGraphSchema,
-  captureBridgeSnapshot,
-  createProject,
-  indicatorSnapshot,
-} from "../src/domain"
+import { runAllChecks } from "@tscircuit/checks"
+import { captureBridgeSnapshot, createProject, indicatorSnapshot } from "../src/domain"
 import { compileBoardGraph, compileSnapshot, prepareExport, validateCircuit } from "../src/eda"
 import { environmentMonitorGraph } from "../src/samples"
 
@@ -32,10 +28,18 @@ test("indicator compiles, validates, and exports consistent artifacts", async ()
 
 test("PocketRoar uses the generic compiler and exports engineering-only artifacts", async () => {
   const project = await createProject("capture", "PocketRoar Capture Bridge", captureBridgeSnapshot)
-  const circuitJson = await compileBoardGraph(boardGraphSchema.parse(captureBridgeSnapshot.design))
-  expect(circuitJson.some(({ type }) => type === "pcb_board")).toBe(true)
-
   const prepared = await prepareExport(project, "engineering")
+  const circuitJson = JSON.parse(new TextDecoder().decode(prepared.files["circuit.json"])) as Array<
+    Record<string, unknown>
+  >
+  expect(circuitJson.some(({ type }) => type === "pcb_board")).toBe(true)
+  const coreErrors = circuitJson.filter(({ type }) => String(type).includes("error"))
+  const checkErrors = (await runAllChecks(circuitJson as never)).filter(({ type }) =>
+    String(type).includes("error"),
+  )
+  expect(coreErrors).toEqual([])
+  expect(checkErrors).toEqual([])
+
   expect(prepared.manifest.artifactClass).toBe("engineering")
   expect(new TextDecoder().decode(prepared.files["ENGINEERING_ONLY.md"])).toContain(
     "not fabrication-ready",
@@ -44,7 +48,7 @@ test("PocketRoar uses the generic compiler and exports engineering-only artifact
     "Analog/power SPICE | not run",
   )
   await expect(prepareExport(project, "fabrication")).rejects.toThrow("fabrication-ready")
-}, 15_000)
+}, 90_000)
 
 test("a third custom board compiles through the same generic path", async () => {
   const circuitJson = await compileBoardGraph(environmentMonitorGraph)

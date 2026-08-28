@@ -223,6 +223,6 @@ Apple's iPhone guide warns that cables differ in USB speed and that noncompliant
 
 ### PocketRoar critical path
 
-The next milestone should **not** be “finish routing the current eight-layer graph.” It should be a bench architecture spike that proves one iPhone ingestion path. If direct UVC is the candidate, test it on the exact iPhone before more PCB work. If a SeeMo-class companion-app transport is required, identify a documented/licensable silicon and software path first. Only then freeze the schematic and invest in full SI/PI/DFM.
+The eleven-net feasibility slice is now routed with zero compiler/checker errors. The next milestone should **not** be “make the render greener” or route more placeholder nets. It should be a bench architecture spike that proves one iPhone ingestion path. If direct UVC is the candidate, test it on the exact iPhone before more PCB work. If a SeeMo-class companion-app transport is required, identify a documented/licensable silicon and software path first. Only then freeze the complete schematic and invest in full differential-pair, SI/PI, and DFM work.
 
 That is the smallest route to a genuinely useful PocketRoar board and the strongest guardrail against paying to print a polished but fundamentally incompatible design.

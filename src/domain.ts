@@ -48,13 +48,25 @@ const smtPadSchema = z.object({
   portHints: z.array(z.string().min(1).max(80)).min(1).max(10),
 })
 
-const platedHolePadSchema = z.object({
+const circularPlatedHolePadSchema = z.object({
   type: z.literal("pcb_plated_hole"),
   x: coordinateSchema,
   y: coordinateSchema,
   shape: z.enum(["circle", "rect"]).default("circle"),
   holeDiameter: z.number().positive().max(50),
   outerDiameter: z.number().positive().max(50),
+  portHints: z.array(z.string().min(1).max(80)).min(1).max(10),
+})
+
+const pillPlatedHolePadSchema = z.object({
+  type: z.literal("pcb_plated_hole"),
+  x: coordinateSchema,
+  y: coordinateSchema,
+  shape: z.literal("pill"),
+  holeWidth: z.number().positive().max(50),
+  holeHeight: z.number().positive().max(50),
+  outerWidth: z.number().positive().max(50),
+  outerHeight: z.number().positive().max(50),
   portHints: z.array(z.string().min(1).max(80)).min(1).max(10),
 })
 
@@ -66,7 +78,9 @@ export const footprintSchema = z
       .string()
       .regex(/^[a-f0-9]{64}$/)
       .optional(),
-    pads: z.array(z.discriminatedUnion("type", [smtPadSchema, platedHolePadSchema])).max(512),
+    pads: z
+      .array(z.union([smtPadSchema, circularPlatedHolePadSchema, pillPlatedHolePadSchema]))
+      .max(512),
     reviewed: z.boolean().default(false),
   })
   .superRefine((footprint, context) => {
@@ -134,6 +148,7 @@ export const boardSchema = z.object({
   thicknessMm: z.number().min(0.2).max(8).default(1.6),
   solderMaskColor: z.enum(["green", "red", "blue", "purple", "black", "white", "yellow"]),
   allowBlindAndBuriedVias: z.boolean().default(false),
+  isViaInPadAllowed: z.boolean().default(false),
   doubleSidedAssembly: z.boolean().default(false),
   stackup: z.array(z.string().min(1).max(80)).max(10).default([]),
 })
@@ -149,6 +164,22 @@ const netSchema = z.object({
   name: z.string().min(1).max(80),
   members: z.array(z.string().min(3).max(140)).min(2).max(200),
   className: z.string().min(1).max(80).default("default"),
+  pcbPath: z
+    .array(
+      z.union([
+        z.object({ x: coordinateSchema, y: coordinateSchema, via: z.literal(false).optional() }),
+        z.object({
+          x: coordinateSchema,
+          y: coordinateSchema,
+          via: z.literal(true),
+          fromLayer: z.string().min(1).max(40).optional(),
+          toLayer: z.string().min(1).max(40),
+        }),
+      ]),
+    )
+    .min(1)
+    .max(100)
+    .optional(),
 })
 
 const differentialPairSchema = z.object({
@@ -382,6 +413,86 @@ const bgaFootprint = (identifier: string, rows: number, columns: number, pitch: 
   })),
 })
 
+const hdmiConnectorFootprint: BoardComponent["footprint"] = {
+  source: "pad-map",
+  identifier: "KiCad Connector_Video/HDMI_A_Amphenol_10029449-x01xLF_Horizontal",
+  sha256: "1fa19576a91129d9dc87e7f837a8a8665289d1adca3aec62e1c6f454821b64bd",
+  reviewed: false,
+  pads: [
+    ...Array.from({ length: 19 }, (_, index) => ({
+      type: "pcb_smtpad" as const,
+      x: 4.75 - index * 0.5,
+      y: 5,
+      layer: "top" as const,
+      shape: "rect" as const,
+      width: 0.3,
+      height: 1.9,
+      portHints: [`${index + 1}`],
+    })),
+    ...[
+      [-7.85, -0.9],
+      [-7.25, 4],
+      [7.25, 4],
+      [7.85, -0.9],
+    ].map(([x, y]) => ({
+      type: "pcb_plated_hole" as const,
+      x,
+      y,
+      shape: "circle" as const,
+      holeDiameter: 1.3,
+      outerDiameter: 1.8,
+      portHints: ["20"],
+    })),
+  ],
+}
+
+const usbCConnectorFootprint: BoardComponent["footprint"] = {
+  source: "pad-map",
+  identifier: "KiCad Connector_USB/USB_C_Receptacle_Molex_105450-0101",
+  sha256: "4c0ad553929671d01ad6f9bd6c54004970e6482d62016af39fa7812d5c043540",
+  reviewed: false,
+  pads: [
+    ...[-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3].map((x, index) => ({
+      type: "pcb_smtpad" as const,
+      x,
+      y: 3.215,
+      layer: "top" as const,
+      shape: "rect" as const,
+      width: 0.3,
+      height: 0.7,
+      portHints: [`${index + 1}`],
+    })),
+    ...[3.1, 2.25, 1.75, 1.25, 0.75, 0.25, -0.25, -0.75, -1.25, -1.75, -2.25, -3.1].map(
+      (x, index) => ({
+        type: "pcb_smtpad" as const,
+        x,
+        y: 1.915,
+        layer: "top" as const,
+        shape: "rect" as const,
+        width: index === 0 || index === 11 ? 1 : 0.3,
+        height: 0.7,
+        portHints: [`${index + 13}`],
+      }),
+    ),
+    ...[
+      [-4.32, 2.805, 2.1, 1.6],
+      [-4.32, -2.555, 2.6, 2.1],
+      [4.32, 2.805, 2.1, 1.6],
+      [4.32, -2.555, 2.6, 2.1],
+    ].map(([x, y, outerHeight, holeHeight]) => ({
+      type: "pcb_plated_hole" as const,
+      x,
+      y,
+      shape: "pill" as const,
+      outerWidth: 1.1,
+      outerHeight,
+      holeWidth: 0.6,
+      holeHeight,
+      portHints: ["25"],
+    })),
+  ],
+}
+
 const indicatorEvidence: Evidence[] = [
   {
     id: "ev-led-datasheet",
@@ -540,6 +651,14 @@ const captureEvidence: Evidence[] = [
     official: true,
     reviewed: false,
   },
+  {
+    id: "ev-ecs-oscillators",
+    title: "ECS 27 MHz and 19.2 MHz oscillator product documentation",
+    sourceUrl: "https://ecsxtal.com/products/oscillators/surface-mount-oscillators/",
+    kind: "datasheet",
+    official: true,
+    reviewed: false,
+  },
 ]
 
 const candidate = (
@@ -552,6 +671,7 @@ const candidate = (
   y: number,
   pinLabels: string[],
   evidenceIds: string[],
+  rotation = 0,
 ): BoardComponent => ({
   kind,
   reference,
@@ -559,11 +679,25 @@ const candidate = (
   manufacturer,
   pins: pins(...pinLabels),
   footprint,
-  placement: { x, y, rotation: 0, side: "top" },
+  placement: { x, y, rotation, side: "top" },
   reviewStatus: "candidate",
   evidenceIds,
   supplierPartIds: {},
   doNotPlace: false,
+})
+
+const cx3PinLabels = Array.from({ length: 121 }, (_, index) => {
+  const pin = index + 1
+  return (
+    {
+      5: "TX_P_A5",
+      6: "TX_M_A6",
+      23: "SSN_C1",
+      40: "CLKIN_D7",
+      95: "CLK_P_J7",
+      106: "CLK_N_K7",
+    }[pin] ?? `P${pin}`
+  )
 })
 
 const captureComponents: BoardComponent[] = [
@@ -572,30 +706,30 @@ const captureComponents: BoardComponent[] = [
     "connector",
     "10029449-101RLF",
     "Amphenol",
-    libFootprint("pinrow20"),
-    -34,
-    8,
+    hdmiConnectorFootprint,
+    -30,
+    21,
     [
-      "TMDS0P",
-      "TMDS0N",
-      "TMDS1P",
-      "TMDS1N",
       "TMDS2P",
+      "TMDS2_SHIELD",
       "TMDS2N",
+      "TMDS1P",
+      "TMDS1_SHIELD",
+      "TMDS1N",
+      "TMDS0P",
+      "TMDS0_SHIELD",
+      "TMDS0N",
       "CLKP",
+      "CLK_SHIELD",
       "CLKN",
+      "CEC",
+      "UTILITY",
       "DDC_SCL",
       "DDC_SDA",
-      "HPD",
-      "V5",
       "GND",
+      "V5",
+      "HPD",
       "SHIELD",
-      "NC",
-      "NC2",
-      "NC3",
-      "NC4",
-      "NC5",
-      "NC6",
     ],
     ["ev-toshiba-tc358743"],
   ),
@@ -607,7 +741,72 @@ const captureComponents: BoardComponent[] = [
     bgaFootprint("P-TFBGA64-0606-0.65-001", 8, 8, 0.65),
     -18,
     4,
-    Array.from({ length: 64 }, (_, index) => `P${index + 1}`),
+    [
+      "REXT",
+      "VSS_A2",
+      "VPGM",
+      "BIASDA",
+      "DAOUT",
+      "PFIL",
+      "CSID3N",
+      "CSID3P",
+      "AVDD33_B1",
+      "AVDD12_B2",
+      "INT",
+      "IR",
+      "AVDD25",
+      "PCKIN",
+      "CSID2N",
+      "CSID2P",
+      "HDMICP",
+      "HDMICN",
+      "VDDC2_C3",
+      "VSS_C4",
+      "VSS_C5",
+      "VDD_MIPI_C6",
+      "CSICN",
+      "CSICP",
+      "HDMID0P",
+      "HDMID0N",
+      "AVDD12_D3",
+      "VSS_D4",
+      "VSS_D5",
+      "VSS_D6",
+      "CSID1N",
+      "CSID1P",
+      "HDMID1P",
+      "HDMID1N",
+      "VSS_E3",
+      "VSS_E4",
+      "TEST",
+      "VSS_E6",
+      "CSID0N",
+      "CSID0P",
+      "HDMID2P",
+      "HDMID2N",
+      "AVDD33_F3",
+      "VDDIO1",
+      "VDDC2_F5",
+      "VDD_MIPI_F6",
+      "A_SCK",
+      "A_SD",
+      "CEC",
+      "VDDC1",
+      "DDC_SDA",
+      "I2C_SDA",
+      "RESETN",
+      "EDID_SDA",
+      "A_WFS",
+      "A_OSCK",
+      "HPDO",
+      "HPDI",
+      "DDC_SCL",
+      "I2C_SCL",
+      "REFCLK",
+      "EDID_SCL",
+      "VDDIO2",
+      "VSS_H8",
+    ],
     ["ev-toshiba-tc358743"],
   ),
   candidate(
@@ -618,7 +817,7 @@ const captureComponents: BoardComponent[] = [
     bgaFootprint("PG-LFBGA-121", 11, 11, 0.8),
     8,
     2,
-    Array.from({ length: 121 }, (_, index) => `P${index + 1}`),
+    cx3PinLabels,
     ["ev-infineon-cx3", "ev-infineon-power"],
   ),
   candidate(
@@ -626,10 +825,36 @@ const captureComponents: BoardComponent[] = [
     "connector",
     "105450-0101",
     "Molex",
-    libFootprint("pinrow24"),
-    36,
-    2,
-    Array.from({ length: 24 }, (_, index) => `P${index + 1}`),
+    usbCConnectorFootprint,
+    30,
+    21,
+    [
+      "A1_GND",
+      "A2_TX1P",
+      "A3_TX1N",
+      "A4_VBUS",
+      "A5_CC1",
+      "A6_DP",
+      "A7_DN",
+      "A8_SBU1",
+      "A9_VBUS",
+      "A10_RX2N",
+      "A11_RX2P",
+      "A12_GND",
+      "B1_GND",
+      "B2_TX2P",
+      "B3_TX2N",
+      "B4_VBUS",
+      "B5_CC2",
+      "B6_DP",
+      "B7_DN",
+      "B8_SBU2",
+      "B9_VBUS",
+      "B10_RX1N",
+      "B11_RX1P",
+      "B12_GND",
+      "SHIELD",
+    ],
     ["ev-ti-usbc"],
   ),
   candidate(
@@ -639,7 +864,7 @@ const captureComponents: BoardComponent[] = [
     "Texas Instruments",
     libFootprint("qfn20"),
     24,
-    2,
+    12,
     [
       "A_TXP",
       "A_TXN",
@@ -725,8 +950,8 @@ const captureComponents: BoardComponent[] = [
     "TPD12S520DBTR",
     "Texas Instruments",
     libFootprint("tssop38"),
-    -27,
-    5,
+    -24,
+    11,
     Array.from({ length: 38 }, (_, index) => `P${index + 1}`),
     ["ev-ti-usbc", "ev-toshiba-tc358743"],
   ),
@@ -803,8 +1028,8 @@ const captureComponents: BoardComponent[] = [
       "ESD122DMXR",
       "Texas Instruments",
       libFootprint("qfn3"),
-      18 + index * 3,
-      9,
+      15 + index * 4,
+      0,
       ["IO1", "GND", "IO2"],
       ["ev-ti-usbc"],
     ),
@@ -816,20 +1041,20 @@ const captureComponents: BoardComponent[] = [
     "ECS",
     libFootprint("qfn4"),
     -18,
-    -7,
+    10,
     ["EN", "GND", "OUT", "VCC"],
-    ["ev-toshiba-tc358743"],
+    ["ev-toshiba-tc358743", "ev-ecs-oscillators"],
   ),
   candidate(
     "Y2",
     "crystal",
-    "ECS-2520MVLC-120-CN-TR",
+    "ECS-2520MVLC-192-BN-TR",
     "ECS",
     libFootprint("qfn4"),
     7,
     -6,
     ["EN", "GND", "OUT", "VCC"],
-    ["ev-infineon-cx3"],
+    ["ev-infineon-cx3", "ev-ecs-oscillators"],
   ),
   candidate(
     "TP1",
@@ -912,26 +1137,69 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
   ],
   design: {
     board: {
-      outline: { shape: "rectangle", widthMm: 85, heightMm: 48 },
+      outline: { shape: "rectangle", widthMm: 100, heightMm: 60 },
       layers: 8,
       material: "fr4",
       thicknessMm: 1.6,
       solderMaskColor: "black",
       allowBlindAndBuriedVias: true,
+      isViaInPadAllowed: true,
       doubleSidedAssembly: false,
       stackup: ["Signal", "Ground", "Signal", "Power", "Power", "Signal", "Ground", "Signal"],
     },
     components: captureComponents,
     nets: [
-      { name: "HDMI_D0_P", members: ["J1.pin1", "U1.pin1"], className: "hdmi" },
-      { name: "HDMI_D0_N", members: ["J1.pin2", "U1.pin2"], className: "hdmi" },
-      { name: "CSI_CLK_P", members: ["U1.pin9", "U2.pin1"], className: "mipi" },
-      { name: "CSI_CLK_N", members: ["U1.pin10", "U2.pin2"], className: "mipi" },
-      { name: "USB_TX_P", members: ["U2.pin20", "U3.pin1"], className: "usb3" },
-      { name: "USB_TX_N", members: ["U2.pin21", "U3.pin2"], className: "usb3" },
-      { name: "SPI_CS", members: ["U2.pin40", "U5.pin1"], className: "default" },
-      { name: "CLK27", members: ["Y1.pin3", "U1.pin20"], className: "clock" },
-      { name: "CLK19", members: ["Y2.pin3", "U2.pin50"], className: "clock" },
+      { name: "HDMI_D0_P", members: ["J1.pin7", "U1.pin25"], className: "hdmi" },
+      {
+        name: "HDMI_D0_N",
+        members: ["J1.pin9", "U1.pin26"],
+        className: "hdmi",
+        pcbPath: [
+          { x: 0.75, y: -2 },
+          { x: 0.75, y: -3 },
+          { x: 0.75, y: -3, via: true, toLayer: "inner1" },
+          { x: 0.75, y: -3 },
+          { x: 9, y: -14 },
+          { x: 10.375, y: -17.325 },
+          { x: 10.375, y: -17.325, via: true, toLayer: "top" },
+          { x: 10.375, y: -17.325 },
+        ],
+      },
+      {
+        name: "CSI_CLK_P",
+        members: ["U1.pin24", "U2.pin95"],
+        className: "mipi",
+        pcbPath: [
+          { x: 2.275, y: -0.975 },
+          { x: 2.275, y: -0.975, via: true, toLayer: "inner2" },
+          { x: 2.275, y: -0.975 },
+          { x: 6, y: -1.6 },
+          { x: 22, y: -0.3 },
+          { x: 26.8, y: 0.4 },
+          { x: 26.8, y: 0.4, via: true, toLayer: "top" },
+          { x: 26.8, y: 0.4 },
+        ],
+      },
+      {
+        name: "CSI_CLK_N",
+        members: ["U1.pin23", "U2.pin106"],
+        className: "mipi",
+        pcbPath: [
+          { x: 1.625, y: -0.975 },
+          { x: 1.625, y: -0.975, via: true, toLayer: "inner3" },
+          { x: 1.625, y: -0.975 },
+          { x: 6, y: -2 },
+          { x: 22, y: 0.5 },
+          { x: 26.8, y: 1.2 },
+          { x: 26.8, y: 1.2, via: true, toLayer: "top" },
+          { x: 26.8, y: 1.2 },
+        ],
+      },
+      { name: "USB_TX_P", members: ["U2.pin5", "U3.pin1"], className: "usb3" },
+      { name: "USB_TX_N", members: ["U2.pin6", "U3.pin2"], className: "usb3" },
+      { name: "SPI_CS", members: ["U2.pin23", "U5.pin1"], className: "default" },
+      { name: "CLK27", members: ["Y1.pin3", "U1.pin61"], className: "clock" },
+      { name: "CLK19", members: ["Y2.pin3", "U2.pin40"], className: "clock" },
       { name: "V12_TEST", members: ["U6.pin1", "TP1.pin1"], className: "power" },
       { name: "V33_TEST", members: ["U7.pin1", "TP2.pin1"], className: "power" },
     ],
@@ -968,12 +1236,10 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     ],
     pours: [],
     holes: [
-      { id: "mount-1", x: -38, y: -18, diameterMm: 3.2, plated: false },
-      { id: "mount-2", x: 38, y: -18, diameterMm: 3.2, plated: false },
+      { id: "mount-1", x: -45, y: -25, diameterMm: 3.2, plated: false },
+      { id: "mount-2", x: 45, y: -25, diameterMm: 3.2, plated: false },
     ],
-    keepouts: [
-      { id: "connector-edge", x: 0, y: 22, widthMm: 85, heightMm: 4, layers: ["top", "bottom"] },
-    ],
+    keepouts: [],
     routingHints: ["Route all named differential pairs before low-speed control nets."],
   },
   unresolvedRisks: [
@@ -983,6 +1249,7 @@ export const captureBridgeSnapshot: DesignSnapshot = snapshotSchema.parse({
     "TC358743-to-CX3 timing and the target 1080p30 mode are unmeasured.",
     "USB-C current policy and CX3 1.2 V startup transient are unverified.",
     "Order-specific stackup, SI/DFM, licensing, thermal, EMI/ESD, and enclosure mechanics remain open.",
+    "The 0.65 mm BGA escape requires a fabricator-approved filled and capped via-in-pad process.",
     "Exact iPhone transport, decoding, app integration, and compatibility require physical-device proof.",
   ],
 })
@@ -1056,6 +1323,11 @@ export function validateSnapshot(snapshot: DesignSnapshot): Validation {
       if (!evidenceIds.has(evidenceId))
         warnings.push(`${component.reference} references missing evidence ${evidenceId}.`)
     }
+  }
+  if (design.differentialPairs.length) {
+    warnings.push(
+      "Differential-pair impedance, coupling, and routed-length skew are recorded constraints but are not verified by the current compiler.",
+    )
   }
   warnings.push(...snapshot.unresolvedRisks.map((risk) => `Unresolved risk: ${risk}`))
   return {

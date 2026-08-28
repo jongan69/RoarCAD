@@ -22,6 +22,8 @@ The product direction is simplicity without false certainty:
 - Section names now lead with `How it works`, `Parts`, `Connections`, and `Evidence: why we trust it`.
 - `Move parts on the board` makes the existing drag-preview behavior discoverable without weakening approval.
 - The PocketRoar fixture is labeled as a UVC bridge study and explicitly blocks the unproven iPhone transport.
+- The PocketRoar feasibility slice now uses exact upstream KiCad HDMI and USB-C connector pad geometry, the documented TC358743 ball map, net-class trace widths, explicit BGA escape paths, and intentional via-in-pad rules.
+- Its generated Circuit JSON now has zero core errors and zero independent checker errors. Differential-pair impedance, coupling, and skew remain explicit unverified constraints rather than hidden behind that count.
 - Untouched PocketRoar reference fixtures from older releases reset to the clean indicator on startup; edited work remains preserved.
 
 ## Proven before this checkpoint
@@ -41,14 +43,15 @@ PocketRoar needs a camera-to-**iPhone** bridge. A USB-C iPad is the documented U
 
 ### Current RoarCAD design
 
-The bundled board is a standards-based HDMI-to-CX3/UVC **engineering study**, not the final iPhone bridge. In the current installed toolchain it produces:
+The bundled board is a standards-based HDMI-to-CX3/UVC **routed feasibility slice**, not the final iPhone bridge or a complete schematic. In the current installed toolchain it produces:
 
-- 26 placed parts and 11 modeled nets;
-- 2,489 generated Circuit JSON elements;
-- 93 automated placement, overlap, clearance, courtyard, and missing-trace errors;
-- 65 source-model warnings for missing courtyards and underspecified power, ground, or pins.
+- 26 placed parts and 11 routed feasibility nets;
+- revision `c204a71b354abeff` and 2,566 generated Circuit JSON elements;
+- zero compiler-emitted errors and zero independent `@tscircuit/checks` errors;
+- 69 warnings for incomplete courtyard, schematic styling, pin-role, power, and ground metadata;
+- an explicit warning that differential-pair impedance, coupling, and routed-length skew are not yet verified.
 
-Those findings are useful because they prevent false readiness. Reducing the visible error count without first completing the correct transport, schematic, footprints, power tree, and firmware would optimize the render instead of the product.
+The zero-error result is now a useful regression boundary: exact connector geometry, placement, clearances, trace connectivity, and the eleven modeled routes are internally clean. It does **not** prove the other hundreds of connections that a complete schematic needs, high-speed electrical behavior, firmware, the final iPhone transport, manufacturability, or physical operation.
 
 ### Next hardware gate
 
@@ -100,6 +103,6 @@ These remain useful ideas, not current product claims. Drag-and-drop must never 
 
 ## Devpost boundary
 
-The current submission may accurately say that RoarCAD now makes common part types and its existing workflow easier to understand. It must not claim clickable auditing, functional-block design, a complete PocketRoar schematic, a fabrication-ready PocketRoar PCB, or iPhone compatibility.
+The current submission may accurately say that RoarCAD makes common part types easier to understand and that the PocketRoar feasibility slice deterministically reaches zero compiler/checker errors while remaining engineering-only. It must not claim clickable auditing, functional-block design, a complete PocketRoar schematic, a fabrication-ready PocketRoar PCB, or iPhone compatibility.
 
 Updating this repository draft is safe. Updating the live Devpost entry remains a separate user-approved action followed by public readback.

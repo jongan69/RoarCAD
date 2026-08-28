@@ -23,7 +23,7 @@ Confident technical founder, neutral American accent, warm dry timbre, brisk but
 | 1:20–1:33 | Shared requirements, evidence, parts, and footprints are untrusted again on arrival. A checkpoint hash proves unchanged content, not who sent it. | Show the checkpoint warning and readiness downgrade. |
 | 1:33–1:46 | The same typed BoardGraph, Zod schemas, immutable revisions, and tscircuit compiler power the human interface and every agent action. No arbitrary generated code is executed. | Show board, schematic, checks, and the architecture summary. |
 | 1:46–1:59 | The reviewed indicator demonstrates the fabrication path, while download, quoting, checkout, payment, and substitution decisions remain human-only. | Prepare the indicator bundle and show the visible Download control. |
-| 1:59–2:12 | PocketRoar is the stress test: an eight-layer HDMI-to-USB-C capture bridge candidate that compiles and exports an engineering package. | Switch to PocketRoar and prepare the engineering bundle. |
+| 1:59–2:12 | PocketRoar is the stress test: its eight-layer feasibility slice now has zero digital errors, while the complete circuit and iPhone transport remain unproven. | Switch to PocketRoar, show zero errors, and prepare the engineering bundle. |
 | 2:12–2:25 | Its unresolved electrical, mechanical, thermal, and evidence risks prevent fabrication export and quoting. RoarCAD refuses to turn an impressive render into a false safety claim. | Attempt fabrication preparation or quote and show the blockers. |
 | 2:25–2:35 | RoarCAD is live and open source: immutable PCB handoff, faster agent iteration, and human authority where hardware mistakes become expensive. | Show the live URL, repository, and closing mark. |
 
@@ -35,7 +35,7 @@ Confident technical founder, neutral American accent, warm dry timbre, brisk but
 - Keep the browser tab, product output, approval click, and revision change visible.
 - Include the indicator fabrication path and PocketRoar manufacturing rejection.
 - Hide provider consoles, credentials, notifications, other tabs, and personal data.
-- If PocketRoar's tscircuit findings are visible, explain them as unresolved engineering-review findings; never crop them out or imply the board is fabrication-ready.
+- Show PocketRoar's zero-error count together with its incomplete-schematic, differential-pair, and iPhone-transport warnings; never crop those warnings out or imply the board is fabrication-ready.
 
 ## Caption plan
 
