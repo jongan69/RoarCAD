@@ -473,6 +473,9 @@ export default function App() {
           </div>
         </div>
         <div className="header-actions">
+          <a className="button" href="/guides/safe-ai-pcb-design/">
+            Learn
+          </a>
           <span className={document.modelContext ? "status good" : "status neutral"}>
             {document.modelContext ? "WebMCP ready" : "Manual mode"}
           </span>
@@ -1095,6 +1098,18 @@ export default function App() {
           ))}
         </ol>
       </section>
+      <footer className="resource-footer">
+        <strong>Understand before you manufacture.</strong>
+        <nav aria-label="RoarCAD resources">
+          <a href="/guides/safe-ai-pcb-design/">Safety guide</a>
+          <a href="/compare/flux-quilter/">Product comparison</a>
+          <a href="/alternatives/flux-ai-pcb/">Flux alternatives</a>
+          <a href="/open-source-ai-pcb/">Free workflow</a>
+          <a href="/case-studies/pocketroar/">PocketRoar</a>
+          <a href="/evidence/">Evidence</a>
+          <a href="https://github.com/jongan69/RoarCAD">Source</a>
+        </nav>
+      </footer>
     </main>
   )
 }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PocketRoar iPhone camera bridge PCB study | RoarCAD</title>
+  <meta name="description" content="How RoarCAD produced and checked an engineering PCB study for bringing a dedicated camera feed into an iPhone while refusing to claim unproven fabrication readiness." />
+  <meta name="robots" content="index,follow" /><link rel="canonical" href="https://roarcad.vercel.app/case-studies/pocketroar/" />
+  <meta property="og:type" content="article" /><meta property="og:title" content="PocketRoar iPhone camera bridge PCB study" /><meta property="og:description" content="A zero-digital-error feasibility slice with explicit physical and iPhone transport blockers." /><meta property="og:url" content="https://roarcad.vercel.app/case-studies/pocketroar/" />
+  <link rel="stylesheet" href="/visibility.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"CaseStudy","name":"PocketRoar iPhone camera bridge PCB study","datePublished":"2026-08-31","author":{"@type":"Person","name":"Jonathan Gan"},"url":"https://roarcad.vercel.app/case-studies/pocketroar/"}</script>
+</head>
+<body>
+  <header><a href="/"><strong>RoarCAD</strong></a><nav aria-label="Main"><a href="/guides/safe-ai-pcb-design/">Safety</a><a href="/compare/flux-quilter/">Compare</a><a href="/evidence/">Evidence</a><a href="https://github.com/jongan69/RoarCAD">Source</a></nav></header>
+  <main>
+    <p class="eyebrow">Case study · engineering, not fabrication</p>
+    <h1>PocketRoar needs a camera bridge for iPhone</h1>
+    <p class="lede">A Sony camera can expose live video, but an iPhone does not provide the same documented native USB Video Class input path that USB-C iPads do. PocketRoar therefore needs hardware and an app-specific transport that can deliver the camera feed to iPhone.</p>
+    <h2>The simple version</h2>
+    <p>Think of the board as a translator. It receives video from a dedicated camera, converts or compresses it into a form the phone and PocketRoar app can accept, and manages the cable, power, and connection rules between them.</p>
+    <p>The functional comparison is the <a href="https://accsoonusa.com/accsoon-seemo-4k-ios-hdmi-adapter/">Accsoon SeeMo 4K</a>, which accepts HDMI and works with an iOS app. This does not mean RoarCAD copied SeeMo or that the current candidate implements the same proprietary architecture.</p>
+    <h2>What RoarCAD actually produced</h2>
+    <ul><li>An eight-layer routed feasibility slice using the same generic BoardGraph compiler as the small reference board.</li><li>Exact modeled HDMI and USB-C connector footprints, a Cypress CX3-family bridge candidate, clocking, power support, nets, placements, and engineering evidence.</li><li>2,566 generated Circuit JSON elements with zero compiler and independent-checker errors in the recorded revision.</li><li>An engineering package and immutable revision that can be inspected and handed off.</li></ul>
+    <h2>What remains unproven</h2>
+    <table><thead><tr><th>Gate</th><th>Why it matters</th></tr></thead><tbody><tr><td>iPhone transport</td><td>The current UVC candidate does not prove an app-compatible iPhone video-ingest path.</td></tr><tr><td>Complete schematic</td><td>Eleven modeled routes are a feasibility slice, not every support circuit needed for a product.</td></tr><tr><td>Signal and power integrity</td><td>HDMI, USB, clocks, rails, heat, and return paths require vendor models, approved stack-up, and physical measurement.</td></tr><tr><td>Firmware and app integration</td><td>Compression, accessory communication, reconnect behavior, latency, and sustained streaming must work together.</td></tr><tr><td>Manufacturing and compliance</td><td>DFM, assembly, connector mechanics, licensing, EMC, and safety review happen beyond a clean digital render.</td></tr><tr><td>Physical prototype</td><td>Only built hardware can prove compatibility on the exact camera, cable, iPhone, iOS version, and app.</td></tr></tbody></table>
+    <div class="callout warning"><strong>Result:</strong> the study is useful engineering evidence, but RoarCAD correctly refuses fabrication-ready status and quoting. Zero digital errors means the modeled slice is internally clean; it does not mean the final product works.</div>
+    <p>Review the <a href="/evidence/">verification record</a> and <a href="https://github.com/jongan69/RoarCAD/blob/main/docs/research/pocketroar-iphone-capture-inspiration.md">source research</a>.</p>
+  </main>
+  <footer>PocketRoar is an engineering study. No iPhone compatibility, manufacturing readiness, or physical performance claim is made.</footer>
+</body>
+</html>

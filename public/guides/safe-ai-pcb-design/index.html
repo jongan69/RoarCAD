@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>How to safely design a PCB with AI agents | RoarCAD</title>
+  <meta name="description" content="A plain-English, evidence-based workflow for using AI agents to draft and review circuit boards without letting them silently approve or manufacture unsafe work." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://roarcad.vercel.app/guides/safe-ai-pcb-design/" />
+  <meta property="og:type" content="article" /><meta property="og:title" content="How to safely design a PCB with AI agents" />
+  <meta property="og:description" content="Use typed inputs, non-mutating previews, independent checks, immutable revisions, and visible human approval." />
+  <meta property="og:url" content="https://roarcad.vercel.app/guides/safe-ai-pcb-design/" />
+  <link rel="stylesheet" href="/visibility.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How to safely design a PCB with AI agents","datePublished":"2026-08-31","dateModified":"2026-08-31","author":{"@type":"Person","name":"Jonathan Gan"},"publisher":{"@type":"Organization","name":"RoarCAD","url":"https://roarcad.vercel.app/"},"mainEntityOfPage":"https://roarcad.vercel.app/guides/safe-ai-pcb-design/"}</script>
+</head>
+<body>
+  <header><a href="/"><strong>RoarCAD</strong></a><nav aria-label="Main"><a href="/compare/flux-quilter/">Compare</a><a href="/case-studies/pocketroar/">PocketRoar</a><a href="/evidence/">Evidence</a><a href="https://github.com/jongan69/RoarCAD">Source</a></nav></header>
+  <main>
+    <p class="eyebrow">Safety guide · checked August 31, 2026</p>
+    <h1>How do I safely design a PCB with AI agents?</h1>
+    <p class="lede">Treat the AI like a fast junior teammate: give it structured facts, inspect every proposed change, run independent checks, and keep manufacturing behind a visible human decision.</p>
+    <div class="callout"><strong>Short answer:</strong> an AI-generated board is a draft until a qualified person reviews the exact parts, footprints, electrical rules, physical layout, and test evidence.</div>
+    <h2>Seven controls that reduce avoidable failures</h2>
+    <ol>
+      <li><strong>Write requirements first.</strong> Record power, connectors, environment, board size, layer count, interfaces, and what “working” means.</li>
+      <li><strong>Use a typed board model.</strong> A structured component, pin, footprint, and net graph is easier to validate than free-form prose.</li>
+      <li><strong>Separate preview from apply.</strong> The agent may propose a bounded change, but the stored design must remain unchanged until a person approves it.</li>
+      <li><strong>Verify evidence.</strong> Datasheets, supplier pages, and shared files are untrusted until a person confirms the exact manufacturer part and package.</li>
+      <li><strong>Run more than one check.</strong> Compile the design, run electrical and design-rule checks, inspect the generated connectivity, and use simulation or field solvers where the interface demands them.</li>
+      <li><strong>Keep immutable revisions.</strong> Every approved state should have a stable identifier, parent, summary, and recoverable history.</li>
+      <li><strong>Test physical hardware.</strong> Manufacturing files and zero digital errors do not prove power behavior, signal integrity, heat, radio performance, cable compatibility, or long-run reliability.</li>
+    </ol>
+    <h2>What RoarCAD enforces</h2>
+    <div class="grid">
+      <section class="card"><h3>The agent may</h3><ul><li>draft a structured board</li><li>inspect one bounded topic</li><li>preview allowlisted changes</li><li>prepare checked exports</li></ul></section>
+      <section class="card"><h3>Only a person may</h3><ul><li>apply a design change</li><li>approve parts or evidence</li><li>download manufacturing files</li><li>request a quote, order, or pay</li></ul></section>
+    </div>
+    <h2>Definitions in simple English</h2>
+    <dl><dt>PCB</dt><dd>A printed circuit board: the rigid board that holds parts and connects them with copper paths.</dd><dt>Schematic</dt><dd>A logical map showing which pins should connect. It does not show the final physical placement.</dd><dt>Footprint</dt><dd>The exact copper-pad pattern used to solder one package onto the board.</dd><dt>Net</dt><dd>One named electrical connection shared by two or more pins.</dd><dt>ERC and DRC</dt><dd>Automated checks for electrical mistakes and physical-rule violations. Passing them is necessary, but not sufficient proof.</dd></dl>
+    <div class="callout warning"><strong>Limit:</strong> RoarCAD does not replace professional schematic review, signal/power-integrity analysis, fabricator DFM review, compliance work, or physical testing.</div>
+    <p>Next: review the <a href="/evidence/">reproducible evidence</a> or open the <a href="/">live workbench</a>.</p>
+  </main>
+  <footer>RoarCAD is free and MIT-licensed. Safety claims describe product controls, not certification of a physical board.</footer>
+</body>
+</html>

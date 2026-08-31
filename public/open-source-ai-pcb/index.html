@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Free open-source AI PCB review workflow | RoarCAD</title>
+  <meta name="description" content="RoarCAD is a free MIT-licensed browser workbench for AI-assisted PCB drafting, inspection, preview, immutable revisions, and human-controlled export." />
+  <meta name="robots" content="index,follow" /><link rel="canonical" href="https://roarcad.vercel.app/open-source-ai-pcb/" />
+  <meta property="og:type" content="website" /><meta property="og:title" content="Free open-source AI PCB review workflow" /><meta property="og:description" content="Local-first board revisions and safety gates without a paid account." /><meta property="og:url" content="https://roarcad.vercel.app/open-source-ai-pcb/" />
+  <link rel="stylesheet" href="/visibility.css" />
+</head>
+<body>
+  <header><a href="/"><strong>RoarCAD</strong></a><nav aria-label="Main"><a href="/guides/safe-ai-pcb-design/">Safety</a><a href="/compare/flux-quilter/">Compare</a><a href="/evidence/">Evidence</a><a href="https://github.com/jongan69/RoarCAD">Source</a></nav></header>
+  <main>
+    <p class="eyebrow">Free and open source</p>
+    <h1>A free AI-assisted PCB workflow with human approval</h1>
+    <p class="lede">RoarCAD costs $0 to use, requires no account for its local workflow, and publishes its TypeScript source under the MIT license.</p>
+    <div class="grid"><section class="card"><h2>Included</h2><ul><li>structured PCB drafting and import</li><li>PCB and schematic views</li><li>four bounded WebMCP tools</li><li>immutable local revisions</li><li>portable collaboration checkpoints</li><li>engineering and fabrication gates</li></ul></section><section class="card"><h2>Not included</h2><ul><li>verified teammate identity</li><li>private cloud workspaces</li><li>real-time coediting</li><li>automatic divergent-board merges</li><li>fabrication certification</li><li>proof that a physical design works</li></ul></section></div>
+    <h2>How local-first works</h2>
+    <p>Projects are stored in the browser with IndexedDB. A checkpoint packages one immutable head revision and its ancestry into a compressed URL fragment or JSON file. The recipient reviews it before continuing or adopting it. Possession of a checkpoint grants read access, and its hash proves unchanged bytes—not the sender’s identity.</p>
+    <h2>Why it is free</h2>
+    <p>The contest version uses browser storage and native web capabilities instead of accounts, a hosted database, or real-time infrastructure. That keeps the core design, review, and handoff workflow auditable and inexpensive. Manufacturing still costs money through the chosen fabricator, and RoarCAD never invents a quote.</p>
+    <div class="callout"><strong>Source and license:</strong> inspect, run, fork, and verify the project at <a href="https://github.com/jongan69/RoarCAD">github.com/jongan69/RoarCAD</a>.</div>
+  </main>
+  <footer>Free software can reduce software cost. It cannot remove engineering and manufacturing risk.</footer>
+</body>
+</html>
