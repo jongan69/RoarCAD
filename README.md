@@ -5,6 +5,9 @@ RoarCAD is a local-first browser PCB workbench where people and AI agents operat
 - [Production app](https://roarcad.vercel.app)
 - [Verified `dev` preview](https://roarcad-git-dev-jongan69s-projects.vercel.app)
 - [Public source](https://github.com/jongan69/RoarCAD)
+- [Safe AI PCB design guide](https://roarcad.vercel.app/guides/safe-ai-pcb-design/)
+- [RoarCAD, Flux, and Quilter comparison](https://roarcad.vercel.app/compare/flux-quilter/)
+- [Reproducible product evidence](https://roarcad.vercel.app/evidence/)
 
 The two-layer indicator proves the fabrication-ready path. The included eight-layer PocketRoar Capture Bridge proves the same generic compiler on a routed feasibility slice that has zero compiler/checker errors and exports a clearly marked engineering package. A third environmental-monitor sample proves that a new structured brief uses the same compiler without a project-name branch. PocketRoar remains incomplete and cannot request a quote until its full schematic, differential-pair, electrical, physical, licensing, and compatibility gates are proven.
 

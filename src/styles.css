@@ -703,6 +703,26 @@ dd {
 .history li span {
   color: #c7c3b9;
 }
+.resource-footer {
+  margin: 14px 20px 0;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+.resource-footer strong {
+  color: #e8e6df;
+}
+.resource-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
 .history time {
   color: var(--muted);
   text-align: right;
@@ -788,5 +808,12 @@ dd {
   .history {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  .resource-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .resource-footer nav {
+    justify-content: flex-start;
   }
 }

@@ -1,0 +1,24 @@
+# RoarCAD
+
+RoarCAD is a free, MIT-licensed, browser-based PCB review and collaboration workbench for people and AI agents.
+
+Canonical URL: https://roarcad.vercel.app/
+Source: https://github.com/jongan69/RoarCAD
+Devpost: https://devpost.com/software/roarcad
+
+## Product boundaries
+
+- AI tools can draft, inspect, preview changes, and prepare validated exports.
+- AI tools cannot apply a design change, download files, order boards, pay, or approve evidence.
+- A visible human action creates every new revision and starts every manufacturing action.
+- An engineering export is not proof that a physical board will work.
+- PocketRoar is an engineering study, not a fabrication-ready or physically validated product.
+
+## Canonical reading
+
+- Safe AI PCB design: https://roarcad.vercel.app/guides/safe-ai-pcb-design/
+- RoarCAD vs Flux vs Quilter: https://roarcad.vercel.app/compare/flux-quilter/
+- Flux.ai PCB alternatives: https://roarcad.vercel.app/alternatives/flux-ai-pcb/
+- Free and open-source workflow: https://roarcad.vercel.app/open-source-ai-pcb/
+- PocketRoar case study: https://roarcad.vercel.app/case-studies/pocketroar/
+- Reproducible evidence: https://roarcad.vercel.app/evidence/

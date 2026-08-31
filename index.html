@@ -4,11 +4,76 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#11110f" />
-    <meta name="description" content="Transparent, agent-assisted PCB design in the browser." />
-    <title>RoarCAD</title>
+    <meta
+      name="description"
+      content="RoarCAD is a free, open-source PCB review and collaboration workbench where AI can draft, inspect, and preview changes, but people approve every revision and manufacturing action."
+    />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <link rel="canonical" href="https://roarcad.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RoarCAD" />
+    <meta property="og:title" content="RoarCAD — Human-controlled AI PCB workbench" />
+    <meta
+      property="og:description"
+      content="Draft, inspect, review, and hand off versioned PCB designs with AI assistance and visible human approval."
+    />
+    <meta property="og:url" content="https://roarcad.vercel.app/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="RoarCAD — Human-controlled AI PCB workbench" />
+    <meta
+      name="twitter:description"
+      content="Free, open-source PCB design review and immutable handoff for people and AI agents."
+    />
+    <title>RoarCAD — Human-controlled AI PCB workbench</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "RoarCAD",
+        "url": "https://roarcad.vercel.app/",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Web",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/license/mit",
+        "codeRepository": "https://github.com/jongan69/RoarCAD",
+        "author": { "@type": "Person", "name": "Jonathan Gan" },
+        "description": "A free, open-source, agent-native PCB review and collaboration workbench with immutable revisions and human-only approval for design changes and manufacturing actions.",
+        "featureList": [
+          "Agent-assisted PCB drafting and inspection",
+          "Non-mutating change previews",
+          "Human-only revision approval",
+          "Immutable collaboration checkpoints",
+          "Engineering and fabrication readiness gates"
+        ],
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+    <style>
+      .discovery-fallback { max-width: 760px; margin: 0 auto; padding: 56px 24px; color: #e8e6df; background: #11110f; font: 16px/1.6 system-ui, sans-serif; }
+      .discovery-fallback h1 { font: 500 42px/1.1 Georgia, serif; }
+      .discovery-fallback a { color: #d9b28f; }
+      .discovery-fallback nav { display: flex; flex-wrap: wrap; gap: 16px; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="discovery-fallback">
+        <p>Free and open-source</p>
+        <h1>RoarCAD keeps people in control of AI-assisted PCB design.</h1>
+        <p>
+          A PCB is the board that connects electronic parts. RoarCAD lets an AI agent draft,
+          inspect, and preview changes to that board, while only a person can approve a new
+          revision, download manufacturing files, or request a quote.
+        </p>
+        <nav aria-label="Learn about RoarCAD">
+          <a href="/guides/safe-ai-pcb-design/">Safe AI PCB design</a>
+          <a href="/compare/flux-quilter/">Compare Flux and Quilter</a>
+          <a href="/open-source-ai-pcb/">Free and open-source workflow</a>
+          <a href="/case-studies/pocketroar/">PocketRoar case study</a>
+          <a href="/evidence/">Verification evidence</a>
+        </nav>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://roarcad.vercel.app/sitemap.xml

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RoarCAD vs Flux.ai vs Quilter: an honest comparison</title>
+  <meta name="description" content="Compare RoarCAD, Flux.ai, and Quilter by workflow: agent-controlled review and handoff, full browser ECAD, or autonomous PCB placement and routing." />
+  <meta name="robots" content="index,follow" /><link rel="canonical" href="https://roarcad.vercel.app/compare/flux-quilter/" />
+  <meta property="og:type" content="article" /><meta property="og:title" content="RoarCAD vs Flux.ai vs Quilter" /><meta property="og:description" content="Three different approaches to AI-assisted PCB work, compared without claiming feature parity." /><meta property="og:url" content="https://roarcad.vercel.app/compare/flux-quilter/" />
+  <link rel="stylesheet" href="/visibility.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"RoarCAD vs Flux.ai vs Quilter: an honest comparison","datePublished":"2026-08-31","dateModified":"2026-08-31","author":{"@type":"Person","name":"Jonathan Gan"},"mainEntityOfPage":"https://roarcad.vercel.app/compare/flux-quilter/"}</script>
+</head>
+<body>
+  <header><a href="/"><strong>RoarCAD</strong></a><nav aria-label="Main"><a href="/guides/safe-ai-pcb-design/">Safety</a><a href="/alternatives/flux-ai-pcb/">Alternatives</a><a href="/evidence/">Evidence</a><a href="https://github.com/jongan69/RoarCAD">Source</a></nav></header>
+  <main>
+    <p class="eyebrow">Product comparison · checked August 31, 2026</p>
+    <h1>RoarCAD vs Flux.ai vs Quilter</h1>
+    <p class="lede">These products overlap, but they solve different jobs. Flux is broad browser ECAD, Quilter automates physical layout, and RoarCAD focuses on inspectable agent changes, immutable review handoff, and human approval.</p>
+    <table><thead><tr><th>Product</th><th>Best fit</th><th>Starts with</th><th>Distinct strength</th><th>Important boundary</th></tr></thead><tbody>
+      <tr><th>RoarCAD</th><td>Small teams that want a transparent agent and revision workflow</td><td>Requirements or a structured BoardGraph</td><td>Four bounded WebMCP tools, non-mutating previews, human-only apply, tamper-evident checkpoints</td><td>Not a proven replacement for professional ECAD or physical verification</td></tr>
+      <tr><th><a href="https://www.flux.ai/p">Flux.ai</a></th><td>Teams wanting a collaborative, end-to-end browser ECAD</td><td>An idea, requirements, or an editable project</td><td>Planning, schematic/BOM work, layout, manufacturing output, component data, and real-time collaboration</td><td>A broader commercial product with subscription and AI-credit pricing</td></tr>
+      <tr><th><a href="https://www.quilter.ai/">Quilter</a></th><td>Engineers automating placement and routing of an existing design</td><td>A prepared schematic, board file, and constraints</td><td>Multiple physics-driven candidates, checks, and native ECAD return files</td><td>It is primarily layout automation, not requirements-to-schematic collaboration</td></tr>
+    </tbody></table>
+    <h2>Choose by the bottleneck</h2>
+    <ul><li>Choose <strong>RoarCAD</strong> when the main risk is trusting and handing off agent-made changes.</li><li>Choose <strong>Flux</strong> when you want a mature browser design environment with collaboration across the broader PCB workflow.</li><li>Choose <strong>Quilter</strong> when you already have the electrical design and need to compress placement and routing time.</li></ul>
+    <h2>What this comparison does not claim</h2>
+    <p>RoarCAD does not claim feature parity with Flux, physics-validation parity with Quilter, or evidence that PocketRoar is ready to fabricate. Competitor descriptions come from their official product pages and may change; follow the linked sources for current details.</p>
+    <div class="callout"><strong>RoarCAD’s differentiator:</strong> the agent has useful tools but no tool that can approve its own change. A person sees the diff and creates the next immutable revision.</div>
+    <p>See the <a href="/guides/safe-ai-pcb-design/">safety workflow</a>, <a href="/open-source-ai-pcb/">free/open-source details</a>, or <a href="/">try RoarCAD</a>.</p>
+  </main>
+  <footer>Comparison authored by RoarCAD. Competitor capability claims link to first-party sources; no paid ranking is involved.</footer>
+</body>
+</html>
