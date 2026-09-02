@@ -48,6 +48,17 @@ until the provider contract and abuse controls are independently verified.
 Rollback: republish the previous verified Netlify deploy; keep Vercel available.
 Never clear browser storage to repair a deployment.
 
+Repeat the deployed HTTP checks with:
+
+```sh
+bun run smoke https://roarcad.netlify.app
+```
+
+This sends only the public bundled example projects to the selected deployment.
+It checks static content, discovery files, headers, rejected methods, malformed
+and oversized bodies, the indicator's compiled fallback, and PocketRoar's
+fabrication refusal. It does not place orders or prove browser behavior.
+
 ## Sponsor facts checked September 2, 2026
 
 The live Devpost prize feed lists ten winners at $3,500 each, including $500
