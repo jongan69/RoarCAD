@@ -3,6 +3,11 @@ import { POST as quote } from "../../api/manufacturing/jlcpcb/quote.js"
 
 export const config = {
   path: ["/api/manufacturing/jlcpcb/quote", "/api/manufacturing/jlcpcb/handoff"],
+  rateLimit: {
+    windowLimit: 20,
+    windowSize: 60,
+    aggregateBy: ["ip", "domain"],
+  },
 }
 
 export default async function manufacturing(request: Request): Promise<Response> {

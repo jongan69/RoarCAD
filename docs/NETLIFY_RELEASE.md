@@ -35,6 +35,14 @@ No database migration, new authentication service, or production credential
 copy is required. Live quoting remains disabled even when credentials exist
 until the provider contract and abuse controls are independently verified.
 
+The native function declares a 20-request / 60-second limit per IP and domain.
+This protects the public compilation boundary without application-level state.
+It is not a global spending cap; shared-IP users share the allowance. Netlify
+documents up to ten seconds of enforcement delay, and an invalid rule does not
+fail the deploy. Verify deployment logs and a bounded live 429 test before
+claiming enforcement. Normal smoke checks stay below this limit. Source:
+[Netlify rate limiting](https://docs.netlify.com/manage/security/secure-access-to-sites/rate-limiting/).
+
 ## Rollout
 
 1. Test shared request boundaries and Netlify routing on `dev`.

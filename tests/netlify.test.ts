@@ -7,6 +7,11 @@ test("Netlify routes only the two manufacturing boundaries", async () => {
     "/api/manufacturing/jlcpcb/quote",
     "/api/manufacturing/jlcpcb/handoff",
   ])
+  expect(config.rateLimit).toEqual({
+    windowLimit: 20,
+    windowSize: 60,
+    aggregateBy: ["ip", "domain"],
+  })
   for (const path of config.path) {
     const response = await handler(new Request(`https://roarcad.test${path}`))
     expect(response.status).toBe(405)
