@@ -92,4 +92,4 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
 - [ ] **16. Replace and freeze the submission**
   What to build: Record the checkpoint-first video, update screenshots and Devpost copy, then obtain explicit confirmation before resubmission.
   Acceptance: Public video and live Devpost readback match the verified production build.
-  Verify: zero-error production commit `16f3e1600998a2a35644e32a0dbc7b388de81cce` is live, but the current public video and PocketRoar screenshot predate that repair. Freeze only after those assets and the Devpost readback match the release.
+  Verify: Netlify production and the current four-tool workflow are recorded in `../NETLIFY_RELEASE.md`. Fresh checkpoint review/adoption and indicator screenshots plus a replacement recording script are in `../PRESENTATION_REPLACEMENT.md`. The public video still predates the repair; final video and Devpost publication remain approval-gated. Freeze only after those assets and the Devpost readback match the release.
