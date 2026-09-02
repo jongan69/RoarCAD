@@ -160,7 +160,7 @@ and saved-revision browser gates pass.
 1. Open the live URL in ChatGPT’s in-app browser, or enable `chrome://flags/#enable-webmcp-testing` in Chrome and relaunch.
 2. Confirm the header says `WebMCP ready` when the browser exposes `document.modelContext`; otherwise use the complete manual workflow.
 3. Open the indicator, create a checkpoint link, and open it in a clean browser profile. Confirm it starts read-only.
-4. Continue the checkpoint as a local fork, preview moving D1 with an agent, confirm the revision ID is unchanged, then click **Approve & apply** and observe a new revision.
+4. Click **Download local backup** and confirm the file is saved before choosing **Continue as local fork**. Preview moving D1 with an agent, confirm the revision ID is unchanged, then click **Approve & apply** and observe a new revision.
 5. Return the new checkpoint to the original profile. Confirm the common ancestor and semantic diff, then manually adopt it as a new local revision.
 6. Select the bundled indicator to test fabrication export. Incoming checkpoint approvals are intentionally reset, so an adopted board is not automatically fabrication-ready. Confirm the browser requires a visible download click.
 7. Open PocketRoar, prepare an engineering bundle, then confirm fabrication export and quoting remain blocked.

@@ -30,6 +30,11 @@ hostname. Export the project JSON on the old site, then explicitly import it on
 the new site. Keep the old site accessible; do not redirect users away from their
 stored projects. Checkpoint fragments can also cross hosts, but intentionally
 downgrade incoming review claims and do not transfer full local history.
+Before selecting **Continue as local fork**, download the recipient's local
+backup and confirm it was saved; this is required even across different hosts.
+Adopting a returned checkpoint retains the recipient's existing local history
+and records incoming provenance, but resets incoming approval claims to
+unreviewed. Adoption replaces the snapshot; it never auto-merges PCB graphs.
 
 No database migration, new authentication service, or production credential
 copy is required. Live quoting remains disabled even when credentials exist
