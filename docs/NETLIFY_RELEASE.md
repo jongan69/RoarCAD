@@ -89,6 +89,18 @@ fabrication refusal. It does not place orders or prove browser behavior.
 - Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
   final Netlify production readback, and Devpost publication are still separate
   gates. Historical Vercel browser evidence is not substituted for them.
+- Native rate limiting was deployed with `24b62c8` on branch deploy
+  `6a98697276f4f20008805194`. A bounded sequential GET probe recorded 24 method
+  refusals (405), followed by a provider throttle (429), consistent with
+  Netlify's documented enforcement delay. No valid manufacturing request was
+  sent in this probe. CLI deploy-log retrieval returned 404, so enforcement
+  proof comes from the live response, not a claimed log inspection.
+- [CI run 33666824234](https://github.com/jongan69/RoarCAD/actions/runs/33666824234)
+  passed for the rate-limit and plain-English retry changes. CodeRabbit reviewed
+  the migration through `b3aa189`; its one actionable documentation finding was
+  addressed by distinguishing the submission deadline from judging start and
+  citing the event-specific repo/site-freeze FAQ. Later small rate-limit changes
+  have targeted tests and CI but are not claimed as independently reviewed.
 
 The deterministic eval-file test checks ten case definitions, not measured AI
 selection accuracy. Live tool execution above is direct integration evidence,
@@ -105,5 +117,8 @@ credit-request deadline. Hosting on Netlify is permitted, not required.
 Sources: [prizes](https://webmcp.devpost.com/),
 [rules](https://webmcp.devpost.com/rules),
 [resources](https://webmcp.devpost.com/resources). The official website prevails
-over this dated record. Do not alter the submitted repo, site, or entry after
-September 3 at 1 PM PT during judging.
+over this dated record. Submissions close September 3 at 1 PM PT; judging
+starts September 4 at 10 AM PT. The official resources FAQ, under “Can I edit
+my submission after the deadline?”, explicitly includes the repo and live site
+in its freeze until winners are announced. Preserve the submitted repo, site,
+and entry after the deadline; use a separate fork for further work.
