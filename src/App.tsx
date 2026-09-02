@@ -54,6 +54,8 @@ export default function App() {
   const [project, setProject] = useState<BoardProject | null>(null)
   const projectRef = useRef<BoardProject | null>(null)
   const [circuitJson, setCircuitJson] = useState<Record<string, unknown>[]>([])
+  const [compiling, setCompiling] = useState(false)
+  const compilingRef = useRef(false)
   const [view, setView] = useState<"pcb" | "schematic">("pcb")
   const [change, setChange] = useState<DesignChange | null>(null)
   const changeRef = useRef<DesignChange | null>(null)
@@ -179,6 +181,8 @@ export default function App() {
       },
       prepare: async (revisionId: string, targets: string[], requestedClass: ArtifactClass) => {
         requireWritableWorkspace()
+        if (compilingRef.current)
+          throw new Error("The board is still compiling. Try export when it finishes.")
         if (exportControllerRef.current) throw new Error("An export is already being prepared.")
         const current = requireProject()
         if (current.currentRevisionId !== revisionId)
@@ -230,11 +234,16 @@ export default function App() {
     setCanvasEditing(false)
     lastViewerMoveRef.current = ""
     if (!snapshot.design) {
+      compilingRef.current = false
+      setCompiling(false)
       setCircuitJson([])
       setNotice("Requirements are blocked; no BoardGraph was compiled.")
       return
     }
     const controller = new AbortController()
+    compilingRef.current = true
+    setCompiling(true)
+    setNotice("Compiling the current revision in the background…")
     compileInBackground(snapshot, controller.signal)
       .then((json) => {
         if (controller.signal.aborted) return
@@ -244,6 +253,12 @@ export default function App() {
       .catch((error) => {
         if (!controller.signal.aborted)
           setNotice(error instanceof Error ? error.message : "Compilation failed.")
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          compilingRef.current = false
+          setCompiling(false)
+        }
       })
     return () => {
       controller.abort()
@@ -918,8 +933,16 @@ export default function App() {
               </>
             ) : (
               <div className="blocked-canvas">
-                <span>Draft blocked</span>
-                <p>Supply a complete BoardGraph to compile a board.</p>
+                <span>
+                  {compiling ? "Compiling board…" : design ? "Board unavailable" : "Draft blocked"}
+                </span>
+                <p>
+                  {compiling
+                    ? "You can keep reviewing the design while it is processed."
+                    : design
+                      ? "See the status above. Reload or select a reference to retry."
+                      : "Supply a complete BoardGraph to compile a board."}
+                </p>
               </div>
             )}
           </div>
@@ -1020,7 +1043,7 @@ export default function App() {
           </fieldset>
           <button
             className="primary full"
-            disabled={!design || exporting}
+            disabled={!design || compiling || exporting}
             type="button"
             onClick={() => void validateAndPrepare()}
           >
