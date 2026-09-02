@@ -99,6 +99,16 @@ fabrication refusal. It does not place orders or prove browser behavior.
   assets, blind agent-selection measurement, and physical hardware validation
   remain distinct from this deployed software release.
 
+- The September 2 presentation refresh captured the production return review
+  and explicit adoption separately: incoming `b83febfd32320e30`, common
+  ancestor `d03a628e2c8e8f9d`, and adopted `6a6536c3499548f5`, with three local
+  revisions retained and incoming trust reset. A separate immutable production
+  origin showed PocketRoar `c204a71b354abeff` with zero compiler errors and the
+  iPhone blocker. Neither capture journey reported application console errors.
+  Current screenshots and the unrecorded replacement script are indexed in
+  [the presentation packet](PRESENTATION_REPLACEMENT.md). Static captures do
+  not substitute for the replacement video or blind agent-selection benchmark.
+
 - Native packaging and live HTTP checks passed for `9c9f7d3` on Netlify deploy
   `6a9866f1cb3dc423aa941f67`. The published function uses Node 22 and maps exactly
   the quote and handoff paths. The repeatable smoke script was added in

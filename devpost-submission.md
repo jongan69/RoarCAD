@@ -209,14 +209,26 @@ The public video is 2:25, 1920×1080, H.264/AAC, with AI narration disclosure en
 It uses genuine live-product captures and passed YouTube's copyright and Community
 Guidelines checks.
 
+It predates the four-tool checkpoint workflow and zero-error PocketRoar repair.
+The replacement script and current screenshot inventory are in
+`docs/PRESENTATION_REPLACEMENT.md`; a new video has not yet been rendered or
+published. Do not present the historical video as proof of the current release.
+
 ## Screenshot Shot List
 
-1. Power indicator at fabrication-ready with prepared artifacts: `docs/screenshots/indicator-fabrication.jpg`.
-2. PocketRoar at engineering readiness with visible blockers: `docs/screenshots/pocketroar-engineering.jpg`.
-3. Replace the stale PocketRoar workspace capture with the current `c204a71b354abeff` view showing **0 errors**, the iPhone blocker, exact HDMI/USB-C connector footprints, and the 19.2 MHz CX3 clock.
-4. Environmental-monitor generic-board proof: `docs/screenshots/environment-monitor-webmcp.png`.
-5. Non-mutating PocketRoar preview: `docs/screenshots/pocketroar-preview.jpg`.
-6. Approved immutable PocketRoar revision: `docs/screenshots/pocketroar-applied-revision.jpg`.
+1. Returned checkpoint, common ancestor, and semantic diff:
+   `docs/screenshots/netlify-checkpoint-review.png`.
+2. Manual adoption, retained three-revision history, and incoming trust reset:
+   `docs/screenshots/netlify-checkpoint-adopted.png`.
+3. Production indicator at fabrication-ready with an explicit package download:
+   `docs/screenshots/netlify-indicator-fabrication.png`.
+4. Current PocketRoar `c204a71b354abeff`, **0 errors**, and the iPhone blocker:
+   `docs/screenshots/netlify-pocketroar-engineering.png`.
+
+Older `pocketroar-*.jpg`, `pocketroar-webmcp-engineering.png`,
+`indicator-fabrication.jpg`, and `environment-monitor-webmcp.png` are historical
+evidence, not current-release screenshots. The replacement assets above have
+not been uploaded to Devpost.
 
 ## Submission Readiness Notes
 

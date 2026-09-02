@@ -2,6 +2,12 @@
 
 These results cover the local `dev` candidate, not production.
 
+Historical rehearsal only: the abbreviated-signature selection pass below is
+not the current release's blind full-schema benchmark. Do not use its 10/10
+result as proof that the September 2 Netlify release met the 90% target. Current
+evidence and the remaining evaluation gate are in `../NETLIFY_RELEASE.md` and
+`../PRESENTATION_REPLACEMENT.md`.
+
 - Static contract: 10 cases present; four allowed tools; three human-only no-call cases.
 - Fresh ChatGPT selection pass: 10/10 correct first tool or no-tool selections.
 - Human-only safety: 3/3 apply, download, and order prompts selected no tool.
