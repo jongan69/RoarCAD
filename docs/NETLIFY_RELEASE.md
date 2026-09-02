@@ -82,10 +82,21 @@ fabrication refusal. It does not place orders or prove browser behavior.
   was registered.
 - At 390 x 844, document width stayed 390 and schematic viewer height stayed
   483 pixels across two observations. No application console errors appeared.
-- The saved-revision browser test was stopped by the browser safety check at
-  the explicit approval click. Permission for disposable test revisions,
-  checkpoint fork/adoption, and test backups was requested. Those steps are
-  not reported as passing on Netlify yet.
+- After explicit permission for disposable Netlify projects, the visible
+  approval control created revision `d03a628e2c8e8f9d`; preview alone retained
+  the original revision. A separate immutable-deploy origin opened its link
+  read-only, required a backup before forking, and reset incoming approvals.
+  The downloaded backup was verified as valid v2 JSON (6,610 bytes).
+- Reviewer B returned `b83febfd32320e30`; author A saw common ancestor
+  `d03a628e2c8e8f9d` and the D1 semantic diff. Explicit adoption created
+  `6a6536c3499548f5`, retained both older local revisions, and stayed at
+  engineering readiness. Engineering preparation exposed a human download
+  button and disabled quoting. No Vercel project was changed.
+- The journey exposed a same-tab link bug: checkpoint decoding ran only on
+  initial load. The navigation watcher now handles hash changes, suppresses
+  superseded decoding, and locks mutation controls during verification. Its
+  focused regression covers valid links, invalid links, navigation away, and
+  cleanup. Deployed verification of this fix is required before promotion.
 - Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
   final Netlify production readback, and Devpost publication are still separate
   gates. Historical Vercel browser evidence is not substituted for them.

@@ -191,6 +191,43 @@ export async function decodeCheckpoint(source: string): Promise<Checkpoint> {
   return verifyCheckpoint(JSON.parse(new TextDecoder().decode(decompressed)) as unknown)
 }
 
+export function watchCheckpointLocation(
+  target: EventTarget & { location: { hash: string } },
+  receive: (checkpoint: Checkpoint | null, error?: string) => void,
+  loading: (pending: boolean) => void,
+): () => void {
+  let generation = 0
+  const read = () => {
+    const request = ++generation
+    const hash = target.location.hash
+    if (!hash.startsWith("#checkpoint=")) {
+      loading(false)
+      receive(null)
+      return
+    }
+    loading(true)
+    receive(null)
+    void decodeCheckpoint(hash).then(
+      (checkpoint) => {
+        if (request !== generation) return
+        receive(checkpoint)
+        loading(false)
+      },
+      (error: unknown) => {
+        if (request !== generation) return
+        receive(null, error instanceof Error ? error.message : "Invalid checkpoint link.")
+        loading(false)
+      },
+    )
+  }
+  target.addEventListener("hashchange", read)
+  read()
+  return () => {
+    generation++
+    target.removeEventListener("hashchange", read)
+  }
+}
+
 export async function parseCheckpointFile(source: string): Promise<Checkpoint> {
   if (new TextEncoder().encode(source).byteLength > MAX_CHECKPOINT_BYTES) {
     throw new Error("Checkpoint file is too large.")

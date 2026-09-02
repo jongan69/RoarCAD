@@ -8,10 +8,10 @@ import {
   checkpointUrl,
   compareCheckpoint,
   createCheckpoint,
-  decodeCheckpoint,
   forkCheckpoint,
   MAX_CHECKPOINT_BYTES,
   parseCheckpointFile,
+  watchCheckpointLocation,
 } from "./checkpoints"
 import {
   applyChange,
@@ -79,6 +79,8 @@ export default function App() {
   )
   const [incomingCheckpoint, setIncomingCheckpoint] = useState<Checkpoint | null>(null)
   const incomingCheckpointRef = useRef<Checkpoint | null>(null)
+  const [checkpointLoading, setCheckpointLoading] = useState(false)
+  const checkpointLoadingRef = useRef(false)
   const [backupPreparedKey, setBackupPreparedKey] = useState<string | null>(null)
   const lastViewerMoveRef = useRef("")
 
@@ -98,17 +100,24 @@ export default function App() {
     void load()
   }, [])
 
-  useEffect(() => {
-    if (!location.hash.startsWith("#checkpoint=")) return
-    decodeCheckpoint(location.hash)
-      .then((checkpoint) => {
-        setIncomingCheckpoint(checkpoint)
-        setNotice("Shared checkpoint loaded for read-only review.")
-      })
-      .catch((error) => {
-        setNotice(error instanceof Error ? error.message : "Invalid checkpoint link.")
-      })
-  }, [])
+  useEffect(
+    () =>
+      watchCheckpointLocation(
+        window,
+        (checkpoint, error) => {
+          incomingCheckpointRef.current = checkpoint
+          setIncomingCheckpoint(checkpoint)
+          if (error) setNotice(error)
+          else if (checkpoint) setNotice("Shared checkpoint loaded for read-only review.")
+        },
+        (pending) => {
+          checkpointLoadingRef.current = pending
+          setCheckpointLoading(pending)
+          if (pending) setNotice("Verifying checkpoint integrity…")
+        },
+      ),
+    [],
+  )
 
   useEffect(() => {
     projectRef.current = project
@@ -127,7 +136,7 @@ export default function App() {
   }, [])
 
   const requireWritableWorkspace = useCallback(() => {
-    if (incomingCheckpointRef.current) {
+    if (checkpointLoadingRef.current || incomingCheckpointRef.current) {
       throw new Error("Dismiss, continue, or adopt the incoming checkpoint before changing state.")
     }
   }, [])
@@ -224,6 +233,7 @@ export default function App() {
 
   if (!project) return <main className="loading">Preparing RoarCAD…</main>
   const revision = currentRevision(project)
+  const checkpointReadOnly = checkpointLoading || Boolean(incomingCheckpoint)
   const domainValidation = validateSnapshot(revision.snapshot)
   const validation =
     revision.validation.status === "not-run" ? domainValidation : revision.validation
@@ -487,12 +497,12 @@ export default function App() {
           >
             Export project
           </button>
-          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
+          <label className="button" aria-disabled={checkpointReadOnly}>
             Import project
             <input
               className="visually-hidden"
               type="file"
-              disabled={Boolean(incomingCheckpoint)}
+              disabled={checkpointReadOnly}
               accept=".json,.roarcad.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -512,7 +522,7 @@ export default function App() {
         <button
           className={project.id === "indicator" ? "active" : ""}
           type="button"
-          disabled={Boolean(incomingCheckpoint)}
+          disabled={checkpointReadOnly}
           onClick={() => void selectReference("indicator")}
         >
           Indicator vertical slice
@@ -520,7 +530,7 @@ export default function App() {
         <button
           className={project.id === "capture" ? "active" : ""}
           type="button"
-          disabled={Boolean(incomingCheckpoint)}
+          disabled={checkpointReadOnly}
           onClick={() => void selectReference("capture")}
         >
           PocketRoar engineering study
@@ -543,29 +553,29 @@ export default function App() {
             maxLength={500}
             placeholder="Optional handoff note"
             value={checkpointNote}
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onChange={(event) => setCheckpointNote(event.target.value)}
           />
           <button
             type="button"
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onClick={() => void shareCheckpoint()}
           >
             Copy checkpoint link
           </button>
           <button
             type="button"
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onClick={() => void downloadCheckpoint()}
           >
             Download checkpoint
           </button>
-          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
+          <label className="button" aria-disabled={checkpointReadOnly}>
             Import checkpoint
             <input
               className="visually-hidden"
               type="file"
-              disabled={Boolean(incomingCheckpoint)}
+              disabled={checkpointReadOnly}
               accept=".json,.roarcad-checkpoint.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -663,7 +673,7 @@ export default function App() {
         )}
       </section>
 
-      <section className="workspace" inert={incomingCheckpoint ? true : undefined}>
+      <section className="workspace" inert={checkpointReadOnly ? true : undefined}>
         <aside className="panel requirements">
           <div className="panel-heading">
             <span>01</span>
