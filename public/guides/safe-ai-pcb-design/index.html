@@ -6,12 +6,12 @@
   <title>How to safely design a PCB with AI agents | RoarCAD</title>
   <meta name="description" content="A plain-English, evidence-based workflow for using AI agents to draft and review circuit boards without letting them silently approve or manufacture unsafe work." />
   <meta name="robots" content="index,follow" />
-  <link rel="canonical" href="https://roarcad.vercel.app/guides/safe-ai-pcb-design/" />
+  <link rel="canonical" href="https://roarcad.netlify.app/guides/safe-ai-pcb-design/" />
   <meta property="og:type" content="article" /><meta property="og:title" content="How to safely design a PCB with AI agents" />
   <meta property="og:description" content="Use typed inputs, non-mutating previews, independent checks, immutable revisions, and visible human approval." />
-  <meta property="og:url" content="https://roarcad.vercel.app/guides/safe-ai-pcb-design/" />
+  <meta property="og:url" content="https://roarcad.netlify.app/guides/safe-ai-pcb-design/" />
   <link rel="stylesheet" href="/visibility.css" />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How to safely design a PCB with AI agents","datePublished":"2026-08-31","dateModified":"2026-08-31","author":{"@type":"Person","name":"Jonathan Gan"},"publisher":{"@type":"Organization","name":"RoarCAD","url":"https://roarcad.vercel.app/"},"mainEntityOfPage":"https://roarcad.vercel.app/guides/safe-ai-pcb-design/"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How to safely design a PCB with AI agents","datePublished":"2026-08-31","dateModified":"2026-08-31","author":{"@type":"Person","name":"Jonathan Gan"},"publisher":{"@type":"Organization","name":"RoarCAD","url":"https://roarcad.netlify.app/"},"mainEntityOfPage":"https://roarcad.netlify.app/guides/safe-ai-pcb-design/"}</script>
 </head>
 <body>
   <header><a href="/"><strong>RoarCAD</strong></a><nav aria-label="Main"><a href="/compare/flux-quilter/">Compare</a><a href="/case-studies/pocketroar/">PocketRoar</a><a href="/evidence/">Evidence</a><a href="https://github.com/jongan69/RoarCAD">Source</a></nav></header>
@@ -35,6 +35,14 @@
       <section class="card"><h3>The agent may</h3><ul><li>draft a structured board</li><li>inspect one bounded topic</li><li>preview allowlisted changes</li><li>prepare checked exports</li></ul></section>
       <section class="card"><h3>Only a person may</h3><ul><li>apply a design change</li><li>approve parts or evidence</li><li>download manufacturing files</li><li>request a quote, order, or pay</li></ul></section>
     </div>
+    <h2>Try it with your browser agent</h2>
+    <ol>
+      <li>Open RoarCAD in ChatGPT's WebMCP-capable browser, or Chrome 149+ with WebMCP enabled and an agent integration.</li>
+      <li>Select the indicator example. Ask: “Inspect this revision's parts and explain D1 and its connections. Preview moving D1 to x=3, y=2. Do not apply it.”</li>
+      <li>Read the proposed change. The revision stays unchanged until you click <strong>Approve &amp; apply</strong>.</li>
+      <li>Ask the agent to prepare an engineering export. Download it yourself, or share a checkpoint with a teammate.</li>
+    </ol>
+    <p><strong>Compatibility:</strong> WebMCP exposes tools inside a browser page. This website is not a remote MCP server you can paste into any coding agent's settings. Your agent needs a browser connection that supports page tools. Without it, all manual controls still work.</p>
     <h2>Definitions in simple English</h2>
     <dl><dt>PCB</dt><dd>A printed circuit board: the rigid board that holds parts and connects them with copper paths.</dd><dt>Schematic</dt><dd>A logical map showing which pins should connect. It does not show the final physical placement.</dd><dt>Footprint</dt><dd>The exact copper-pad pattern used to solder one package onto the board.</dd><dt>Net</dt><dd>One named electrical connection shared by two or more pins.</dd><dt>ERC and DRC</dt><dd>Automated checks for electrical mistakes and physical-rule violations. Passing them is necessary, but not sufficient proof.</dd></dl>
     <div class="callout warning"><strong>Limit:</strong> RoarCAD does not replace professional schematic review, signal/power-integrity analysis, fabricator DFM review, compliance work, or physical testing.</div>

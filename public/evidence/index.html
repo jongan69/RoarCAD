@@ -4,8 +4,8 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RoarCAD verification evidence and limitations</title>
   <meta name="description" content="Reproducible evidence for RoarCAD's WebMCP safety boundaries, immutable checkpoints, PCB compilation, export gates, production deployment, and known limitations." />
-  <meta name="robots" content="index,follow" /><link rel="canonical" href="https://roarcad.vercel.app/evidence/" />
-  <meta property="og:type" content="article" /><meta property="og:title" content="RoarCAD verification evidence" /><meta property="og:description" content="What was tested, how to reproduce it, and what remains unproven." /><meta property="og:url" content="https://roarcad.vercel.app/evidence/" />
+  <meta name="robots" content="index,follow" /><link rel="canonical" href="https://roarcad.netlify.app/evidence/" />
+  <meta property="og:type" content="article" /><meta property="og:title" content="RoarCAD verification evidence" /><meta property="og:description" content="What was tested, how to reproduce it, and what remains unproven." /><meta property="og:url" content="https://roarcad.netlify.app/evidence/" />
   <link rel="stylesheet" href="/visibility.css" />
 </head>
 <body>
@@ -18,7 +18,7 @@
       <tr><td>Agent preview cannot create a revision</td><td>WebMCP exposes four tools and no apply tool; domain tests assert stored state is unchanged until manual apply.</td><td><code>bun test tests/webmcp.test.ts tests/domain.test.ts</code></td></tr>
       <tr><td>Checkpoint integrity and ancestry are enforced</td><td>Tests cover round-trip, size, tampering, unrelated projects, fast-forward, behind, and divergence behavior.</td><td><code>bun test tests/checkpoints.test.ts</code></td></tr>
       <tr><td>Manufacturing remains human-controlled</td><td>Client and server validation reject unready designs; download and quote actions require visible UI controls.</td><td><code>bun test tests/manufacturing.test.ts tests/eda.test.ts</code></td></tr>
-      <tr><td>Tool selection and outputs are bounded</td><td>Natural-language WebMCP evaluations cover selection, arguments, sequencing, pagination, and safety no-call cases.</td><td><code>bun run eval:webmcp</code></td></tr>
+      <tr><td>Tool contracts and evaluation cases are checked</td><td>Deterministic tests enforce output limits and safety boundaries. Ten natural-language cases specify selection, arguments, sequencing, pagination, and no-call behavior; checking the case file does not measure an AI model's selection accuracy.</td><td><code>bun test tests/webmcp.test.ts</code> and <code>bun run eval:webmcp</code>; see the dated browser records for live execution.</td></tr>
       <tr><td>PocketRoar's modeled slice is digitally clean</td><td>The recorded revision generated 2,566 Circuit JSON elements with zero compiler and checker errors.</td><td><code>bun test tests/eda.test.ts</code> and inspect the tracked project evidence</td></tr>
       <tr><td>The web application builds</td><td>TypeScript, Biome, Bun tests, and the Vite production build are required release gates.</td><td><code>bun run typecheck &amp;&amp; bun run check &amp;&amp; bun test &amp;&amp; bun run build</code></td></tr>
     </tbody></table>

@@ -2,7 +2,7 @@
 
 RoarCAD is a free, MIT-licensed, browser-based PCB review and collaboration workbench for people and AI agents.
 
-Canonical URL: https://roarcad.vercel.app/
+Canonical URL: https://roarcad.netlify.app/
 Source: https://github.com/jongan69/RoarCAD
 Devpost: https://devpost.com/software/roarcad
 
@@ -16,9 +16,9 @@ Devpost: https://devpost.com/software/roarcad
 
 ## Canonical reading
 
-- Safe AI PCB design: https://roarcad.vercel.app/guides/safe-ai-pcb-design/
-- RoarCAD vs Flux vs Quilter: https://roarcad.vercel.app/compare/flux-quilter/
-- Flux.ai PCB alternatives: https://roarcad.vercel.app/alternatives/flux-ai-pcb/
-- Free and open-source workflow: https://roarcad.vercel.app/open-source-ai-pcb/
-- PocketRoar case study: https://roarcad.vercel.app/case-studies/pocketroar/
-- Reproducible evidence: https://roarcad.vercel.app/evidence/
+- Safe AI PCB design: https://roarcad.netlify.app/guides/safe-ai-pcb-design/
+- RoarCAD vs Flux vs Quilter: https://roarcad.netlify.app/compare/flux-quilter/
+- Flux.ai PCB alternatives: https://roarcad.netlify.app/alternatives/flux-ai-pcb/
+- Free and open-source workflow: https://roarcad.netlify.app/open-source-ai-pcb/
+- PocketRoar case study: https://roarcad.netlify.app/case-studies/pocketroar/
+- Reproducible evidence: https://roarcad.netlify.app/evidence/

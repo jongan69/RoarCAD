@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://roarcad.vercel.app/sitemap.xml
+Sitemap: https://roarcad.netlify.app/sitemap.xml

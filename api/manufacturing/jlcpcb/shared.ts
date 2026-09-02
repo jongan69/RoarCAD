@@ -7,6 +7,55 @@ import {
 export const JLC_FALLBACK_URL = "https://jlcpcb.com/quote"
 export const JLC_OPEN_API_BASE = "https://open.jlcpcb.com"
 
+class RequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
+}
+
+export async function readRequestJson(request: Request, limit: number): Promise<unknown> {
+  if (request.method !== "POST") throw new RequestError("Use POST for this endpoint.", 405)
+  if (Number(request.headers.get("content-length")) > limit)
+    throw new RequestError("Manufacturing request is too large.", 413)
+  const reader = request.body?.getReader()
+  if (!reader) throw new RequestError("Request body is required.", 400)
+  const decoder = new TextDecoder("utf-8", { fatal: true })
+  let bytes = 0
+  let source = ""
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > limit) {
+        await reader.cancel()
+        throw new RequestError("Manufacturing request is too large.", 413)
+      }
+      source += decoder.decode(value, { stream: true })
+    }
+    return JSON.parse(source + decoder.decode())
+  } finally {
+    reader.releaseLock()
+  }
+}
+
+export function requestErrorResponse(error: unknown): Response {
+  const message = error instanceof Error ? error.message : "Invalid manufacturing request."
+  const status =
+    error instanceof RequestError
+      ? error.status
+      : /fabrication-ready|Export blocked/.test(message)
+        ? 422
+        : 400
+  return Response.json(
+    { error: message },
+    { status, headers: status === 405 ? { allow: "POST" } : undefined },
+  )
+}
+
 export function fallbackQuote(reason: string, manifestHash?: string): QuoteResult {
   return {
     configured: false,
@@ -129,10 +178,18 @@ export async function verifyQuoteToken(token: string, secret: string) {
   }
   if (!payload.quoteId || !/^[a-f0-9]{64}$/.test(payload.manifestHash))
     throw new Error("Invalid quote token payload.")
-  if (Date.parse(payload.expiresAt) <= Date.now()) throw new Error("Quote token has expired.")
+  const expiry = Date.parse(payload.expiresAt)
+  if (!Number.isFinite(expiry)) throw new Error("Invalid quote token expiry.")
+  if (expiry <= Date.now()) throw new Error("Quote token has expired.")
   if (payload.checkoutUrl) {
-    const hostname = new URL(payload.checkoutUrl).hostname
-    if (hostname !== "jlcpcb.com" && !hostname.endsWith(".jlcpcb.com"))
+    const url = new URL(payload.checkoutUrl)
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.port ||
+      (url.hostname !== "jlcpcb.com" && !url.hostname.endsWith(".jlcpcb.com"))
+    )
       throw new Error("Invalid checkout URL.")
   }
   return payload

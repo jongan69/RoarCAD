@@ -1,18 +1,16 @@
 import { prepareExport } from "../../../src/eda.js"
 import { MAX_PROJECT_BYTES } from "../../../src/manufacturing.js"
-import { fallbackQuote, jlcCredentials, parseQuoteRequest } from "./shared.js"
+import {
+  fallbackQuote,
+  jlcCredentials,
+  parseQuoteRequest,
+  readRequestJson,
+  requestErrorResponse,
+} from "./shared.js"
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const declaredBytes = Number(request.headers.get("content-length") ?? 0)
-    if (declaredBytes > MAX_PROJECT_BYTES) {
-      return Response.json({ error: "Manufacturing request is too large." }, { status: 413 })
-    }
-    const source = await request.text()
-    if (new TextEncoder().encode(source).byteLength > MAX_PROJECT_BYTES) {
-      return Response.json({ error: "Manufacturing request is too large." }, { status: 413 })
-    }
-    const parsed = parseQuoteRequest(JSON.parse(source))
+    const parsed = parseQuoteRequest(await readRequestJson(request, MAX_PROJECT_BYTES))
     const prepared = await prepareExport(parsed.project, "fabrication")
     if (!jlcCredentials()) {
       return Response.json(
@@ -37,11 +35,7 @@ export async function POST(request: Request): Promise<Response> {
       ),
     )
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Invalid quote request."
-    return Response.json(
-      { error: message },
-      { status: /fabrication-ready|Export blocked/.test(message) ? 422 : 400 },
-    )
+    return requestErrorResponse(error)
   }
 }
 

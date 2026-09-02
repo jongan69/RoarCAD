@@ -1,8 +1,14 @@
-import { authorizeHandoff, JLC_FALLBACK_URL, verifyQuoteToken } from "./shared.js"
+import {
+  authorizeHandoff,
+  JLC_FALLBACK_URL,
+  readRequestJson,
+  requestErrorResponse,
+  verifyQuoteToken,
+} from "./shared.js"
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const handoff = authorizeHandoff(await request.json())
+    const handoff = authorizeHandoff(await readRequestJson(request, 16_384))
     const secret = process.env.JLCPCB_SECRET_KEY
     if (!secret) {
       return Response.json(
@@ -25,10 +31,7 @@ export async function POST(request: Request): Promise<Response> {
       fallbackUrl: JLC_FALLBACK_URL,
     })
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "Invalid handoff request." },
-      { status: 400 },
-    )
+    return requestErrorResponse(error)
   }
 }
 
