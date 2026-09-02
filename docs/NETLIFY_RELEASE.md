@@ -74,6 +74,31 @@ fabrication refusal. It does not place orders or prove browser behavior.
 
 ## Evidence recorded September 2
 
+- Production release: [PR #10](https://github.com/jongan69/RoarCAD/pull/10)
+  merged as `3895452567e767bbf2df5c1bb1ac46766af48fa6`. Netlify production
+  deploy `6a987be18688ed000897bd4b` reached `ready` and published to
+  <https://roarcad.netlify.app/> at 19:42:07 UTC.
+  [Main CI run 33674811226](https://github.com/jongan69/RoarCAD/actions/runs/33674811226)
+  passed typecheck, Biome, all 38 tests across 12 files, and build.
+- Production HTTP smoke passed all seven HTML routes, discovery files, headers,
+  invalid/oversized request refusals, indicator server compilation/manual
+  fallback, and PocketRoar fabrication refusal. A clean production browser
+  executed live WebMCP preview without changing history; visible approval
+  created `d03a628e2c8e8f9d`. Worker-backed fabrication preparation returned
+  manifest `637a2bffd909eeceff546f1a48aa54f0e5764ee3e3025b8796cc71865b0f899e`
+  with `humanDownloadRequired: true`. No application console errors appeared.
+- The pre-release Netlify handoff, PocketRoar bundle verification, cancellation,
+  and mobile results below are separate from the production smoke. Chrome
+  additionally passed manual preview, approval, and worker-backed indicator
+  export. Its initial control-channel error came from the browser extension;
+  no new Chrome WebMCP execution benchmark is claimed.
+- CodeRabbit completed a full review through `59123ce`; its only new finding
+  was the missing explicit backup prerequisite in migration guidance. That
+  prerequisite and judge instructions were corrected in `0daa73d`; both review
+  threads are resolved. Final Devpost publication, refreshed presentation
+  assets, blind agent-selection measurement, and physical hardware validation
+  remain distinct from this deployed software release.
+
 - Native packaging and live HTTP checks passed for `9c9f7d3` on Netlify deploy
   `6a9866f1cb3dc423aa941f67`. The published function uses Node 22 and maps exactly
   the quote and handoff paths. The repeatable smoke script was added in
@@ -117,9 +142,10 @@ fabrication refusal. It does not place orders or prove browser behavior.
   159 review/check warnings. Fabrication was refused through live WebMCP.
   Starting another export and canceling it returned an explicit canceled
   notice. Production browser verification remains a separate gate.
-- Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
-  final Netlify production readback, and Devpost publication are still separate
-  gates. Historical Vercel browser evidence is not substituted for them.
+- Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge
+  and final Netlify readback subsequently passed as recorded above. Devpost
+  publication remains confirmation-gated. Historical Vercel browser evidence
+  is not substituted for Netlify verification.
 - Native rate limiting was deployed with `24b62c8` on branch deploy
   `6a98697276f4f20008805194`. A bounded sequential GET probe recorded 24 method
   refusals (405), followed by a provider throttle (429), consistent with
