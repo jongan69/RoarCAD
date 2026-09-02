@@ -54,6 +54,8 @@ export const handoffSchema = z.object({
 
 export async function parseProviderResponse<T>(response: Response, fallback: string): Promise<T> {
   const body = await response.text()
+  if (response.status === 429)
+    throw new Error("Too many manufacturing requests. Wait a minute and try again.")
   let result: T & { error?: string }
   try {
     result = JSON.parse(body) as T & { error?: string }

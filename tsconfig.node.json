@@ -11,5 +11,13 @@
     "strict": true,
     "types": ["bun"]
   },
-  "include": ["vite.config.ts", "api", "tests", "src/domain.ts", "src/manufacturing.ts"]
+  "include": [
+    "vite.config.ts",
+    "api",
+    "netlify",
+    "scripts",
+    "tests",
+    "src/domain.ts",
+    "src/manufacturing.ts"
+  ]
 }

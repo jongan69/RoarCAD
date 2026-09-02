@@ -8,10 +8,10 @@ import {
   checkpointUrl,
   compareCheckpoint,
   createCheckpoint,
-  decodeCheckpoint,
   forkCheckpoint,
   MAX_CHECKPOINT_BYTES,
   parseCheckpointFile,
+  watchCheckpointLocation,
 } from "./checkpoints"
 import {
   applyChange,
@@ -31,13 +31,8 @@ import {
   validateSnapshot,
   withValidation,
 } from "./domain"
-import {
-  type ArtifactClass,
-  compileSnapshot,
-  downloadBlob,
-  type PreparedExport,
-  prepareExport,
-} from "./eda"
+import { type ArtifactClass, downloadBlob, type PreparedExport } from "./eda"
+import { compileInBackground, prepareInBackground } from "./eda-background"
 import { componentDefinition } from "./explanations"
 import { inspectProject } from "./inspection"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
@@ -59,10 +54,14 @@ export default function App() {
   const [project, setProject] = useState<BoardProject | null>(null)
   const projectRef = useRef<BoardProject | null>(null)
   const [circuitJson, setCircuitJson] = useState<Record<string, unknown>[]>([])
+  const [compiling, setCompiling] = useState(false)
+  const compilingRef = useRef(false)
   const [view, setView] = useState<"pcb" | "schematic">("pcb")
   const [change, setChange] = useState<DesignChange | null>(null)
   const changeRef = useRef<DesignChange | null>(null)
   const [prepared, setPrepared] = useState<PreparedExport | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const exportControllerRef = useRef<AbortController | null>(null)
   const [quote, setQuote] = useState<QuoteResult | null>(null)
   const [notice, setNotice] = useState("Loading reference design…")
   const [mode, setMode] = useState<"bare-pcb" | "pcba">("bare-pcb")
@@ -79,6 +78,8 @@ export default function App() {
   )
   const [incomingCheckpoint, setIncomingCheckpoint] = useState<Checkpoint | null>(null)
   const incomingCheckpointRef = useRef<Checkpoint | null>(null)
+  const [checkpointLoading, setCheckpointLoading] = useState(false)
+  const checkpointLoadingRef = useRef(false)
   const [backupPreparedKey, setBackupPreparedKey] = useState<string | null>(null)
   const lastViewerMoveRef = useRef("")
 
@@ -98,17 +99,24 @@ export default function App() {
     void load()
   }, [])
 
-  useEffect(() => {
-    if (!location.hash.startsWith("#checkpoint=")) return
-    decodeCheckpoint(location.hash)
-      .then((checkpoint) => {
-        setIncomingCheckpoint(checkpoint)
-        setNotice("Shared checkpoint loaded for read-only review.")
-      })
-      .catch((error) => {
-        setNotice(error instanceof Error ? error.message : "Invalid checkpoint link.")
-      })
-  }, [])
+  useEffect(
+    () =>
+      watchCheckpointLocation(
+        window,
+        (checkpoint, error) => {
+          incomingCheckpointRef.current = checkpoint
+          setIncomingCheckpoint(checkpoint)
+          if (error) setNotice(error)
+          else if (checkpoint) setNotice("Shared checkpoint loaded for read-only review.")
+        },
+        (pending) => {
+          checkpointLoadingRef.current = pending
+          setCheckpointLoading(pending)
+          if (pending) setNotice("Verifying checkpoint integrity…")
+        },
+      ),
+    [],
+  )
 
   useEffect(() => {
     projectRef.current = project
@@ -127,7 +135,7 @@ export default function App() {
   }, [])
 
   const requireWritableWorkspace = useCallback(() => {
-    if (incomingCheckpointRef.current) {
+    if (checkpointLoadingRef.current || incomingCheckpointRef.current) {
       throw new Error("Dismiss, continue, or adopt the incoming checkpoint before changing state.")
     }
   }, [])
@@ -173,10 +181,25 @@ export default function App() {
       },
       prepare: async (revisionId: string, targets: string[], requestedClass: ArtifactClass) => {
         requireWritableWorkspace()
+        if (compilingRef.current)
+          throw new Error("The board is still compiling. Try export when it finishes.")
+        if (exportControllerRef.current) throw new Error("An export is already being prepared.")
         const current = requireProject()
         if (current.currentRevisionId !== revisionId)
           throw new Error("Only the current revision can export.")
-        const result = await prepareExport(current, requestedClass, setNotice)
+        const controller = new AbortController()
+        exportControllerRef.current = controller
+        setExporting(true)
+        let result: PreparedExport
+        try {
+          result = await prepareInBackground(current, requestedClass, setNotice, controller.signal)
+          requireWritableWorkspace()
+          if (projectRef.current !== current)
+            throw new Error("The project changed. Prepare the current revision again.")
+        } finally {
+          if (exportControllerRef.current === controller) exportControllerRef.current = null
+          setExporting(false)
+        }
         setPrepared(result)
         setProject(withValidation(current, result.validation))
         setNotice(
@@ -204,26 +227,48 @@ export default function App() {
     const current = projectRef.current
     if (!compileKey || !current) return
     const snapshot = currentRevision(current).snapshot
+    setCircuitJson([])
     setPrepared(null)
     setQuote(null)
     setEditEvents([])
     setCanvasEditing(false)
     lastViewerMoveRef.current = ""
     if (!snapshot.design) {
+      compilingRef.current = false
+      setCompiling(false)
       setCircuitJson([])
       setNotice("Requirements are blocked; no BoardGraph was compiled.")
       return
     }
-    compileSnapshot(snapshot)
+    const controller = new AbortController()
+    compilingRef.current = true
+    setCompiling(true)
+    setNotice("Compiling the current revision in the background…")
+    compileInBackground(snapshot, controller.signal)
       .then((json) => {
+        if (controller.signal.aborted) return
         setCircuitJson(json)
         setNotice("BoardGraph compiled to Circuit JSON. Validate before export.")
       })
-      .catch((error) => setNotice(error instanceof Error ? error.message : "Compilation failed."))
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setNotice(error instanceof Error ? error.message : "Compilation failed.")
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          compilingRef.current = false
+          setCompiling(false)
+        }
+      })
+    return () => {
+      controller.abort()
+      exportControllerRef.current?.abort()
+    }
   }, [compileKey])
 
   if (!project) return <main className="loading">Preparing RoarCAD…</main>
   const revision = currentRevision(project)
+  const checkpointReadOnly = checkpointLoading || Boolean(incomingCheckpoint)
   const domainValidation = validateSnapshot(revision.snapshot)
   const validation =
     revision.validation.status === "not-run" ? domainValidation : revision.validation
@@ -487,12 +532,12 @@ export default function App() {
           >
             Export project
           </button>
-          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
+          <label className="button" aria-disabled={checkpointReadOnly}>
             Import project
             <input
               className="visually-hidden"
               type="file"
-              disabled={Boolean(incomingCheckpoint)}
+              disabled={checkpointReadOnly}
               accept=".json,.roarcad.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -512,7 +557,7 @@ export default function App() {
         <button
           className={project.id === "indicator" ? "active" : ""}
           type="button"
-          disabled={Boolean(incomingCheckpoint)}
+          disabled={checkpointReadOnly}
           onClick={() => void selectReference("indicator")}
         >
           Indicator vertical slice
@@ -520,7 +565,7 @@ export default function App() {
         <button
           className={project.id === "capture" ? "active" : ""}
           type="button"
-          disabled={Boolean(incomingCheckpoint)}
+          disabled={checkpointReadOnly}
           onClick={() => void selectReference("capture")}
         >
           PocketRoar engineering study
@@ -543,29 +588,29 @@ export default function App() {
             maxLength={500}
             placeholder="Optional handoff note"
             value={checkpointNote}
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onChange={(event) => setCheckpointNote(event.target.value)}
           />
           <button
             type="button"
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onClick={() => void shareCheckpoint()}
           >
             Copy checkpoint link
           </button>
           <button
             type="button"
-            disabled={Boolean(incomingCheckpoint)}
+            disabled={checkpointReadOnly}
             onClick={() => void downloadCheckpoint()}
           >
             Download checkpoint
           </button>
-          <label className="button" aria-disabled={Boolean(incomingCheckpoint)}>
+          <label className="button" aria-disabled={checkpointReadOnly}>
             Import checkpoint
             <input
               className="visually-hidden"
               type="file"
-              disabled={Boolean(incomingCheckpoint)}
+              disabled={checkpointReadOnly}
               accept=".json,.roarcad-checkpoint.json"
               onChange={async (event) => {
                 const file = event.target.files?.[0]
@@ -663,7 +708,7 @@ export default function App() {
         )}
       </section>
 
-      <section className="workspace" inert={incomingCheckpoint ? true : undefined}>
+      <section className="workspace" inert={checkpointReadOnly ? true : undefined}>
         <aside className="panel requirements">
           <div className="panel-heading">
             <span>01</span>
@@ -888,8 +933,16 @@ export default function App() {
               </>
             ) : (
               <div className="blocked-canvas">
-                <span>Draft blocked</span>
-                <p>Supply a complete BoardGraph to compile a board.</p>
+                <span>
+                  {compiling ? "Compiling board…" : design ? "Board unavailable" : "Draft blocked"}
+                </span>
+                <p>
+                  {compiling
+                    ? "You can keep reviewing the design while it is processed."
+                    : design
+                      ? "See the status above. Reload or select a reference to retry."
+                      : "Supply a complete BoardGraph to compile a board."}
+                </p>
               </div>
             )}
           </div>
@@ -990,12 +1043,17 @@ export default function App() {
           </fieldset>
           <button
             className="primary full"
-            disabled={!design}
+            disabled={!design || compiling || exporting}
             type="button"
             onClick={() => void validateAndPrepare()}
           >
-            Validate & prepare exports
+            {exporting ? "Preparing exports…" : "Validate & prepare exports"}
           </button>
+          {exporting && (
+            <button type="button" onClick={() => exportControllerRef.current?.abort()}>
+              Cancel export
+            </button>
+          )}
           {prepared && (
             <section className="manufacture">
               <h2>

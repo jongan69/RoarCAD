@@ -8,6 +8,7 @@ import {
   encodeCheckpoint,
   forkCheckpoint,
   parseCheckpointFile,
+  watchCheckpointLocation,
 } from "../src/checkpoints"
 import {
   applyChange,
@@ -18,6 +19,45 @@ import {
   previewChange,
   validateSnapshot,
 } from "../src/domain"
+
+test("reviews same-tab checkpoint navigation and ignores superseded links", async () => {
+  const project = await createProject("indicator", "Power indicator", indicatorSnapshot)
+  const checkpoint = await createCheckpoint(project)
+  const source = Object.assign(new EventTarget(), { location: { hash: "" } })
+  const received: (string | null)[] = []
+  const pending: boolean[] = []
+  let settled = Promise.withResolvers<void>()
+  const stop = watchCheckpointLocation(
+    source,
+    (incoming, error) => {
+      received.push(error ?? incoming?.head.id ?? null)
+      if (incoming || error) settled.resolve()
+    },
+    (loading) => pending.push(loading),
+  )
+  source.location.hash = `#checkpoint=${await encodeCheckpoint(checkpoint)}`
+  source.dispatchEvent(new Event("hashchange"))
+  await settled.promise
+  expect(received).toContain(project.currentRevisionId)
+  expect(pending.slice(-2)).toEqual([true, false])
+
+  settled = Promise.withResolvers<void>()
+  source.location.hash = "#checkpoint=v0.invalid"
+  source.dispatchEvent(new Event("hashchange"))
+  await settled.promise
+  expect(received.at(-1)).toBe("Unsupported checkpoint link version.")
+
+  source.location.hash = `#checkpoint=${await encodeCheckpoint(checkpoint)}`
+  source.dispatchEvent(new Event("hashchange"))
+  source.location.hash = ""
+  source.dispatchEvent(new Event("hashchange"))
+  expect(received.at(-1)).toBeNull()
+  const count = received.length
+  stop()
+  source.dispatchEvent(new Event("hashchange"))
+  await decodeCheckpoint(await encodeCheckpoint(checkpoint))
+  expect(received).toHaveLength(count)
+})
 
 test("round-trips a checkpoint without changing its immutable head", async () => {
   for (const [id, name, snapshot, note] of [

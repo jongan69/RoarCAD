@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { POST as handoffPost } from "../api/manufacturing/jlcpcb/handoff"
 import { POST as quotePost } from "../api/manufacturing/jlcpcb/quote"
 import {
   authorizeHandoff,
@@ -113,6 +114,39 @@ describe("manufacturing boundary", () => {
     )
     expect((await verifyQuoteToken(token, "secret")).quoteId).toBe("quote-1")
     await expect(verifyQuoteToken(`${token}x`, "secret")).rejects.toThrow("Invalid")
+    for (const overrides of [
+      { expiresAt: "not-a-date" },
+      { expiresAt: new Date(0).toISOString() },
+      { checkoutUrl: "http://jlcpcb.com/checkout" },
+      { checkoutUrl: "https://evil.test/checkout" },
+      { checkoutUrl: "https://user:password@jlcpcb.com/checkout" },
+    ]) {
+      const invalid = await issueQuoteToken(
+        {
+          quoteId: "quote-1",
+          manifestHash: "a".repeat(64),
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          ...overrides,
+        },
+        "secret",
+      )
+      await expect(verifyQuoteToken(invalid, "secret")).rejects.toThrow()
+    }
+  })
+
+  test("both endpoints reject methods and bound streamed bodies", async () => {
+    for (const endpoint of [quotePost, handoffPost]) {
+      const get = await endpoint(new Request("https://roarcad.test/api"))
+      expect(get.status).toBe(405)
+      expect(get.headers.get("allow")).toBe("POST")
+      const response = await endpoint(
+        new Request("https://roarcad.test/api", {
+          method: "POST",
+          body: "x".repeat(MAX_PROJECT_BYTES + 1),
+        }),
+      )
+      expect(response.status).toBe(413)
+    }
   })
 
   test("rejects oversized quote requests before parsing", async () => {
@@ -132,5 +166,8 @@ describe("manufacturing boundary", () => {
         "Quote failed",
       ),
     ).rejects.toThrow("Quote failed (HTTP 401)")
+    await expect(
+      parseProviderResponse(new Response("Netlify rate limit", { status: 429 }), "Quote failed"),
+    ).rejects.toThrow("Wait a minute and try again")
   })
 })

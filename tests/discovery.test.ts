@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 
-const origin = "https://roarcad.vercel.app"
+const origin = "https://roarcad.netlify.app"
 const pages = [
   ["index.html", `${origin}/`],
   ["public/guides/safe-ai-pcb-design/index.html", `${origin}/guides/safe-ai-pcb-design/`],
