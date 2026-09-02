@@ -141,12 +141,33 @@ Heavy board calculations run in a native browser worker, using the same compiler
 
 WebMCP is a tool connection inside a browser page, not a remote MCP-server address. A coding agent needs a browser integration that exposes these page tools. RoarCAD does not claim that pasting its website URL into any agent's MCP settings will work.
 
-## Previously Verified Production Proof
+## Verified Software Release
 
-The following records describe the earlier Vercel release, not fresh proof for
-the Netlify production hostname. Current Netlify acceptance is tracked in
-`docs/NETLIFY_RELEASE.md`; replace this distinction only after the production
-and saved-revision browser gates pass.
+The Netlify production release is commit `3895452567e767bbf2df5c1bb1ac46766af48fa6`.
+Its build, hosting-provider status, public HTTP checks, and live browser checks
+are separately recorded in `docs/NETLIFY_RELEASE.md`.
+
+- **CI (continuous integration)** automatically checked types, formatting,
+  all 38 tests across 12 files, and the production build.
+- The production **smoke test**, a quick check of essential behavior, passed
+  the website, six guides, discovery files, and manufacturing safety boundary.
+- Live production WebMCP preview preserved the saved revision. The visible
+  approval button created a new revision, and background export prepared
+  fabrication artifacts while still requiring a human download click.
+- On the Netlify release candidate, an **end-to-end test** followed the whole
+  share → backup → fork → return → adopt journey across isolated origins.
+  Older local history and incoming provenance survived adoption; incoming
+  approvals did not survive as trusted claims.
+- PocketRoar's engineering bundle downloaded successfully. All nine file
+  fingerprints and the manifest fingerprint matched; the bundle contains
+  2,566 Circuit JSON elements and zero compiler errors. Its 159 review/check
+  warnings remain visible, and fabrication is refused. This is digital
+  verification of the modeled slice, not proof of working iPhone hardware.
+- Mobile checks at 390×844 found no sideways overflow and a stable schematic
+  height. Chrome also passed the manual preview, approval, and worker-export
+  journey. A blind first-call AI-selection benchmark is not yet measured.
+
+### Earlier Vercel evidence
 
 - A **smoke test** is a quick check that the most important parts of a product start and respond. RoarCAD's public production URL passed its clean-browser smoke test.
 - An **end-to-end test** follows a whole user journey across the real product. RoarCAD passed a production A → B → A handoff: one browser shared a checkpoint, another continued it, and the first reviewed and adopted the returned revision.
@@ -170,10 +191,11 @@ No credentials are required.
 
 ## Public Demo Link
 
-https://roarcad.vercel.app/
+https://roarcad.netlify.app/
 
-Netlify release target: https://roarcad.netlify.app/. Change the live submission
-URL only after its release gates pass and Jonathan approves the final update.
+Vercel remains available at https://roarcad.vercel.app/ so existing browser-local
+projects are not stranded. This document is the updated draft; changing the
+live Devpost entry still requires Jonathan's final confirmation.
 
 ## Public Repository Link
 
@@ -203,7 +225,7 @@ Guidelines checks.
   on the `dev` deployment. An authorized disposable A → B → A handoff passed,
   including a saved backup, immutable adoption, retained history, and downgraded
   trust. Same-tab checkpoint navigation was repaired and retested. Final
-  production verification remains separate. No Netlify-specific award is claimed:
+  production verification subsequently passed as recorded above. No Netlify-specific award is claimed:
   the official prize feed still lists ten equal winners and no tracks.
 - September 2 live Devpost readback confirmed the project is published and
   still uses the Vercel URL. The Netlify/zero-error update in this repository
@@ -260,7 +282,7 @@ For PocketRoar, the next gate is transport proof on the exact Sony camera, iPhon
 - `28251` — Organization: leave blank; not applicable
 - `28252` — App Status: `New`
 - `28253` — Existing-project explanation: leave blank. The repository began August 25, 2026 at 23:34 UTC, after the submission period opened.
-- `28254` — Live URL: `https://roarcad.vercel.app/`
+- `28254` — Live URL: `https://roarcad.netlify.app/`
 - `28255` — Testing instructions: use the eight numbered steps above; no credentials required
 - `28256` — Public repository: `https://github.com/jongan69/RoarCAD`
 - `28257` — Tested clients: `Chrome 149 with WebMCP testing enabled and ChatGPT's in-app browser. Both completed the production checkpoint journey; Chrome executed the four live tools and ChatGPT completed the clean-profile handoff and manual fallback surfaces.`
