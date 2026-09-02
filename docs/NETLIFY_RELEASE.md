@@ -59,6 +59,33 @@ It checks static content, discovery files, headers, rejected methods, malformed
 and oversized bodies, the indicator's compiled fallback, and PocketRoar's
 fabrication refusal. It does not place orders or prove browser behavior.
 
+## Evidence recorded September 2
+
+- Native packaging and live HTTP checks passed for `9c9f7d3` on Netlify deploy
+  `6a9866f1cb3dc423aa941f67`. The published function uses Node 22 and maps exactly
+  the quote and handoff paths. The repeatable smoke script was added in
+  `b3aa189` and passed against that deployment.
+- [Branch CI run 33665544929](https://github.com/jongan69/RoarCAD/actions/runs/33665544929)
+  passed typecheck, Biome, 36 tests across 11 files, and the production build.
+- In-app-browser calls to inspection (overview, exact part, pagination, history)
+  and preview passed on the Netlify branch origin. Preview returned
+  `waitingForHumanApproval: true`; revision `5989bc5823543c90` still had one
+  history entry afterwards. No apply, download, quote, order, or payment tool
+  was registered.
+- At 390 x 844, document width stayed 390 and schematic viewer height stayed
+  483 pixels across two observations. No application console errors appeared.
+- The saved-revision browser test was stopped by the browser safety check at
+  the explicit approval click. Permission for disposable test revisions,
+  checkpoint fork/adoption, and test backups was requested. Those steps are
+  not reported as passing on Netlify yet.
+- Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
+  final Netlify production readback, and Devpost publication are still separate
+  gates. Historical Vercel browser evidence is not substituted for them.
+
+The deterministic eval-file test checks ten case definitions, not measured AI
+selection accuracy. Live tool execution above is direct integration evidence,
+not a blind first-call benchmark across coding agents.
+
 ## Sponsor facts checked September 2, 2026
 
 The live Devpost prize feed lists ten winners at $3,500 each, including $500

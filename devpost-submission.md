@@ -65,7 +65,7 @@ RoarCAD gives the AI four narrow WebMCP tools to draft, inspect, preview, and va
 - **base64url:** a way to turn compressed data into characters that are safe inside a web link.
 - **URL fragment:** the part of a link after `#`. Browsers do not send this fragment to the web server, so checkpoint data stays client-side.
 - **Server-side:** code that runs on a hosted server instead of inside the user's browser.
-- **Vercel function:** a small server-side program. RoarCAD uses one to independently recheck manufacturing requests.
+- **Netlify Function:** a small server-side program. RoarCAD uses one to independently recheck manufacturing requests. The Vercel fallback uses the same underlying logic.
 - **HDMI:** a digital connection that carries video and often audio from cameras and other devices.
 - **UVC (USB Video Class):** the standard language that makes many USB cameras behave like webcams.
 - **H.264:** a common video-compression format that reduces the amount of data needed to carry video.
@@ -132,9 +132,18 @@ RoarCAD also begins translating the engineering surface for newcomers. The app e
 
 ## Architecture
 
-React builds the visible interface, and TypeScript helps catch incorrect data while the code is being written. Zod checks every project and tool input at runtime. One `compileBoardGraph()` function translates every supported board into tscircuit; there is no hidden special-case compiler for PocketRoar. IndexedDB stores limited revision history inside the browser. The WebMCP tools call the same checked actions as the buttons. Vercel functions independently read, compile, and validate manufacturing requests, and private credentials never enter browser code.
+React builds the visible interface, and TypeScript helps catch incorrect data while the code is being written. Zod checks every project and tool input at runtime. One `compileBoardGraph()` function translates every supported board into tscircuit; there is no hidden special-case compiler for PocketRoar. IndexedDB stores limited revision history inside the browser. The WebMCP tools call the same checked actions as the buttons. A native Netlify Function independently reads, compiles, and validates manufacturing requests using the same handlers as the Vercel fallback. Private credentials never enter browser code.
 
-## Production Proof
+The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. Live provider quoting stays disabled; the app does not invent a price or place an order.
+
+WebMCP is a tool connection inside a browser page, not a remote MCP-server address. A coding agent needs a browser integration that exposes these page tools. RoarCAD does not claim that pasting its website URL into any agent's MCP settings will work.
+
+## Previously Verified Production Proof
+
+The following records describe the earlier Vercel release, not fresh proof for
+the Netlify production hostname. Current Netlify acceptance is tracked in
+`docs/NETLIFY_RELEASE.md`; replace this distinction only after the production
+and saved-revision browser gates pass.
 
 - A **smoke test** is a quick check that the most important parts of a product start and respond. RoarCAD's public production URL passed its clean-browser smoke test.
 - An **end-to-end test** follows a whole user journey across the real product. RoarCAD passed a production A → B → A handoff: one browser shared a checkpoint, another continued it, and the first reviewed and adopted the returned revision.
@@ -160,6 +169,9 @@ No credentials are required.
 
 https://roarcad.vercel.app/
 
+Netlify release target: https://roarcad.netlify.app/. Change the live submission
+URL only after its release gates pass and Jonathan approves the final update.
+
 ## Public Repository Link
 
 https://github.com/jongan69/RoarCAD
@@ -182,6 +194,15 @@ Guidelines checks.
 6. Approved immutable PocketRoar revision: `docs/screenshots/pocketroar-applied-revision.jpg`.
 
 ## Submission Readiness Notes
+
+- September 2 Netlify migration: native Node function packaging, live HTTP
+  smoke, inspection, pagination, non-mutating preview, and mobile layout passed
+  on the `dev` deployment. Saved-revision browser tests and final production
+  verification remain separate gates. No Netlify-specific award is claimed:
+  the official prize feed still lists ten equal winners and no tracks.
+- September 2 live Devpost readback confirmed the project is published and
+  still uses the Vercel URL. The Netlify/zero-error update in this repository
+  has not been published to Devpost.
 
 - Devpost authentication and registration were verified live on August 26, 2026.
 - The zero-error PocketRoar release is on production `main` at commit `16f3e1600998a2a35644e32a0dbc7b388de81cce`. GitHub Actions run `33217786830` passed typecheck, Biome, every Bun test, and the production build; Vercel deployed the same commit as production deployment `roarcad-jp63mhv62-jongan69s-projects.vercel.app` and marked it `READY`.
