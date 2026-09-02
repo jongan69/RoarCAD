@@ -103,7 +103,15 @@ fabrication refusal. It does not place orders or prove browser behavior.
   Compilation and export now use a native module worker around the same shared
   implementation, with progress, cancellation, a three-minute ceiling, and
   stale-result protection. Real worker tests cover artifacts, cancellation,
-  and fabrication refusal; production browser verification remains required.
+  and fabrication refusal. The live Netlify branch completed PocketRoar
+  compilation with zero viewer errors, then prepared and downloaded an
+  engineering bundle while the schematic tab remained interactive. All nine
+  manifest entries and the manifest hash verified against the downloaded ZIP:
+  `a4f658eea46a66a0e8955e104c74797f272ef32590c94fa428a85cd5c4ea69f5`.
+  The bundle contains 2,566 Circuit JSON elements, zero compiler errors, and
+  159 review/check warnings. Fabrication was refused through live WebMCP.
+  Starting another export and canceling it returned an explicit canceled
+  notice. Production browser verification remains a separate gate.
 - Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
   final Netlify production readback, and Devpost publication are still separate
   gates. Historical Vercel browser evidence is not substituted for them.

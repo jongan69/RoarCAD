@@ -51,6 +51,7 @@ RoarCAD gives the AI four narrow WebMCP tools to draft, inspect, preview, and va
 - **Copper pour:** a larger filled copper area, often used for ground or power.
 - **Keepout:** an area where parts or copper are not allowed.
 - **Compile:** turn RoarCAD's structured board description into diagrams, checks, and manufacturing files.
+- **Background worker:** a browser helper that does heavy calculations separately, so the page can still respond. RoarCAD uses one for board compilation and export, with progress, cancellation, and a time limit.
 - **tscircuit:** the open-source electronics toolchain RoarCAD uses to compile and render boards.
 - **DRC (design-rule check):** an automated check for layout problems such as copper paths being too close together. Passing DRC does not prove the whole product works.
 - **Evidence:** a source or test result supporting an engineering claim, such as a manufacturer datasheet or physical measurement.
@@ -136,6 +137,8 @@ React builds the visible interface, and TypeScript helps catch incorrect data wh
 
 The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. Live provider quoting stays disabled; the app does not invent a price or place an order.
 
+Heavy board calculations run in a native browser worker, using the same compiler as the server. This keeps the page usable while an engineering export runs. A person can cancel, and changing revisions discards obsolete work. Checkpoint links also work when opened in an existing tab; integrity checks finish before editing is allowed.
+
 WebMCP is a tool connection inside a browser page, not a remote MCP-server address. A coding agent needs a browser integration that exposes these page tools. RoarCAD does not claim that pasting its website URL into any agent's MCP settings will work.
 
 ## Previously Verified Production Proof
@@ -159,7 +162,7 @@ and saved-revision browser gates pass.
 3. Open the indicator, create a checkpoint link, and open it in a clean browser profile. Confirm it starts read-only.
 4. Continue the checkpoint as a local fork, preview moving D1 with an agent, confirm the revision ID is unchanged, then click **Approve & apply** and observe a new revision.
 5. Return the new checkpoint to the original profile. Confirm the common ancestor and semantic diff, then manually adopt it as a new local revision.
-6. Prepare a fabrication bundle and confirm the browser requires a visible download click.
+6. Select the bundled indicator to test fabrication export. Incoming checkpoint approvals are intentionally reset, so an adopted board is not automatically fabrication-ready. Confirm the browser requires a visible download click.
 7. Open PocketRoar, prepare an engineering bundle, then confirm fabrication export and quoting remain blocked.
 8. Load the environmental-monitor sample and confirm its agent-supplied requirements, parts, footprints, and evidence are unreviewed.
 
@@ -197,14 +200,19 @@ Guidelines checks.
 
 - September 2 Netlify migration: native Node function packaging, live HTTP
   smoke, inspection, pagination, non-mutating preview, and mobile layout passed
-  on the `dev` deployment. Saved-revision browser tests and final production
-  verification remain separate gates. No Netlify-specific award is claimed:
+  on the `dev` deployment. An authorized disposable A → B → A handoff passed,
+  including a saved backup, immutable adoption, retained history, and downgraded
+  trust. Same-tab checkpoint navigation was repaired and retested. Final
+  production verification remains separate. No Netlify-specific award is claimed:
   the official prize feed still lists ten equal winners and no tracks.
 - September 2 live Devpost readback confirmed the project is published and
   still uses the Vercel URL. The Netlify/zero-error update in this repository
   has not been published to Devpost.
 
-- Devpost authentication and registration were verified live on August 26, 2026.
+- Devpost authentication, registration, and official form requirements were
+  verified again on September 2, 2026.
+
+### Historical Vercel evidence
 - The zero-error PocketRoar release is on production `main` at commit `16f3e1600998a2a35644e32a0dbc7b388de81cce`. GitHub Actions run `33217786830` passed typecheck, Biome, every Bun test, and the production build; Vercel deployed the same commit as production deployment `roarcad-jp63mhv62-jongan69s-projects.vercel.app` and marked it `READY`.
 - The release candidate's in-app-browser smoke showed PocketRoar revision `c204a71b354abeff`, exact corrected connector/clock data, four WebMCP tools, a bounded validation inspection, and **0 viewer errors**. A clean Chrome production profile independently loaded `https://roarcad.vercel.app/` with `WebMCP ready` and the fabrication-ready indicator.
 - Production exposes exactly four WebMCP tools. `apply_design_change` is absent, preview output is bounded to the six safe summary fields, and only the visible **Approve & apply** control creates a revision.

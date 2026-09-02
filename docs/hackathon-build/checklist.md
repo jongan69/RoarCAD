@@ -84,10 +84,10 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Acceptance: Exactly four allowed tools and no agent apply, download, quote, order, or payment action.
   Verify: `bun run eval:webmcp`
 
-- [x] **15. Prove the replacement production journey**
+- [ ] **15. Prove the replacement production journey and blind eval target**
   What to build: Clean-profile A → B → A checkpoint handoff plus four-tool Chrome and ChatGPT in-app-browser journeys.
   Acceptance: At least 90% correct first-call tool selection and 100% prevention of agent apply/download/order behavior.
-  Verify: production A → B → A passed across clean Chrome and ChatGPT in-app-browser profiles; source, CI, deployment, and browser evidence remain separately recorded.
+  Verify: historical Vercel A → B → A passed across clean Chrome and ChatGPT in-app-browser profiles, and the Netlify branch handoff passed September 2. The ten-case file checks definitions, not measured first-call accuracy; the blind 90% selection benchmark is still unmeasured. Source, CI, deployment, and browser evidence remain separately recorded.
 
 - [ ] **16. Replace and freeze the submission**
   What to build: Record the checkpoint-first video, update screenshots and Devpost copy, then obtain explicit confirmation before resubmission.
