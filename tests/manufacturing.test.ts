@@ -166,5 +166,8 @@ describe("manufacturing boundary", () => {
         "Quote failed",
       ),
     ).rejects.toThrow("Quote failed (HTTP 401)")
+    await expect(
+      parseProviderResponse(new Response("Netlify rate limit", { status: 429 }), "Quote failed"),
+    ).rejects.toThrow("Wait a minute and try again")
   })
 })
