@@ -31,13 +31,8 @@ import {
   validateSnapshot,
   withValidation,
 } from "./domain"
-import {
-  type ArtifactClass,
-  compileSnapshot,
-  downloadBlob,
-  type PreparedExport,
-  prepareExport,
-} from "./eda"
+import { type ArtifactClass, downloadBlob, type PreparedExport } from "./eda"
+import { compileInBackground, prepareInBackground } from "./eda-background"
 import { componentDefinition } from "./explanations"
 import { inspectProject } from "./inspection"
 import { type QuoteResult, requestJlcQuote } from "./manufacturing"
@@ -63,6 +58,8 @@ export default function App() {
   const [change, setChange] = useState<DesignChange | null>(null)
   const changeRef = useRef<DesignChange | null>(null)
   const [prepared, setPrepared] = useState<PreparedExport | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const exportControllerRef = useRef<AbortController | null>(null)
   const [quote, setQuote] = useState<QuoteResult | null>(null)
   const [notice, setNotice] = useState("Loading reference design…")
   const [mode, setMode] = useState<"bare-pcb" | "pcba">("bare-pcb")
@@ -182,10 +179,23 @@ export default function App() {
       },
       prepare: async (revisionId: string, targets: string[], requestedClass: ArtifactClass) => {
         requireWritableWorkspace()
+        if (exportControllerRef.current) throw new Error("An export is already being prepared.")
         const current = requireProject()
         if (current.currentRevisionId !== revisionId)
           throw new Error("Only the current revision can export.")
-        const result = await prepareExport(current, requestedClass, setNotice)
+        const controller = new AbortController()
+        exportControllerRef.current = controller
+        setExporting(true)
+        let result: PreparedExport
+        try {
+          result = await prepareInBackground(current, requestedClass, setNotice, controller.signal)
+          requireWritableWorkspace()
+          if (projectRef.current !== current)
+            throw new Error("The project changed. Prepare the current revision again.")
+        } finally {
+          if (exportControllerRef.current === controller) exportControllerRef.current = null
+          setExporting(false)
+        }
         setPrepared(result)
         setProject(withValidation(current, result.validation))
         setNotice(
@@ -213,6 +223,7 @@ export default function App() {
     const current = projectRef.current
     if (!compileKey || !current) return
     const snapshot = currentRevision(current).snapshot
+    setCircuitJson([])
     setPrepared(null)
     setQuote(null)
     setEditEvents([])
@@ -223,12 +234,21 @@ export default function App() {
       setNotice("Requirements are blocked; no BoardGraph was compiled.")
       return
     }
-    compileSnapshot(snapshot)
+    const controller = new AbortController()
+    compileInBackground(snapshot, controller.signal)
       .then((json) => {
+        if (controller.signal.aborted) return
         setCircuitJson(json)
         setNotice("BoardGraph compiled to Circuit JSON. Validate before export.")
       })
-      .catch((error) => setNotice(error instanceof Error ? error.message : "Compilation failed."))
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setNotice(error instanceof Error ? error.message : "Compilation failed.")
+      })
+    return () => {
+      controller.abort()
+      exportControllerRef.current?.abort()
+    }
   }, [compileKey])
 
   if (!project) return <main className="loading">Preparing RoarCAD…</main>
@@ -1000,12 +1020,17 @@ export default function App() {
           </fieldset>
           <button
             className="primary full"
-            disabled={!design}
+            disabled={!design || exporting}
             type="button"
             onClick={() => void validateAndPrepare()}
           >
-            Validate & prepare exports
+            {exporting ? "Preparing exports…" : "Validate & prepare exports"}
           </button>
+          {exporting && (
+            <button type="button" onClick={() => exportControllerRef.current?.abort()}>
+              Cancel export
+            </button>
+          )}
           {prepared && (
             <section className="manufacture">
               <h2>

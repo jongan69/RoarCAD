@@ -96,7 +96,14 @@ fabrication refusal. It does not place orders or prove browser behavior.
   initial load. The navigation watcher now handles hash changes, suppresses
   superseded decoding, and locks mutation controls during verification. Its
   focused regression covers valid links, invalid links, navigation away, and
-  cleanup. Deployed verification of this fix is required before promotion.
+  cleanup. Same-tab review and stale-checkpoint adoption refusal passed on
+  branch deploy `6a98749335ca110007be77d8` from `1913e2a` without refreshing.
+- PocketRoar export consumed the browser UI thread long enough to time out
+  browser commands. CI measured approximately 59 seconds for its export test.
+  Compilation and export now use a native module worker around the same shared
+  implementation, with progress, cancellation, a three-minute ceiling, and
+  stale-result protection. Real worker tests cover artifacts, cancellation,
+  and fabrication refusal; production browser verification remains required.
 - Source PR: [#10](https://github.com/jongan69/RoarCAD/pull/10). Production merge,
   final Netlify production readback, and Devpost publication are still separate
   gates. Historical Vercel browser evidence is not substituted for them.
