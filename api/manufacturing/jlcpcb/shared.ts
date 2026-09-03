@@ -60,6 +60,7 @@ export function fallbackQuote(reason: string, manifestHash?: string): QuoteResul
   return {
     configured: false,
     provider: "JLCPCB",
+    state: "fallback",
     substitutions: [],
     warnings: [
       reason,

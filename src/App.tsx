@@ -35,7 +35,12 @@ import { type ArtifactClass, downloadBlob, type PreparedExport } from "./eda"
 import { compileInBackground, prepareInBackground } from "./eda-background"
 import { componentDefinition } from "./explanations"
 import { inspectProject } from "./inspection"
-import { type QuoteResult, requestJlcQuote } from "./manufacturing"
+import {
+  type QuoteResult,
+  requestJlcQuote,
+  requestMacroFabQuote,
+  requestMacroFabStatus,
+} from "./manufacturing"
 import { environmentMonitorGraph, environmentMonitorRequirements } from "./samples"
 import { chooseStartupProject, loadStoredProject, saveStoredProject } from "./storage"
 import { type InspectFocus, registerWebMcpTools } from "./webmcp"
@@ -63,6 +68,8 @@ export default function App() {
   const [exporting, setExporting] = useState(false)
   const exportControllerRef = useRef<AbortController | null>(null)
   const [quote, setQuote] = useState<QuoteResult | null>(null)
+  const [quoteBusy, setQuoteBusy] = useState(false)
+  const [macroFabConfirmed, setMacroFabConfirmed] = useState(false)
   const [notice, setNotice] = useState("Loading reference design…")
   const [mode, setMode] = useState<"bare-pcb" | "pcba">("bare-pcb")
   const [artifactClass, setArtifactClass] = useState<ArtifactClass>("fabrication")
@@ -78,6 +85,7 @@ export default function App() {
   )
   const [incomingCheckpoint, setIncomingCheckpoint] = useState<Checkpoint | null>(null)
   const incomingCheckpointRef = useRef<Checkpoint | null>(null)
+
   const [checkpointLoading, setCheckpointLoading] = useState(false)
   const checkpointLoadingRef = useRef(false)
   const [backupPreparedKey, setBackupPreparedKey] = useState<string | null>(null)
@@ -375,14 +383,16 @@ export default function App() {
     }
   }
 
-  const validateAndPrepare = () =>
-    actions
+  const validateAndPrepare = () => {
+    setMacroFabConfirmed(false)
+    return actions
       .prepare(
         revision.id,
         ["circuit-json", "gerber", "bom", "placement", "validation", "project", "manifest"],
         artifactClass,
       )
       .catch((error) => setNotice(String(error)))
+  }
 
   const quoteJlc = async () => {
     if (prepared?.manifest.artifactClass !== "fabrication" || !design) return
@@ -398,6 +408,54 @@ export default function App() {
       )
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Quote request failed.")
+    }
+  }
+
+  const pollMacroFab = async (quoteToken: string, revisionId: string) => {
+    let currentToken = quoteToken
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 5_000))
+      if (projectRef.current?.currentRevisionId !== revisionId) return
+      const result = await requestMacroFabStatus(currentToken)
+      if (projectRef.current?.currentRevisionId !== revisionId) return
+      setQuote(result)
+      if (result.state !== "processing") return
+      currentToken = result.quoteToken ?? currentToken
+    }
+    setNotice("MacroFab is still processing. Use Retry status without uploading again.")
+  }
+
+  const quoteMacroFab = async () => {
+    if (prepared?.manifest.artifactClass !== "fabrication" || !design || !macroFabConfirmed) return
+    setQuoteBusy(true)
+    try {
+      const result = await requestMacroFabQuote(project, {
+        mode,
+        quantity: 5,
+        layers: design.board.layers,
+        thicknessMm: design.board.thicknessMm as 0.8 | 1 | 1.2 | 1.6 | 2,
+        finish: "ENIG",
+      })
+      setQuote(result)
+      if (result.state === "processing" && result.quoteToken) {
+        await pollMacroFab(result.quoteToken, project.currentRevisionId)
+      }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "MacroFab quote request failed.")
+    } finally {
+      setQuoteBusy(false)
+    }
+  }
+
+  const retryMacroFabStatus = async () => {
+    if (!quote?.quoteToken) return
+    setQuoteBusy(true)
+    try {
+      await pollMacroFab(quote.quoteToken, project.currentRevisionId)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "MacroFab status request failed.")
+    } finally {
+      setQuoteBusy(false)
     }
   }
 
@@ -1094,6 +1152,18 @@ export default function App() {
                   <dt>Finish</dt>
                   <dd>ENIG</dd>
                 </div>
+                <div>
+                  <dt>Copper</dt>
+                  <dd>1 oz</dd>
+                </div>
+                <div>
+                  <dt>Mask / silkscreen</dt>
+                  <dd>Green / white</dd>
+                </div>
+                <div>
+                  <dt>Manufacturing</dt>
+                  <dd>Standard</dd>
+                </div>
               </dl>
               <button
                 className="primary full"
@@ -1107,6 +1177,29 @@ export default function App() {
               >
                 Download package
               </button>
+              <label className="manufacturing-confirmation">
+                <input
+                  type="checkbox"
+                  checked={macroFabConfirmed}
+                  onChange={(event) => setMacroFabConfirmed(event.target.checked)}
+                />
+                I understand that RoarCAD will share this revision’s Gerber and drill files with
+                MacroFab to request a quote.
+              </label>
+              <button
+                className="full"
+                disabled={
+                  quoteBusy ||
+                  !macroFabConfirmed ||
+                  mode !== "bare-pcb" ||
+                  prepared.manifest.artifactClass !== "fabrication" ||
+                  prepared.validation.readiness !== "fabrication-ready"
+                }
+                type="button"
+                onClick={() => void quoteMacroFab()}
+              >
+                {quoteBusy ? "Checking MacroFab…" : "Request live MacroFab quote"}
+              </button>
               <button
                 className="full"
                 disabled={
@@ -1116,18 +1209,50 @@ export default function App() {
                 type="button"
                 onClick={() => void quoteJlc()}
               >
-                Request JLCPCB quote
+                Use JLCPCB manual upload
               </button>
             </section>
           )}
           {quote && (
             <div className="quote">
-              <strong>{quote.configured ? "Provider quote" : "Manual JLCPCB handoff"}</strong>
+              <strong>
+                {quote.provider} · {quote.state}
+              </strong>
+              {quote.price && (
+                <p>
+                  Provider total: {quote.price.amount} {quote.price.currency}
+                </p>
+              )}
+              {quote.leadTime && <p>Lead time: {quote.leadTime}</p>}
+              {quote.quotedAt && <p>Quoted: {new Date(quote.quotedAt).toLocaleString()}</p>}
+              {quote.manifestHash && (
+                <p>
+                  Manifest: <code>{quote.manifestHash.slice(0, 12)}…</code>
+                </p>
+              )}
+              <p>
+                Shipping:{" "}
+                {quote.shipping
+                  ? `${quote.shipping.amount} ${quote.shipping.currency}`
+                  : "unavailable"}
+              </p>
+              <p>Tax: {quote.tax ? `${quote.tax.amount} ${quote.tax.currency}` : "unavailable"}</p>
               {quote.warnings.map((warning) => (
                 <p key={warning}>{warning}</p>
               ))}
+              {quote.provider === "MacroFab" &&
+                quote.state === "processing" &&
+                quote.quoteToken && (
+                  <button
+                    disabled={quoteBusy}
+                    type="button"
+                    onClick={() => void retryMacroFabStatus()}
+                  >
+                    Retry status without uploading again
+                  </button>
+                )}
               <a href={quote.fallbackUrl} target="_blank" rel="noreferrer">
-                Continue to JLCPCB ↗
+                Open {quote.provider} ↗
               </a>
             </div>
           )}

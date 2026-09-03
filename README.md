@@ -40,7 +40,7 @@ bun run build
 4. A person approves and applies the preview in the visible UI to create an immutable revision.
 5. Validate the graph and generated Circuit JSON.
 6. Prepare engineering or fabrication Gerber, BOM, placement, validation, digital-verification, project, and hash-manifest artifacts.
-7. Explicitly download the package or request a JLCPCB quote.
+7. Explicitly download the package, confirm a MacroFab file upload for a live bare-PCB quote, or use JLCPCB's manual upload fallback.
 
 Browsers without WebMCP retain the complete manual workflow. Agents cannot order, pay, store an address, or accept a substitution.
 
@@ -80,7 +80,7 @@ A recipient reviews the checkpoint before choosing **Continue as local fork**. T
 
 ## Manufacturing status
 
-The JLCPCB server boundary receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. It supports bare-PCB and PCBA configurations, server-side JLC signing, and expiring confirmed handoff tokens. Without an approved account-specific quote endpoint, it returns no invented price and directs the human to [JLCPCB's upload flow](https://jlcpcb.com/quote).
+The manufacturing server receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. For bare PCBs, the visible MacroFab flow creates a provider project, uploads only the generated Gerber and drill files through MacroFab's signed S3 flow, processes and imports the recognized layers, and returns a short-lived polling token. The status route displays MacroFab's returned total only after the provider marks the base PCB quote valid and manufacturable. MacroFab's API omits a currency field; USD comes from its published [Manufacturing Services Agreement](https://www.macrofab.com/legal/msa), which states that its prices are in U.S. dollars. Shipping, tax, ordering, addresses, carts, payment, and PCBA remain unavailable. JLCPCB remains an honest [manual-upload fallback](https://jlcpcb.com/quote).
 
 Server variables:
 
@@ -91,13 +91,14 @@ JLCPCB_SECRET_KEY
 JLCPCB_TOKENIZATION_PUBLIC_KEY
 JLCPCB_TOKENIZATION_PRIVATE_KEY
 JLCPCB_QUOTE_ENABLED=false
+MACROFAB_API_KEY
 ```
 
 The tokenization keys remain unused unless an approved endpoint explicitly requires them. Configure and verify provider-side abuse controls for `/api/manufacturing/jlcpcb/quote` before enabling live quoting; the deployment alone does not enable it.
 
 ## Hosting and moving existing projects
 
-Netlify serves the Vite build and routes the two manufacturing endpoints through
+Netlify serves the Vite build and routes the four manufacturing endpoints through
 one native Node function. It reuses the Vercel handlers and all their validation;
 no hosted database or AI API key is needed. `netlify.toml` contains the build,
 function, cache, and security settings. Use `bunx netlify-cli dev` to exercise

@@ -609,6 +609,19 @@ main {
   font-size: 11px;
   line-height: 1.4;
 }
+
+.manufacturing-confirmation {
+  align-items: flex-start;
+  display: flex;
+  font-size: 0.82rem;
+  gap: 0.55rem;
+  line-height: 1.45;
+  margin: 0.75rem 0;
+}
+
+.manufacturing-confirmation input {
+  margin-top: 0.2rem;
+}
 fieldset {
   border: 0;
   padding: 0;
