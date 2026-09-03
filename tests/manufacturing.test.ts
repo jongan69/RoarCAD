@@ -395,6 +395,14 @@ describe("manufacturing boundary", () => {
               errors: [],
               tasks: [
                 {
+                  task_type: "generating_previews",
+                  status: "completed",
+                  errors: null,
+                  result: {
+                    files: [{ filename: "roarcad.gtl.svg", file_type: "svg", source: null }],
+                  },
+                },
+                {
                   task_type: "processing_gerbers",
                   status: "completed",
                   errors: null,
