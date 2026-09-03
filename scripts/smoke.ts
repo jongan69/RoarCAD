@@ -66,6 +66,27 @@ for (const endpoint of ["quote", "handoff"]) {
   console.log(`PASS ${endpoint}: method, malformed, unconfirmed, oversized, non-cacheable`)
 }
 
+for (const endpoint of ["quote", "status"]) {
+  const path = `/api/manufacturing/macrofab/${endpoint}`
+  const get = await request(path)
+  assert.equal(get.status, 405, `MacroFab ${endpoint} rejects GET`)
+  assert.equal(get.headers.get("allow"), "POST")
+  for (const [body, status] of [
+    ["{", 400],
+    ["x".repeat(endpoint === "quote" ? MAX_PROJECT_BYTES + 1 : 10_001), 413],
+  ] as const) {
+    const response = await request(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    })
+    assert.equal(response.status, status, `MacroFab ${endpoint} failure status`)
+    assert.equal(response.headers.get("cache-control"), "no-store")
+    assert.equal(typeof (await response.json()).error, "string")
+  }
+  console.log(`PASS MacroFab ${endpoint}: method, malformed, oversized, non-cacheable`)
+}
+
 for (const [name, snapshot, expected] of [
   ["indicator", indicatorSnapshot, 200],
   ["capture", captureBridgeSnapshot, 422],
@@ -97,5 +118,34 @@ for (const [name, snapshot, expected] of [
     `PASS ${name}: ${expected === 200 ? "compiled manual fallback" : "fabrication refused"}`,
   )
 }
+
+const capture = await createProject(
+  "capture-macrofab",
+  "Smoke PocketRoar MacroFab",
+  captureBridgeSnapshot,
+)
+const macroFabBlocked = await request("/api/manufacturing/macrofab/quote", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({
+    project: capture,
+    revisionId: capture.currentRevisionId,
+    confirmed: true,
+    configuration: {
+      mode: "bare-pcb",
+      quantity: 5,
+      layers: 8,
+      thicknessMm: 1.6,
+      finish: "ENIG",
+      copperWeightOz: 1,
+      solderMaskColor: "green",
+      silkscreenColor: "white",
+      manufacturing: "Standard",
+    },
+  }),
+})
+assert.equal(macroFabBlocked.status, 422, "PocketRoar must fail before MacroFab upload")
+assert.match((await macroFabBlocked.json()).error, /fabrication-ready|Export blocked/)
+console.log("PASS PocketRoar: MacroFab upload refused before provider contact")
 
 console.log(`PASS live HTTP smoke at ${target.origin}; browser and hardware proof are separate.`)

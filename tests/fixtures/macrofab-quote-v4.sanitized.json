@@ -1,0 +1,36 @@
+{
+  "quote": {
+    "pcb_id": "abc123",
+    "pcb_version": 1,
+    "quantity": 5,
+    "region": "us",
+    "tier": "standard",
+    "lead_time": {
+      "business_days": 22
+    },
+    "panel": {
+      "base_pcb": {
+        "manufacturable": true
+      }
+    },
+    "specifications": {
+      "layer_count": 2,
+      "impedance_control": false,
+      "outer_copper_weight": 1,
+      "soldermask_color": "green",
+      "silkscreen_color": "white",
+      "manufacturing_type": "Standard",
+      "surface_finish": "enig",
+      "thickness": 1.6
+    },
+    "totals": {
+      "total": {
+        "total_price": 591.078493150685,
+        "unit_price": 118.21569863013698
+      }
+    },
+    "valid": true,
+    "invalid_reasons": {},
+    "warnings": []
+  }
+}

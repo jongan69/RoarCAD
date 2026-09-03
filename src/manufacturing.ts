@@ -30,6 +30,18 @@ export const manufacturingRequestSchema = z.object({
   configuration: manufacturingConfigurationSchema,
 })
 
+export const macroFabConfigurationSchema = manufacturingConfigurationSchema.extend({
+  copperWeightOz: z.literal(1),
+  solderMaskColor: z.literal("green"),
+  silkscreenColor: z.literal("white"),
+  manufacturing: z.literal("Standard"),
+})
+
+export const macroFabRequestSchema = manufacturingRequestSchema.extend({
+  configuration: macroFabConfigurationSchema,
+  confirmed: z.literal(true),
+})
+
 export type ManufacturingConfiguration = z.infer<typeof manufacturingConfigurationSchema>
 export type ManufacturingRequest = z.infer<typeof manufacturingRequestSchema>
 
@@ -96,10 +108,17 @@ export async function requestMacroFabQuote(
   project: BoardProject,
   configuration: ManufacturingConfiguration,
 ): Promise<QuoteResult> {
-  const payload = manufacturingRequestSchema.parse({
+  const payload = macroFabRequestSchema.parse({
     project,
     revisionId: project.currentRevisionId,
-    configuration,
+    configuration: {
+      ...configuration,
+      copperWeightOz: 1,
+      solderMaskColor: "green",
+      silkscreenColor: "white",
+      manufacturing: "Standard",
+    },
+    confirmed: true,
   })
   const body = JSON.stringify(payload)
   if (new TextEncoder().encode(body).byteLength > MAX_PROJECT_BYTES) {

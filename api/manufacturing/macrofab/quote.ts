@@ -1,5 +1,9 @@
 import { prepareExport } from "../../../src/eda.js"
-import { MAX_PROJECT_BYTES, type QuoteResult } from "../../../src/manufacturing.js"
+import {
+  MAX_PROJECT_BYTES,
+  macroFabRequestSchema,
+  type QuoteResult,
+} from "../../../src/manufacturing.js"
 import { parseQuoteRequest, readRequestJson, requestErrorResponse } from "../jlcpcb/shared.js"
 import {
   createMacroFabProject,
@@ -8,20 +12,23 @@ import {
   macroFabConfiguration,
   macroFabErrorResponse,
   macroFabFallback,
+  startMacroFabIngestion,
   uploadMacroFabGerbers,
 } from "./shared.js"
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const parsed = parseQuoteRequest(await readRequestJson(request, MAX_PROJECT_BYTES))
+    const source = await readRequestJson(request, MAX_PROJECT_BYTES)
+    const macroFabRequest = macroFabRequestSchema.parse(source)
+    const parsed = parseQuoteRequest(source)
     if (parsed.configuration.mode !== "bare-pcb") {
       return Response.json(
         { error: "MacroFab PCBA quoting is not implemented or verified." },
         { status: 422 },
       )
     }
-    const configuration = macroFabConfiguration(parsed.configuration)
     const prepared = await prepareExport(parsed.project, "fabrication")
+    const configuration = macroFabConfiguration(macroFabRequest.configuration)
     const apiKey = macroFabApiKey()
     if (!apiKey) {
       return Response.json(
@@ -35,6 +42,7 @@ export async function POST(request: Request): Promise<Response> {
       apiKey,
     )
     await uploadMacroFabGerbers(prepared, pcbId, pcbVersion, apiKey)
+    const workflowId = await startMacroFabIngestion(pcbId, pcbVersion, apiKey)
     const revision = parsed.project.revisions.find(({ id }) => id === parsed.revisionId)
     const quoteToken = await issueMacroFabToken(
       {
@@ -49,6 +57,11 @@ export async function POST(request: Request): Promise<Response> {
             ({ targetImpedanceOhms }) => targetImpedanceOhms,
           ),
         ),
+        copperWeightOz: macroFabRequest.configuration.copperWeightOz,
+        solderMaskColor: macroFabRequest.configuration.solderMaskColor,
+        silkscreenColor: macroFabRequest.configuration.silkscreenColor,
+        manufacturing: macroFabRequest.configuration.manufacturing,
+        workflowId,
       },
       apiKey,
     )

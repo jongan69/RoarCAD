@@ -411,12 +411,16 @@ export default function App() {
     }
   }
 
-  const pollMacroFab = async (quoteToken: string) => {
+  const pollMacroFab = async (quoteToken: string, revisionId: string) => {
+    let currentToken = quoteToken
     for (let attempt = 0; attempt < 12; attempt += 1) {
       await new Promise((resolve) => window.setTimeout(resolve, 5_000))
-      const result = await requestMacroFabStatus(quoteToken)
+      if (projectRef.current?.currentRevisionId !== revisionId) return
+      const result = await requestMacroFabStatus(currentToken)
+      if (projectRef.current?.currentRevisionId !== revisionId) return
       setQuote(result)
       if (result.state !== "processing") return
+      currentToken = result.quoteToken ?? currentToken
     }
     setNotice("MacroFab is still processing. Use Retry status without uploading again.")
   }
@@ -434,7 +438,7 @@ export default function App() {
       })
       setQuote(result)
       if (result.state === "processing" && result.quoteToken) {
-        await pollMacroFab(result.quoteToken)
+        await pollMacroFab(result.quoteToken, project.currentRevisionId)
       }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "MacroFab quote request failed.")
@@ -447,7 +451,7 @@ export default function App() {
     if (!quote?.quoteToken) return
     setQuoteBusy(true)
     try {
-      await pollMacroFab(quote.quoteToken)
+      await pollMacroFab(quote.quoteToken, project.currentRevisionId)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "MacroFab status request failed.")
     } finally {
@@ -1148,6 +1152,18 @@ export default function App() {
                   <dt>Finish</dt>
                   <dd>ENIG</dd>
                 </div>
+                <div>
+                  <dt>Copper</dt>
+                  <dd>1 oz</dd>
+                </div>
+                <div>
+                  <dt>Mask / silkscreen</dt>
+                  <dd>Green / white</dd>
+                </div>
+                <div>
+                  <dt>Manufacturing</dt>
+                  <dd>Standard</dd>
+                </div>
               </dl>
               <button
                 className="primary full"
@@ -1184,7 +1200,15 @@ export default function App() {
               >
                 {quoteBusy ? "Checking MacroFab…" : "Request live MacroFab quote"}
               </button>
-              <button className="full" type="button" onClick={() => void quoteJlc()}>
+              <button
+                className="full"
+                disabled={
+                  prepared.manifest.artifactClass !== "fabrication" ||
+                  prepared.validation.readiness !== "fabrication-ready"
+                }
+                type="button"
+                onClick={() => void quoteJlc()}
+              >
                 Use JLCPCB manual upload
               </button>
             </section>
@@ -1206,8 +1230,13 @@ export default function App() {
                   Manifest: <code>{quote.manifestHash.slice(0, 12)}…</code>
                 </p>
               )}
-              {!quote.shipping && <p>Shipping: unavailable</p>}
-              {!quote.tax && <p>Tax: unavailable</p>}
+              <p>
+                Shipping:{" "}
+                {quote.shipping
+                  ? `${quote.shipping.amount} ${quote.shipping.currency}`
+                  : "unavailable"}
+              </p>
+              <p>Tax: {quote.tax ? `${quote.tax.amount} ${quote.tax.currency}` : "unavailable"}</p>
               {quote.warnings.map((warning) => (
                 <p key={warning}>{warning}</p>
               ))}

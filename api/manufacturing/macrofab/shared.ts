@@ -1,7 +1,7 @@
 import JSZip from "jszip"
 import { z } from "zod"
 import type { PreparedExport } from "../../../src/eda.js"
-import type { ManufacturingConfiguration, QuoteResult } from "../../../src/manufacturing.js"
+import type { macroFabConfigurationSchema, QuoteResult } from "../../../src/manufacturing.js"
 import { hmacSha256Base64 } from "../jlcpcb/shared.js"
 
 const API_BASE = "https://api.macrofab.com"
@@ -17,6 +17,12 @@ const tokenPayloadSchema = z.object({
   quantity: z.number().int().min(5).max(10_000),
   layers: z.union([z.literal(2), z.literal(4), z.literal(6), z.literal(8)]),
   impedanceControl: z.boolean(),
+  copperWeightOz: z.literal(1),
+  solderMaskColor: z.literal("green"),
+  silkscreenColor: z.literal("white"),
+  manufacturing: z.literal("Standard"),
+  workflowId: z.string().min(1).max(128),
+  importRunId: z.string().uuid().optional(),
   expiresAt: z.string().datetime(),
 })
 
@@ -33,37 +39,105 @@ const signResponseSchema = z.object({
     .refine((value) => value.startsWith("https://")),
   form_fields: z.record(z.string()),
 })
-export const layersResponseSchema = z.object({
-  pcb_layers: z.array(
-    z.object({
-      id: z.string(),
-      files: z.array(z.object({ state: z.string().optional() }).passthrough()),
-    }),
-  ),
-})
 export const errorsResponseSchema = z.object({
   errors: z.array(z.object({ message: z.string().optional() }).passthrough()),
 })
-export const readinessResponseSchema = z.object({
-  manufacturable: z.object({ prototype: z.boolean(), production: z.boolean() }),
-  errors: z.record(z.unknown()).optional(),
+
+const ingestionFileSchema = z.object({
+  filename: z.string().min(1).max(200),
+  file_type: z.enum(["gerber", "excellon", "unknown"]),
+  source: z.string().min(1).max(80),
+  layer_name: z.string().nullable().optional(),
 })
 
-const quoteResponseSchema = z.object({
-  quote: z.object({
-    totals: z.object({
-      total: z.union([z.number().finite().nonnegative(), z.string().regex(/^\d+(?:\.\d+)?$/)]),
-      currency: z.string().regex(/^[A-Z]{3}$/),
+export const workflowResponseSchema = z.object({
+  current_stage: z.string(),
+  process_percentage: z.number().min(0).max(100),
+  failure_reason: z.string().nullable().optional(),
+  errors: z.array(z.unknown()).optional(),
+  tasks: z.array(
+    z.object({
+      task_type: z.string(),
+      status: z.string(),
+      errors: z.array(z.unknown()).nullable().optional(),
+      result: z
+        .object({ files: z.array(ingestionFileSchema) })
+        .passthrough()
+        .nullable()
+        .optional(),
     }),
-    lead_time: z
-      .union([
-        z.string().min(1),
-        z.object({ days: z.number().int().nonnegative() }).transform(({ days }) => `${days} days`),
-      ])
-      .optional(),
-    warnings: z.array(z.string()).optional(),
-  }),
+  ),
 })
+
+const workflowStartResponseSchema = z.object({
+  id: z.string().min(1).max(128),
+})
+
+export const ingestionAcceptResponseSchema = z.object({ run_id: z.string().uuid() })
+
+export const importStatusResponseSchema = z.object({
+  current_stage: z.string(),
+  process_percentage: z.number().min(0).max(100),
+  failure_reason: z.string().nullable().optional(),
+  errors: z.array(z.unknown()).optional(),
+})
+
+export const processedFilesResponseSchema = z.array(
+  z.object({
+    basename: z.string(),
+    state: z.string(),
+    metadata: z
+      .object({
+        "file-type": z.string().optional(),
+        "pcb-layer": z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  }),
+)
+
+const quoteResponseSchema = z
+  .object({
+    quote: z
+      .object({
+        pcb_id: z.string(),
+        pcb_version: z.number().int().positive(),
+        quantity: z.number().int().positive(),
+        region: z.literal("us"),
+        tier: z.string(),
+        lead_time: z.object({ business_days: z.number().int().nonnegative() }).passthrough(),
+        panel: z
+          .object({ base_pcb: z.object({ manufacturable: z.boolean() }).passthrough() })
+          .passthrough(),
+        specifications: z
+          .object({
+            layer_count: z.number().int(),
+            impedance_control: z.boolean(),
+            outer_copper_weight: z.number(),
+            soldermask_color: z.string(),
+            silkscreen_color: z.string(),
+            manufacturing_type: z.string(),
+            surface_finish: z.string(),
+            thickness: z.number(),
+          })
+          .passthrough(),
+        totals: z
+          .object({
+            total: z
+              .object({
+                total_price: z.number().finite().nonnegative(),
+                unit_price: z.number().finite().nonnegative(),
+              })
+              .strict(),
+          })
+          .passthrough(),
+        valid: z.boolean(),
+        invalid_reasons: z.record(z.unknown()),
+        warnings: z.array(z.string()),
+      })
+      .passthrough(),
+  })
+  .passthrough()
 
 const gerberNames: Record<string, string> = {
   F_Cu: "roarcad.gtl",
@@ -78,6 +152,22 @@ const gerberNames: Record<string, string> = {
   "plated.drl": "roarcad-PTH.drl",
   "unplated.drl": "roarcad-NPTH.drl",
 }
+
+const expectedLayers: Record<string, string> = {
+  "roarcad.gtl": "top_copper",
+  "roarcad.gto": "top_silkscreen",
+  "roarcad.gts": "top_soldermask",
+  "roarcad.gtp": "top_paste",
+  "roarcad.gbl": "bottom_copper",
+  "roarcad.gbo": "bottom_silkscreen",
+  "roarcad.gbs": "bottom_soldermask",
+  "roarcad.gbp": "bottom_paste",
+  "roarcad.bor": "board_outline",
+  "roarcad-PTH.drl": "drill",
+  "roarcad-NPTH.drl": "drill",
+}
+
+export const macroFabUploadNames = Object.values(gerberNames)
 
 const toBase64Url = (value: string) =>
   btoa(value).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")
@@ -240,6 +330,8 @@ export async function uploadMacroFabGerbers(
       upload_type: "pcb",
       pcb_id: pcbId,
       pcb_revision: `${pcbVersion}`,
+      pending_files_enabled: "false",
+      macrofab_only: "false",
     })
     const signed = await macroFabContract(
       await macroFabRequest(`/api/v2/sign_s3_upload?${params}`, apiKey, {}, fetcher),
@@ -265,6 +357,61 @@ export async function uploadMacroFabGerbers(
   }
 }
 
+export async function startMacroFabIngestion(
+  pcbId: string,
+  pcbVersion: number,
+  apiKey: string,
+  fetcher: typeof fetch = fetch,
+): Promise<string> {
+  const workflow = await macroFabContract(
+    await macroFabRequest(
+      `/api/v3/pcb/${encodeURIComponent(pcbId)}/${pcbVersion}/ingestion/workflow`,
+      apiKey,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ files: macroFabUploadNames }),
+      },
+      fetcher,
+    ),
+    workflowStartResponseSchema,
+    "file processing",
+  )
+  return workflow.id
+}
+
+export function acceptedMacroFabFiles(workflow: z.infer<typeof workflowResponseSchema>) {
+  const task = workflow.tasks.find(({ task_type }) => task_type === "processing_gerbers")
+  if (task?.status !== "completed" || task.errors?.length || !task.result)
+    throw new Error("MacroFab could not process the uploaded fabrication files.")
+  return macroFabUploadNames.map((filename) => {
+    const file = task.result?.files.find((candidate) => candidate.filename === filename)
+    const expectedLayer = expectedLayers[filename]
+    const expectedType = filename.endsWith(".drl") ? "excellon" : "gerber"
+    if (
+      !file ||
+      file.file_type !== expectedType ||
+      (expectedType === "gerber" && file.layer_name !== expectedLayer)
+    ) {
+      throw new Error(`MacroFab did not recognize ${filename} correctly.`)
+    }
+    return {
+      filename: file.filename,
+      file_type: file.file_type,
+      source: file.source,
+      ...(file.file_type === "gerber" ? { layer_name: file.layer_name } : {}),
+    }
+  })
+}
+
+export function macroFabFilesProcessed(
+  files: z.infer<typeof processedFilesResponseSchema>,
+): boolean {
+  return macroFabUploadNames.every((filename) =>
+    files.some(({ basename, state }) => basename === filename && state === "processed"),
+  )
+}
+
 export function macroFabFallback(reason: string, manifestHash?: string): QuoteResult {
   return {
     configured: false,
@@ -278,36 +425,63 @@ export function macroFabFallback(reason: string, manifestHash?: string): QuoteRe
 }
 
 export function quotePath(payload: MacroFabTokenPayload): string {
-  const params = new URLSearchParams({
-    layer_count: `${payload.layers}`,
-    soldermask_color: "green",
-    silkscreen_color: "white",
-    impedance_control: payload.impedanceControl ? "1" : "0",
-    copper_weight: "1 ounce",
-    manufacturing: "Standard",
-    quantity: `${payload.quantity}`,
-  })
-  return `/api/v3/pcb/${encodeURIComponent(payload.pcbId)}/${payload.pcbVersion}/quote?${params}`
+  return `/api/v4/quote/pcb/${encodeURIComponent(payload.pcbId)}/${payload.pcbVersion}/${payload.quantity}`
 }
 
 export function parseMacroFabQuote(source: unknown, payload: MacroFabTokenPayload): QuoteResult {
   const parsed = quoteResponseSchema.safeParse(source)
   if (!parsed.success) throw new Error("MacroFab returned an unsupported quote format.")
+  const quote = parsed.data.quote
+  const specifications = quote.specifications
+  if (
+    quote.pcb_id !== payload.pcbId ||
+    quote.pcb_version !== payload.pcbVersion ||
+    quote.quantity !== payload.quantity ||
+    specifications.layer_count !== payload.layers ||
+    specifications.impedance_control !== payload.impedanceControl ||
+    specifications.outer_copper_weight !== payload.copperWeightOz ||
+    specifications.soldermask_color !== payload.solderMaskColor ||
+    specifications.silkscreen_color !== payload.silkscreenColor ||
+    specifications.manufacturing_type !== payload.manufacturing ||
+    specifications.surface_finish !== "enig" ||
+    specifications.thickness !== 1.6
+  ) {
+    throw new Error("MacroFab returned a quote for unsupported specifications.")
+  }
+  if (!quote.valid || !quote.panel.base_pcb.manufacturable) {
+    return {
+      configured: true,
+      provider: "MacroFab",
+      state: "rejected",
+      substitutions: [],
+      warnings: [
+        "MacroFab did not mark this bare PCB quote valid and manufacturable.",
+        ...Object.keys(quote.invalid_reasons).map(
+          (reason) => `MacroFab flagged ${reason.replaceAll("_", " ")}.`,
+        ),
+      ],
+      fallbackUrl: MACROFAB_FALLBACK_URL,
+      manifestHash: payload.manifestHash,
+    }
+  }
   return {
     configured: true,
     provider: "MacroFab",
     state: "quoted",
     quoteId: `${payload.pcbId}:${payload.pcbVersion}`,
     price: {
-      amount: `${parsed.data.quote.totals.total}`,
-      currency: parsed.data.quote.totals.currency,
+      amount: quote.totals.total.total_price.toFixed(2),
+      currency: "USD",
     },
-    leadTime: parsed.data.quote.lead_time,
+    leadTime: `${quote.lead_time.business_days} business days`,
     quotedAt: new Date().toISOString(),
     substitutions: [],
     warnings: [
-      ...(parsed.data.quote.warnings ?? []),
-      "Shipping and tax are unavailable unless MacroFab includes them in a future verified contract.",
+      ...quote.warnings,
+      "This is MacroFab's complete returned project total; RoarCAD did not recalculate or remove provider fees.",
+      "Currency is USD under MacroFab's published Manufacturing Services Agreement; its quote API omits the currency field.",
+      "Shipping is unavailable.",
+      "Tax is unavailable.",
       "This informational quote does not prove electrical function or final manufacturing acceptance.",
     ],
     fallbackUrl: MACROFAB_FALLBACK_URL,
@@ -315,11 +489,11 @@ export function parseMacroFabQuote(source: unknown, payload: MacroFabTokenPayloa
   }
 }
 
-export function macroFabConfiguration(input: ManufacturingConfiguration): {
+export function macroFabConfiguration(input: z.infer<typeof macroFabConfigurationSchema>): {
   layers: 2 | 4 | 6 | 8
 } {
-  if (![2, 4, 6, 8].includes(input.layers))
-    throw new Error("MacroFab supports 2, 4, 6, or 8 layers.")
+  if (input.layers !== 2)
+    throw new Error("MacroFab quoting is currently verified only for two-layer boards.")
   if (input.thicknessMm !== 1.6 || input.finish !== "ENIG")
     throw new Error("MacroFab quoting is verified only for 1.6 mm ENIG boards.")
   return { layers: input.layers as 2 | 4 | 6 | 8 }

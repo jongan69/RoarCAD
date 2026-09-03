@@ -80,7 +80,7 @@ A recipient reviews the checkpoint before choosing **Continue as local fork**. T
 
 ## Manufacturing status
 
-The manufacturing server receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. For bare PCBs, the visible MacroFab flow creates a provider project, uploads only the generated Gerber and drill files through MacroFab's signed S3 flow, and returns a short-lived polling token. The status route reports processing or provider rejection and displays money only when MacroFab returns an explicit total and currency in the verified contract. Shipping, tax, ordering, addresses, carts, payment, and PCBA remain unavailable. JLCPCB remains an honest [manual-upload fallback](https://jlcpcb.com/quote).
+The manufacturing server receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. For bare PCBs, the visible MacroFab flow creates a provider project, uploads only the generated Gerber and drill files through MacroFab's signed S3 flow, processes and imports the recognized layers, and returns a short-lived polling token. The status route displays MacroFab's returned total only after the provider marks the base PCB quote valid and manufacturable. MacroFab's API omits a currency field; USD comes from its published [Manufacturing Services Agreement](https://www.macrofab.com/legal/msa), which states that its prices are in U.S. dollars. Shipping, tax, ordering, addresses, carts, payment, and PCBA remain unavailable. JLCPCB remains an honest [manual-upload fallback](https://jlcpcb.com/quote).
 
 Server variables:
 

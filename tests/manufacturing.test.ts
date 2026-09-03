@@ -21,6 +21,17 @@ import { POST as macroFabStatusPost } from "../api/manufacturing/macrofab/status
 import { captureBridgeSnapshot, createProject, indicatorSnapshot } from "../src/domain"
 import { MAX_PROJECT_BYTES, parseProviderResponse } from "../src/manufacturing"
 
+const macroFabQuoteFixture = await Bun.file(
+  new URL("./fixtures/macrofab-quote-v4.sanitized.json", import.meta.url),
+).json()
+
+const macroFabSettings = {
+  copperWeightOz: 1,
+  solderMaskColor: "green",
+  silkscreenColor: "white",
+  manufacturing: "Standard",
+} as const
+
 describe("manufacturing boundary", () => {
   test("falls back honestly and requires explicit confirmation", async () => {
     const quote = fallbackQuote("Credentials are missing.")
@@ -180,7 +191,7 @@ describe("manufacturing boundary", () => {
     ).rejects.toThrow("Wait a minute and try again")
   })
 
-  test("MacroFab tokens reject tampering and unsupported money", async () => {
+  test("MacroFab tokens reject tampering and unsupported quote contracts", async () => {
     const payload = {
       pcbId: "abc123",
       pcbVersion: 1,
@@ -189,6 +200,8 @@ describe("manufacturing boundary", () => {
       quantity: 5,
       layers: 2 as const,
       impedanceControl: false,
+      ...macroFabSettings,
+      workflowId: "workflow-1",
     }
     const token = await issueMacroFabToken(payload, "secret", 1_000)
     expect((await verifyMacroFabToken(token, "secret", 2_000)).pcbId).toBe("abc123")
@@ -199,31 +212,56 @@ describe("manufacturing boundary", () => {
     expect(() => parseMacroFabQuote({ quote: { totals: { total: 12.5 } } }, verified)).toThrow(
       "unsupported quote format",
     )
-    const quote = parseMacroFabQuote(
-      {
-        quote: {
-          totals: { total: "42.50", currency: "USD" },
-          lead_time: { days: 10 },
-          warnings: ["Provider warning"],
-        },
-      },
-      verified,
-    )
-    expect(quote.price).toEqual({ amount: "42.50", currency: "USD" })
-    expect(quote.leadTime).toBe("10 days")
+    const quote = parseMacroFabQuote(macroFabQuoteFixture, verified)
+    expect(quote.price).toEqual({ amount: "591.08", currency: "USD" })
+    expect(quote.leadTime).toBe("22 business days")
     expect(quote.shipping).toBeUndefined()
     expect(quote.tax).toBeUndefined()
+
+    const unmanufacturable = structuredClone(macroFabQuoteFixture)
+    unmanufacturable.quote.panel.base_pcb.manufacturable = false
+    unmanufacturable.quote.invalid_reasons = { fabrication: "manual review" }
+    const rejected = parseMacroFabQuote(unmanufacturable, verified)
+    expect(rejected.state).toBe("rejected")
+    expect(rejected.price).toBeUndefined()
   })
 
   test("MacroFab boundaries reject PCBA and engineering-only projects before upload", async () => {
     const indicator = await createProject("indicator", "Power indicator", indicatorSnapshot)
+    const unconfirmed = await macroFabQuotePost(
+      new Request("https://roarcad.test/api/manufacturing/macrofab/quote", {
+        method: "POST",
+        body: JSON.stringify({
+          project: indicator,
+          revisionId: indicator.currentRevisionId,
+          configuration: {
+            mode: "bare-pcb",
+            quantity: 5,
+            layers: 2,
+            thicknessMm: 1.6,
+            finish: "ENIG",
+            ...macroFabSettings,
+          },
+        }),
+      }),
+    )
+    expect(unconfirmed.status).toBe(400)
+
     const pcba = await macroFabQuotePost(
       new Request("https://roarcad.test/api/manufacturing/macrofab/quote", {
         method: "POST",
         body: JSON.stringify({
           project: indicator,
           revisionId: indicator.currentRevisionId,
-          configuration: { mode: "pcba", quantity: 5, layers: 2, thicknessMm: 1.6, finish: "ENIG" },
+          configuration: {
+            mode: "pcba",
+            quantity: 5,
+            layers: 2,
+            thicknessMm: 1.6,
+            finish: "ENIG",
+            ...macroFabSettings,
+          },
+          confirmed: true,
         }),
       }),
     )
@@ -242,7 +280,9 @@ describe("manufacturing boundary", () => {
             layers: 8,
             thicknessMm: 1.6,
             finish: "ENIG",
+            ...macroFabSettings,
           },
+          confirmed: true,
         }),
       }),
     )
@@ -263,7 +303,9 @@ describe("manufacturing boundary", () => {
               layers: 2,
               thicknessMm: 1.6,
               finish: "ENIG",
+              ...macroFabSettings,
             },
+            confirmed: true,
           }),
         }),
       )
@@ -274,7 +316,7 @@ describe("manufacturing boundary", () => {
     }
   })
 
-  test("MacroFab status preserves polling tokens until recognized layers are ready", async () => {
+  test("MacroFab status processes, imports, and maps the sanitized live quote contract", async () => {
     const originalFetch = globalThis.fetch
     const originalKey = process.env.MACROFAB_API_KEY
     process.env.MACROFAB_API_KEY = "test-secret"
@@ -288,20 +330,22 @@ describe("manufacturing boundary", () => {
           quantity: 5,
           layers: 2,
           impedanceControl: false,
+          ...macroFabSettings,
+          workflowId: "workflow-1",
         },
         "test-secret",
       )
-      const responses = [
-        Response.json({ errors: [] }),
-        Response.json({
-          pcb_layers: [
-            { id: "board_outline", files: [{ state: "processed" }] },
-            { id: "top_copper", files: [] },
-          ],
-        }),
-      ]
       globalThis.fetch = Object.assign(
-        () => Promise.resolve(responses.shift() ?? Response.json({})),
+        () =>
+          Promise.resolve(
+            Response.json({
+              current_stage: "processing_gerbers",
+              process_percentage: 25,
+              failure_reason: null,
+              errors: [],
+              tasks: [],
+            }),
+          ),
         { preconnect: () => undefined },
       )
       const response = await macroFabStatusPost(
@@ -316,52 +360,101 @@ describe("manufacturing boundary", () => {
       expect(result.quoteToken).toBe(token)
       expect(JSON.stringify(result)).not.toContain("test-secret")
 
-      const processedLayers = [
-        "board_outline",
-        "top_soldermask",
-        "top_copper",
-        "bottom_copper",
-        "bottom_soldermask",
-        "drill",
-      ].map((id) => ({ id, files: [{ state: "processed" }] }))
-
-      const rejectedResponses = [
-        Response.json({ errors: [] }),
-        Response.json({ pcb_layers: processedLayers }),
-        Response.json({
-          manufacturable: { prototype: false, production: false },
-          errors: { dimensions: "too_small" },
-        }),
-      ]
+      const layerByName: Record<string, string> = {
+        "roarcad.gtl": "top_copper",
+        "roarcad.gto": "top_silkscreen",
+        "roarcad.gts": "top_soldermask",
+        "roarcad.gtp": "top_paste",
+        "roarcad.gbl": "bottom_copper",
+        "roarcad.gbo": "bottom_silkscreen",
+        "roarcad.gbs": "bottom_soldermask",
+        "roarcad.gbp": "bottom_paste",
+        "roarcad.bor": "board_outline",
+        "roarcad-PTH.drl": "drill",
+        "roarcad-NPTH.drl": "drill",
+      }
+      const recognizedFiles = Object.entries(layerByName).map(([filename, layer_name]) => ({
+        filename,
+        file_type: filename.endsWith(".drl") ? "excellon" : "gerber",
+        source: "identifying_files",
+        layer_name,
+      }))
       globalThis.fetch = Object.assign(
-        () => Promise.resolve(rejectedResponses.shift() ?? Response.json({})),
+        (input: string | URL | Request) => {
+          const url = new URL(input instanceof Request ? input.url : input)
+          if (url.pathname.endsWith("/accept")) {
+            return Promise.resolve(
+              Response.json({ run_id: "01a068e4-d2d0-77ec-8c10-d7b98720e12a" }, { status: 202 }),
+            )
+          }
+          return Promise.resolve(
+            Response.json({
+              current_stage: "awaiting_resolution",
+              process_percentage: 100,
+              failure_reason: null,
+              errors: [],
+              tasks: [
+                {
+                  task_type: "processing_gerbers",
+                  status: "completed",
+                  errors: null,
+                  result: { files: recognizedFiles },
+                },
+              ],
+            }),
+          )
+        },
         { preconnect: () => undefined },
       )
-      const rejected = await macroFabStatusPost(
+      const accepted = await macroFabStatusPost(
         new Request("https://roarcad.test/api/manufacturing/macrofab/status", {
           method: "POST",
           body: JSON.stringify({ quoteToken: token }),
         }),
       )
-      expect((await rejected.json()).state).toBe("rejected")
+      expect(accepted.status).toBe(202)
+      const acceptedResult = await accepted.json()
+      expect(acceptedResult.quoteToken).not.toBe(token)
+      expect(
+        (await verifyMacroFabToken(acceptedResult.quoteToken, "test-secret")).importRunId,
+      ).toBe("01a068e4-d2d0-77ec-8c10-d7b98720e12a")
 
-      const quoteResponses = [
-        Response.json({ errors: [] }),
-        Response.json({ pcb_layers: processedLayers }),
-        Response.json({ manufacturable: { prototype: true, production: true }, errors: {} }),
-        Response.json({ quote: { totals: { total: "42.50", currency: "USD" } } }),
-      ]
       globalThis.fetch = Object.assign(
-        () => Promise.resolve(quoteResponses.shift() ?? Response.json({})),
+        (input: string | URL | Request) => {
+          const url = new URL(input instanceof Request ? input.url : input)
+          if (url.pathname.endsWith("/import")) {
+            return Promise.resolve(
+              Response.json({
+                current_stage: "completed",
+                process_percentage: 100,
+                failure_reason: null,
+                errors: [],
+              }),
+            )
+          }
+          if (url.pathname.endsWith("/errors"))
+            return Promise.resolve(Response.json({ errors: [] }))
+          if (url.pathname.endsWith("/files")) {
+            return Promise.resolve(
+              Response.json(
+                Object.keys(layerByName).map((basename) => ({ basename, state: "processed" })),
+              ),
+            )
+          }
+          if (url.pathname.startsWith("/api/v4/quote/pcb/")) {
+            return Promise.resolve(Response.json(macroFabQuoteFixture))
+          }
+          return Promise.resolve(Response.json({}, { status: 404 }))
+        },
         { preconnect: () => undefined },
       )
       const quoted = await macroFabStatusPost(
         new Request("https://roarcad.test/api/manufacturing/macrofab/status", {
           method: "POST",
-          body: JSON.stringify({ quoteToken: token }),
+          body: JSON.stringify({ quoteToken: acceptedResult.quoteToken }),
         }),
       )
-      expect((await quoted.json()).price).toEqual({ amount: "42.50", currency: "USD" })
+      expect((await quoted.json()).price).toEqual({ amount: "591.08", currency: "USD" })
     } finally {
       globalThis.fetch = originalFetch
       if (originalKey === undefined) delete process.env.MACROFAB_API_KEY
@@ -399,6 +492,7 @@ describe("manufacturing boundary", () => {
     process.env.MACROFAB_API_KEY = "test-secret"
     let projects = 0
     let uploads = 0
+    let workflows = 0
     globalThis.fetch = Object.assign(
       async (input: string | URL | Request) => {
         const url = new URL(input instanceof Request ? input.url : input)
@@ -414,10 +508,16 @@ describe("manufacturing boundary", () => {
           return Response.json({ pcb: { current_version: 1 } })
         }
         if (url.pathname === "/api/v2/sign_s3_upload") {
+          expect(url.searchParams.get("pending_files_enabled")).toBe("false")
+          expect(url.searchParams.get("macrofab_only")).toBe("false")
           return Response.json({
             uri: "https://uploads.macrofab.test/",
             form_fields: { key: url.searchParams.get("filename") ?? "file" },
           })
+        }
+        if (url.pathname === "/api/v3/pcb/abc123/1/ingestion/workflow") {
+          workflows += 1
+          return Response.json({ id: "workflow-1" })
         }
         return Response.json({}, { status: 404 })
       },
@@ -437,7 +537,9 @@ describe("manufacturing boundary", () => {
               layers: 2,
               thicknessMm: 1.6,
               finish: "ENIG",
+              ...macroFabSettings,
             },
+            confirmed: true,
           }),
         }),
       )
@@ -447,6 +549,7 @@ describe("manufacturing boundary", () => {
       expect(result.quoteToken).toBeString()
       expect(projects).toBe(1)
       expect(uploads).toBe(11)
+      expect(workflows).toBe(1)
       expect(JSON.stringify(result)).not.toContain("test-secret")
     } finally {
       globalThis.fetch = originalFetch
