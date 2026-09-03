@@ -60,19 +60,25 @@ Mode: autonomous execution with review pauses at hardware claim freeze, final vi
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B6`
   What to build: Real product screen capture with reviewed AI narration, captions, edits, and audio.
   Acceptance: Under three minutes, public YouTube URL, no fabricated behavior, no secrets.
-  Verify: the public 2:25 YouTube video is 1920×1080 H.264/AAC, has audible narration and timed captions, and passed anonymous oEmbed readback; replacing it with the checkpoint-first story remains tracked separately below.
+  Verify: the final public video is 2:46.635 at 1920×1080 H.264/AAC,
+  demonstrates the checkpoint-first story and from-scratch WebMCP draft, and
+  passed anonymous YouTube oEmbed readback at `https://youtu.be/DEJ6Mwa9TYU`.
 
 - [x] **11. Complete and review the Devpost packet**
   Spec ref: `devpost-submission.md`
   What to build: Corrected story, official form answers, URLs, testing instructions, screenshots, AI/Codex disclosure, and limitations.
   Acceptance: Every required field is filled and every claim is demonstrated.
-  Verify: the canonical draft was reconciled with the live Devpost requirements, judging criteria, tested-client evidence, PocketRoar story, and production limitations on August 28, 2026.
+  Verify: Devpost project version 7 contains the final Netlify URL, replacement
+  video, human-readable definitions, current PocketRoar story, tested-client
+  evidence, architecture, and production limitations.
 
 - [x] **12. Submit with confirmation**
   Spec ref: `docs/POCKETROAR_TO_DEVPOST_PLAN.md > B8`
   What to build: Final clean-browser link test and Devpost submission.
   Acceptance: User explicitly confirms immediately before submission; Devpost returns a public project page.
-  Verify: Devpost re-submitted existing entry `1154859`; live project readback returned version 3, state `published`, an August 28 update timestamp, and the WebMCP submission association.
+  Verify: Devpost re-submitted existing entry `1154859`; the September 3 live
+  readback returned state `published`, the Netlify website URL, replacement
+  YouTube URL, final tagline and write-up, and the WebMCP submission association.
 
 - [x] **13. Add immutable checkpoint handoff**
   What to build: Validated, size-bounded, gzip/base64url checkpoints with integrity checks, ancestry, semantic comparison, read-only opening, local fork, and explicit adoption.

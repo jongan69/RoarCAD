@@ -1,6 +1,8 @@
-# RoarCAD demo video packet
+# Historical RoarCAD demo video packet
 
-Final master: 2:24, 1920×1080, public YouTube, audible narration, reviewed captions.
+This packet preserves the original 2:24 submission-video research. It is
+superseded by `PRESENTATION_REPLACEMENT.md` and the final public video at
+`https://youtu.be/DEJ6Mwa9TYU`.
 
 Every product frame must come from the live app. Do not simulate WebMCP results, provider prices, fabrication approval, or physical PocketRoar behavior.
 
@@ -66,6 +68,6 @@ Built for The WebMCP Challenge. PocketRoar remains an engineering candidate and 
 
 - [x] Export one MP4 under three minutes at 1080p.
 - [x] Confirm narration is audible and captions match the spoken words.
-- Upload publicly to YouTube.
-- Watch the entire upload logged out at 1080p with captions enabled.
-- Copy the public URL into `devpost-submission.md` and the Devpost project only after verification.
+- [x] Publish the replacement video publicly to YouTube.
+- [x] Verify the public title and thumbnail through anonymous oEmbed readback.
+- [x] Copy the public URL into `devpost-submission.md` and Devpost project version 7.

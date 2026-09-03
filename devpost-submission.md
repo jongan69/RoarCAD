@@ -194,8 +194,7 @@ No credentials are required.
 https://roarcad.netlify.app/
 
 Vercel remains available at https://roarcad.vercel.app/ so existing browser-local
-projects are not stranded. This document is the updated draft; changing the
-live Devpost entry still requires Jonathan's final confirmation.
+projects are not stranded.
 
 ## Public Repository Link
 
@@ -203,16 +202,14 @@ https://github.com/jongan69/RoarCAD
 
 ## Demo Video
 
-https://youtu.be/wxrciZWlEIk
+https://youtu.be/DEJ6Mwa9TYU
 
-The public video is 2:25, 1920×1080, H.264/AAC, with AI narration disclosure enabled.
-It uses genuine live-product captures and passed YouTube's copyright and Community
-Guidelines checks.
-
-It predates the four-tool checkpoint workflow and zero-error PocketRoar repair.
-The replacement script and current screenshot inventory are in
-`docs/PRESENTATION_REPLACEMENT.md`; a new video has not yet been rendered or
-published. Do not present the historical video as proof of the current release.
+The replacement master is 2:46.635, 1920×1080, H.264/AAC. It opens with the
+checkpoint handoff, shows a live WebMCP-created environmental monitor from
+scratch, preserves the revision during agent preview, shows the visible human
+approval that creates revision two, and closes on PocketRoar's zero-error modeled
+slice and honest fabrication refusal. Every product frame comes from the deployed
+application; the narration is AI-generated.
 
 ## Screenshot Shot List
 
@@ -227,8 +224,7 @@ published. Do not present the historical video as proof of the current release.
 
 Older `pocketroar-*.jpg`, `pocketroar-webmcp-engineering.png`,
 `indicator-fabrication.jpg`, and `environment-monitor-webmcp.png` are historical
-evidence, not current-release screenshots. The replacement assets above have
-not been uploaded to Devpost.
+evidence, not current-release screenshots.
 
 ## Submission Readiness Notes
 
@@ -239,9 +235,10 @@ not been uploaded to Devpost.
   trust. Same-tab checkpoint navigation was repaired and retested. Final
   production verification subsequently passed as recorded above. No Netlify-specific award is claimed:
   the official prize feed still lists ten equal winners and no tracks.
-- September 2 live Devpost readback confirmed the project is published and
-  still uses the Vercel URL. The Netlify/zero-error update in this repository
-  has not been published to Devpost.
+- September 3 final release work produced the measured replacement video and
+  re-ran the live from-scratch WebMCP journey on Netlify. Devpost project version
+  7 is published and submitted with the Netlify URL and new public YouTube video;
+  the post-submit project readback confirmed every final field.
 
 - Devpost authentication, registration, and official form requirements were
   verified again on September 2, 2026.
@@ -262,7 +259,8 @@ not been uploaded to Devpost.
 - On August 28, Devpost project version 3 replaced the original five-tool writeup with the checkpoint-first architecture, production proof, tested-client evidence, value case, and the honest PocketRoar/Apple-host origin story; a post-submit live readback confirmed the project remained published and submitted.
 - Devpost project version 4 corrected that origin story to the actual iPhone requirement: USB-C iPad is the already-supported UVC control case, SeeMo 4K is the functional comparison, and the current CX3/UVC graph is explicitly an unfinished engineering study rather than the final iPhone bridge.
 - Devpost project version 5 rewrote the story in simple English, added a plain-language glossary for the browser, PCB, video, revision, and manufacturing terms, and preserved the full technical architecture and evidence limits. Live readback confirmed the simplified tagline, glossary, iPhone premise, and human-only approval boundary.
-- The next Devpost revision must add the zero-error PocketRoar paragraph already present in this canonical draft and replace the stale PocketRoar screenshot. Do not re-submit until the updated public page is read back and the replacement image is visually checked.
+- The final Devpost revision uses the Netlify live URL, replacement video, current
+  zero-error PocketRoar screenshot, and this canonical human-readable explanation.
 
 ## Known Limitations
 
@@ -301,7 +299,7 @@ For PocketRoar, the next gate is transport proof on the exact Sony camera, iPhon
 - `28258` — AI tools: `Codex and ChatGPT. Codex assisted research, implementation, debugging, browser acceptance testing, documentation, and submission preparation. ChatGPT supported product exploration and the in-app-browser fallback review.`
 - `28259` — Learning: `Significant`
 - `28260` — Career AI value: `Yes`
-- Demo video URL: `https://youtu.be/wxrciZWlEIk`
+- Demo video URL: `https://youtu.be/DEJ6Mwa9TYU`
 
 ## Judging-Criteria Review
 
