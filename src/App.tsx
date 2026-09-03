@@ -626,7 +626,7 @@ export default function App() {
         >
           PocketRoar engineering study
         </button>
-        <span>{notice}</span>
+        <span role="status">{notice}</span>
       </section>
 
       <section className="collaboration panel" aria-labelledby="checkpoint-heading">

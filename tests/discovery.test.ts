@@ -41,6 +41,7 @@ test("positioning preserves the human approval and physical-proof boundaries", a
   const safety = await Bun.file("public/guides/safe-ai-pcb-design/index.html").text()
   const pocketRoar = await Bun.file("public/case-studies/pocketroar/index.html").text()
   expect(homepage).toContain("only a person can approve")
+  expect(homepage).toContain('rel="icon" href="/favicon.svg"')
   expect(safety).toContain("Only a person may")
   expect(safety).toContain("apply a design change")
   expect(pocketRoar).toContain("does not mean the final product works")
