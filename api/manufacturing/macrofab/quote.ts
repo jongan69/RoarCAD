@@ -27,8 +27,8 @@ export async function POST(request: Request): Promise<Response> {
         { status: 422 },
       )
     }
-    const prepared = await prepareExport(parsed.project, "fabrication")
     const configuration = macroFabConfiguration(macroFabRequest.configuration)
+    const prepared = await prepareExport(parsed.project, "engineering")
     const apiKey = macroFabApiKey()
     if (!apiKey) {
       return Response.json(
@@ -74,7 +74,7 @@ export async function POST(request: Request): Promise<Response> {
       retryAfterMs: 5_000,
       substitutions: [],
       warnings: [
-        "MacroFab is processing the uploaded Gerber and drill files.",
+        "MacroFab is processing the generated Gerber and drill files.",
         "No price or manufacturing acceptance has been claimed yet.",
       ],
       fallbackUrl: "https://www.macrofab.com/",

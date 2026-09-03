@@ -319,7 +319,7 @@ Revision checks are reproducible engineering evidence, not physical certificatio
 
 ${pending || "- [ ] No physical validation plan was supplied."}
 
-Readiness: **${validation.readiness}**. Fabrication and ordering require a fabrication-ready revision.
+Readiness: **${validation.readiness}**. A provider quote is informational; ordering and physical validation remain separate.
 `
 }
 
@@ -392,7 +392,7 @@ export async function prepareExport(
   }
   if (artifactClass === "engineering") {
     files["ENGINEERING_ONLY.md"] = encode(
-      "# Engineering candidate only\n\nThis package is not fabrication-ready and must not be quoted, ordered, or treated as electrically validated.\n",
+      "# Engineering candidate only\n\nThis package is not fabrication-ready. A quote does not make it electrically validated or approved for ordering.\n",
     )
   }
   onProgress("Hashing the artifact manifest…")

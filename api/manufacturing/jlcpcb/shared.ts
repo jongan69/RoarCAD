@@ -47,7 +47,7 @@ export function requestErrorResponse(error: unknown): Response {
   const status =
     error instanceof RequestError
       ? error.status
-      : /fabrication-ready|Export blocked/.test(message)
+      : /fabrication-ready|Export blocked|Unsupported MacroFab configuration/.test(message)
         ? 422
         : 400
   return Response.json(

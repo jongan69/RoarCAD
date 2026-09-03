@@ -69,7 +69,6 @@ export default function App() {
   const exportControllerRef = useRef<AbortController | null>(null)
   const [quote, setQuote] = useState<QuoteResult | null>(null)
   const [quoteBusy, setQuoteBusy] = useState(false)
-  const [macroFabConfirmed, setMacroFabConfirmed] = useState(false)
   const [notice, setNotice] = useState("Loading reference design…")
   const [mode, setMode] = useState<"bare-pcb" | "pcba">("bare-pcb")
   const [artifactClass, setArtifactClass] = useState<ArtifactClass>("fabrication")
@@ -384,7 +383,6 @@ export default function App() {
   }
 
   const validateAndPrepare = () => {
-    setMacroFabConfirmed(false)
     return actions
       .prepare(
         revision.id,
@@ -426,11 +424,11 @@ export default function App() {
   }
 
   const quoteMacroFab = async () => {
-    if (prepared?.manifest.artifactClass !== "fabrication" || !design || !macroFabConfirmed) return
+    if (!design) return
     setQuoteBusy(true)
     try {
       const result = await requestMacroFabQuote(project, {
-        mode,
+        mode: "bare-pcb",
         quantity: 5,
         layers: design.board.layers,
         thicknessMm: design.board.thicknessMm as 0.8 | 1 | 1.2 | 1.6 | 2,
@@ -1080,6 +1078,15 @@ export default function App() {
               {issue}
             </p>
           ))}
+          <p>Requests send this revision’s generated Gerber and drill files to MacroFab.</p>
+          <button
+            className="full"
+            disabled={!design || compiling || quoteBusy}
+            type="button"
+            onClick={() => void quoteMacroFab()}
+          >
+            {quoteBusy ? "Checking MacroFab…" : "Get live MacroFab bare-PCB quote"}
+          </button>
           <fieldset>
             <legend>Artifact class</legend>
             <label>
@@ -1177,29 +1184,6 @@ export default function App() {
               >
                 Download package
               </button>
-              <label className="manufacturing-confirmation">
-                <input
-                  type="checkbox"
-                  checked={macroFabConfirmed}
-                  onChange={(event) => setMacroFabConfirmed(event.target.checked)}
-                />
-                I understand that RoarCAD will share this revision’s Gerber and drill files with
-                MacroFab to request a quote.
-              </label>
-              <button
-                className="full"
-                disabled={
-                  quoteBusy ||
-                  !macroFabConfirmed ||
-                  mode !== "bare-pcb" ||
-                  prepared.manifest.artifactClass !== "fabrication" ||
-                  prepared.validation.readiness !== "fabrication-ready"
-                }
-                type="button"
-                onClick={() => void quoteMacroFab()}
-              >
-                {quoteBusy ? "Checking MacroFab…" : "Request live MacroFab quote"}
-              </button>
               <button
                 className="full"
                 disabled={
@@ -1251,9 +1235,23 @@ export default function App() {
                     Retry status without uploading again
                   </button>
                 )}
-              <a href={quote.fallbackUrl} target="_blank" rel="noreferrer">
-                Open {quote.provider} ↗
-              </a>
+              {quote.orderUrl ? (
+                <>
+                  <p>MacroFab collects shipping and payment, then places the order.</p>
+                  <a
+                    className="primary full order-link"
+                    href={quote.orderUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Review and order this board at MacroFab ↗
+                  </a>
+                </>
+              ) : (
+                <a href={quote.fallbackUrl} target="_blank" rel="noreferrer">
+                  Open {quote.provider} ↗
+                </a>
+              )}
             </div>
           )}
         </aside>

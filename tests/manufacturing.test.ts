@@ -214,6 +214,7 @@ describe("manufacturing boundary", () => {
     )
     const quote = parseMacroFabQuote(macroFabQuoteFixture, verified)
     expect(quote.price).toEqual({ amount: "591.08", currency: "USD" })
+    expect(quote.orderUrl).toBe("https://factory.macrofab.com/pcb/abc123")
     expect(quote.leadTime).toBe("22 business days")
     expect(quote.shipping).toBeUndefined()
     expect(quote.tax).toBeUndefined()
@@ -226,27 +227,8 @@ describe("manufacturing boundary", () => {
     expect(rejected.price).toBeUndefined()
   })
 
-  test("MacroFab boundaries reject PCBA and engineering-only projects before upload", async () => {
+  test("MacroFab boundaries reject PCBA and unsupported board packaging", async () => {
     const indicator = await createProject("indicator", "Power indicator", indicatorSnapshot)
-    const unconfirmed = await macroFabQuotePost(
-      new Request("https://roarcad.test/api/manufacturing/macrofab/quote", {
-        method: "POST",
-        body: JSON.stringify({
-          project: indicator,
-          revisionId: indicator.currentRevisionId,
-          configuration: {
-            mode: "bare-pcb",
-            quantity: 5,
-            layers: 2,
-            thicknessMm: 1.6,
-            finish: "ENIG",
-            ...macroFabSettings,
-          },
-        }),
-      }),
-    )
-    expect(unconfirmed.status).toBe(400)
-
     const pcba = await macroFabQuotePost(
       new Request("https://roarcad.test/api/manufacturing/macrofab/quote", {
         method: "POST",
@@ -261,7 +243,6 @@ describe("manufacturing boundary", () => {
             finish: "ENIG",
             ...macroFabSettings,
           },
-          confirmed: true,
         }),
       }),
     )
@@ -282,7 +263,6 @@ describe("manufacturing boundary", () => {
             finish: "ENIG",
             ...macroFabSettings,
           },
-          confirmed: true,
         }),
       }),
     )
@@ -305,7 +285,6 @@ describe("manufacturing boundary", () => {
               finish: "ENIG",
               ...macroFabSettings,
             },
-            confirmed: true,
           }),
         }),
       )
@@ -494,7 +473,7 @@ describe("manufacturing boundary", () => {
     ).rejects.toThrow("authentication failed")
   })
 
-  test("MacroFab start creates one project and uploads the reviewed Gerber set", async () => {
+  test("MacroFab quotes an engineering revision without a separate confirmation gate", async () => {
     const originalFetch = globalThis.fetch
     const originalKey = process.env.MACROFAB_API_KEY
     process.env.MACROFAB_API_KEY = "test-secret"
@@ -532,7 +511,10 @@ describe("manufacturing boundary", () => {
       { preconnect: () => undefined },
     )
     try {
-      const indicator = await createProject("indicator", "Power indicator", indicatorSnapshot)
+      const engineeringSnapshot = structuredClone(indicatorSnapshot)
+      engineeringSnapshot.requirements[0].status = "unverified"
+      const indicator = await createProject("indicator", "Power indicator", engineeringSnapshot)
+      expect(indicator.revisions[0].validation.readiness).toBe("engineering")
       const response = await macroFabQuotePost(
         new Request("https://roarcad.test/api/manufacturing/macrofab/quote", {
           method: "POST",
@@ -547,7 +529,6 @@ describe("manufacturing boundary", () => {
               finish: "ENIG",
               ...macroFabSettings,
             },
-            confirmed: true,
           }),
         }),
       )

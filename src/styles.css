@@ -567,6 +567,13 @@ main {
   width: 100%;
   margin-top: 10px;
 }
+.order-link {
+  box-sizing: border-box;
+  display: block;
+  padding: 8px 12px;
+  text-align: center;
+  text-decoration: none;
+}
 .validation {
   display: flex;
   justify-content: space-between;
@@ -610,18 +617,6 @@ main {
   line-height: 1.4;
 }
 
-.manufacturing-confirmation {
-  align-items: flex-start;
-  display: flex;
-  font-size: 0.82rem;
-  gap: 0.55rem;
-  line-height: 1.45;
-  margin: 0.75rem 0;
-}
-
-.manufacturing-confirmation input {
-  margin-top: 0.2rem;
-}
 fieldset {
   border: 0;
   padding: 0;
