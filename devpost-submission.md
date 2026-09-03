@@ -161,7 +161,10 @@ provider proof, and browser checks are separately recorded in
   quote request, the indicator's 11 Gerber/drill files were recognized,
   imported, and quoted by MacroFab at **$591.08 USD total for five boards** with
   a **22-business-day** lead time. The returned manifest was
-  `0a577ec2db7cb233a181bba95f00e62e069bea485afd6bdf406c7dc97ef7d0d5`.
+  `b621a2da34752e89ed8a295d42a742c6f9aadd6f6a769572fdbbac1c59a36c4c`.
+  RoarCAD returned the exact provider project at
+  `https://factory.macrofab.com/pcb/g22x00i7`, which served successfully for the
+  final shipping, payment, and order review.
   This timestamped test quote is evidence of the integration, not a standing
   price or an order; shipping and tax were not returned.
 - Live production WebMCP preview preserved the saved revision. The visible
