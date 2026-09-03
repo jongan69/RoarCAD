@@ -35,12 +35,17 @@ export type ManufacturingRequest = z.infer<typeof manufacturingRequestSchema>
 
 export type QuoteResult = {
   configured: boolean
-  provider: "JLCPCB"
+  provider: "JLCPCB" | "MacroFab"
+  state: "processing" | "quoted" | "rejected" | "fallback"
   quoteId?: string
   quoteToken?: string
   expiresAt?: string
   price?: { amount: string; currency: string }
   shipping?: { amount: string; currency: string }
+  tax?: { amount: string; currency: string }
+  leadTime?: string
+  quotedAt?: string
+  retryAfterMs?: number
   substitutions: string[]
   warnings: string[]
   fallbackUrl: string
@@ -85,6 +90,36 @@ export async function requestJlcQuote(
     body,
   })
   return parseProviderResponse<QuoteResult>(response, "JLCPCB quote request failed")
+}
+
+export async function requestMacroFabQuote(
+  project: BoardProject,
+  configuration: ManufacturingConfiguration,
+): Promise<QuoteResult> {
+  const payload = manufacturingRequestSchema.parse({
+    project,
+    revisionId: project.currentRevisionId,
+    configuration,
+  })
+  const body = JSON.stringify(payload)
+  if (new TextEncoder().encode(body).byteLength > MAX_PROJECT_BYTES) {
+    throw new Error("Project exceeds the manufacturing request limit.")
+  }
+  const response = await fetch("/api/manufacturing/macrofab/quote", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+  })
+  return parseProviderResponse<QuoteResult>(response, "MacroFab quote request failed")
+}
+
+export async function requestMacroFabStatus(quoteToken: string): Promise<QuoteResult> {
+  const response = await fetch("/api/manufacturing/macrofab/status", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ quoteToken }),
+  })
+  return parseProviderResponse<QuoteResult>(response, "MacroFab quote status failed")
 }
 
 export async function requestJlcHandoff(input: z.input<typeof handoffSchema>): Promise<{

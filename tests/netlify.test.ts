@@ -2,10 +2,12 @@ import { expect, test } from "bun:test"
 import handler, { config } from "../netlify/functions/manufacturing.mts"
 import { createProject, indicatorSnapshot } from "../src/domain"
 
-test("Netlify routes only the two manufacturing boundaries", async () => {
+test("Netlify routes only the four manufacturing boundaries", async () => {
   expect(config.path).toEqual([
     "/api/manufacturing/jlcpcb/quote",
     "/api/manufacturing/jlcpcb/handoff",
+    "/api/manufacturing/macrofab/quote",
+    "/api/manufacturing/macrofab/status",
   ])
   expect(config.rateLimit).toEqual({
     windowLimit: 20,

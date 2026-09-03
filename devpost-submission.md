@@ -135,7 +135,7 @@ RoarCAD also begins translating the engineering surface for newcomers. The app e
 
 React builds the visible interface, and TypeScript helps catch incorrect data while the code is being written. Zod checks every project and tool input at runtime. One `compileBoardGraph()` function translates every supported board into tscircuit; there is no hidden special-case compiler for PocketRoar. IndexedDB stores limited revision history inside the browser. The WebMCP tools call the same checked actions as the buttons. A native Netlify Function independently reads, compiles, and validates manufacturing requests using the same handlers as the Vercel fallback. Private credentials never enter browser code.
 
-The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. Live provider quoting stays disabled; the app does not invent a price or place an order.
+The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. A person may explicitly share a fabrication-ready bare-board package with MacroFab. RoarCAD recompiles it on the server, uploads Gerber and drill files through MacroFab's signed flow, and polls with a short-lived tamper-resistant token. It shows a monetary value only when MacroFab returns an explicit total and currency. PCBA, shipping, tax, ordering, addresses, carts, payment, and agent access remain disabled; JLCPCB remains a manual-upload fallback.
 
 Heavy board calculations run in a native browser worker, using the same compiler as the server. This keeps the page usable while an engineering export runs. A person can cancel, and changing revisions discards obsolete work. Checkpoint links also work when opened in an existing tab; integrity checks finish before editing is allowed.
 
@@ -267,6 +267,7 @@ evidence, not current-release screenshots.
 - RoarCAD does not execute arbitrary TSX or uploaded KiCad files.
 - It does not replace professional schematic, SI/PI, DFM, compliance, or physical validation.
 - JLCPCB live quoting remains disabled until the approved endpoint contract is verified.
+- MacroFab bare-PCB quoting fails closed unless its live response supplies an unambiguous total and currency; a quote is not electrical proof, DFM signoff, or an order.
 - PocketRoar is an engineering candidate, not a fabrication-ready or physically validated product.
 - PocketRoar's zero-error feasibility slice is not a complete schematic; differential-pair impedance, coupling, and skew remain unverified.
 - The current CX3/UVC graph is not the final iPhone bridge. It does not yet implement SeeMo-class H.264 compression or an app-specific iPhone accessory transport.

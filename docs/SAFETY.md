@@ -12,6 +12,8 @@
 - Checkpoint hashes detect changed content but do not identify the sender. Anyone with a checkpoint link can read its design, and all incoming approvals are reset before local readiness is calculated.
 - Divergent checkpoints require a semantic-diff review and whole-snapshot adoption; RoarCAD does not auto-merge PCB graphs.
 - Generated files require review by a qualified hardware engineer and the manufacturer's DFM process.
-- JLCPCB quote, acceptance, component availability, substitutions, shipping, and final price must come from JLCPCB.
+- MacroFab price, manufacturability, warnings, and timing must come from MacroFab. RoarCAD never calculates them locally and shows no monetary value without an explicit provider total and currency.
+- MacroFab receives fabrication files only after visible confirmation. PCBA, shipping, tax, ordering, addresses, carts, and payment are not implemented.
+- JLCPCB remains a manual-upload fallback; its quote, acceptance, shipping, and price must come from JLCPCB.
 - RoarCAD never submits payment, stores shipping details, or silently accepts substitutions.
 - Public quote traffic must remain rate-limited, and `JLCPCB_QUOTE_ENABLED` stays false until the approved endpoint is verified.
