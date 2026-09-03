@@ -6,6 +6,7 @@ import { hmacSha256Base64 } from "../jlcpcb/shared.js"
 
 const API_BASE = "https://api.macrofab.com"
 export const MACROFAB_FALLBACK_URL = "https://www.macrofab.com/"
+const MACROFAB_PLATFORM_URL = "https://factory.macrofab.com"
 const TOKEN_LIFETIME_MS = 15 * 60_000
 
 const tokenPayloadSchema = z.object({
@@ -476,6 +477,10 @@ export function parseMacroFabQuote(source: unknown, payload: MacroFabTokenPayloa
       amount: quote.totals.total.total_price.toFixed(2),
       currency: "USD",
     },
+    orderUrl: new URL(
+      `/pcb/${encodeURIComponent(payload.pcbId)}`,
+      MACROFAB_PLATFORM_URL,
+    ).toString(),
     leadTime: `${quote.lead_time.business_days} business days`,
     quotedAt: new Date().toISOString(),
     substitutions: [],
@@ -496,8 +501,12 @@ export function macroFabConfiguration(input: z.infer<typeof macroFabConfiguratio
   layers: 2 | 4 | 6 | 8
 } {
   if (input.layers !== 2)
-    throw new Error("MacroFab quoting is currently verified only for two-layer boards.")
+    throw new Error(
+      "Unsupported MacroFab configuration: RoarCAD currently packages only two-layer uploads.",
+    )
   if (input.thicknessMm !== 1.6 || input.finish !== "ENIG")
-    throw new Error("MacroFab quoting is verified only for 1.6 mm ENIG boards.")
+    throw new Error(
+      "Unsupported MacroFab configuration: RoarCAD currently packages 1.6 mm ENIG uploads.",
+    )
   return { layers: input.layers as 2 | 4 | 6 | 8 }
 }

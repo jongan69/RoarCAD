@@ -39,7 +39,6 @@ export const macroFabConfigurationSchema = manufacturingConfigurationSchema.exte
 
 export const macroFabRequestSchema = manufacturingRequestSchema.extend({
   configuration: macroFabConfigurationSchema,
-  confirmed: z.literal(true),
 })
 
 export type ManufacturingConfiguration = z.infer<typeof manufacturingConfigurationSchema>
@@ -55,6 +54,7 @@ export type QuoteResult = {
   price?: { amount: string; currency: string }
   shipping?: { amount: string; currency: string }
   tax?: { amount: string; currency: string }
+  orderUrl?: string
   leadTime?: string
   quotedAt?: string
   retryAfterMs?: number
@@ -118,7 +118,6 @@ export async function requestMacroFabQuote(
       silkscreenColor: "white",
       manufacturing: "Standard",
     },
-    confirmed: true,
   })
   const body = JSON.stringify(payload)
   if (new TextEncoder().encode(body).byteLength > MAX_PROJECT_BYTES) {

@@ -5,7 +5,7 @@
 - The indicator board demonstrates the software workflow; it has not been physically built or independently reviewed.
 - `blocked`, `engineering`, and `fabrication-ready` are separate states. An engineering Gerber is not permission to fabricate.
 - The PocketRoar capture project compiles and exports for engineering review, but must not be represented as iPhone-, iPad-, camera-, transport-, or fabrication-compatible.
-- PocketRoar artifacts include `ENGINEERING_ONLY.md`; the quote route independently rejects the project.
+- PocketRoar artifacts include `ENGINEERING_ONLY.md`; the current MacroFab uploader independently rejects its unsupported eight-layer package.
 - Agents cannot mark evidence, parts, or footprints reviewed. Those approvals require explicit visible human actions and create immutable revisions.
 - Beginner definitions explain general terms but never count as reviewed, part-specific engineering evidence.
 - Agents cannot apply a preview, create or adopt a shared checkpoint, download artifacts, quote, order, or pay. Those actions remain visible manual controls.
@@ -13,7 +13,7 @@
 - Divergent checkpoints require a semantic-diff review and whole-snapshot adoption; RoarCAD does not auto-merge PCB graphs.
 - Generated files require review by a qualified hardware engineer and the manufacturer's DFM process.
 - MacroFab price, board manufacturability, warnings, and timing must come from MacroFab. RoarCAD never calculates them locally and shows no monetary value without a valid provider total. MacroFab's current API omits currency, so RoarCAD labels it USD only under MacroFab's published Manufacturing Services Agreement and says so beside the quote.
-- MacroFab receives fabrication files only after visible confirmation. PCBA, shipping, tax, ordering, addresses, carts, and payment are not implemented.
+- A visible quote request sends the generated files to MacroFab. After a valid provider quote, RoarCAD links to that exact authenticated MacroFab project. MacroFab owns shipping, payment, and final order placement; RoarCAD never stores those details or calls an undocumented purchase endpoint. PCBA is not implemented.
 - JLCPCB remains a manual-upload fallback; its quote, acceptance, shipping, and price must come from JLCPCB.
 - RoarCAD never submits payment, stores shipping details, or silently accepts substitutions.
 - Public quote traffic must remain rate-limited, and `JLCPCB_QUOTE_ENABLED` stays false until the approved endpoint is verified.

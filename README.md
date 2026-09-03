@@ -40,7 +40,7 @@ bun run build
 4. A person approves and applies the preview in the visible UI to create an immutable revision.
 5. Validate the graph and generated Circuit JSON.
 6. Prepare engineering or fabrication Gerber, BOM, placement, validation, digital-verification, project, and hash-manifest artifacts.
-7. Explicitly download the package, confirm a MacroFab file upload for a live bare-PCB quote, or use JLCPCB's manual upload fallback.
+7. Request a live MacroFab bare-PCB quote, then open that exact provider project to review shipping, payment, and place the order; JLCPCB remains a manual-upload fallback.
 
 Browsers without WebMCP retain the complete manual workflow. Agents cannot order, pay, store an address, or accept a substitution.
 
@@ -80,7 +80,7 @@ A recipient reviews the checkpoint before choosing **Continue as local fork**. T
 
 ## Manufacturing status
 
-The manufacturing server receives the current project and configuration, revalidates the revision, recompiles its artifacts, and rejects anything below `fabrication-ready`. For bare PCBs, the visible MacroFab flow creates a provider project, uploads only the generated Gerber and drill files through MacroFab's signed S3 flow, processes and imports the recognized layers, and returns a short-lived polling token. The status route displays MacroFab's returned total only after the provider marks the base PCB quote valid and manufacturable. MacroFab's API omits a currency field; USD comes from its published [Manufacturing Services Agreement](https://www.macrofab.com/legal/msa), which states that its prices are in U.S. dollars. Shipping, tax, ordering, addresses, carts, payment, and PCBA remain unavailable. JLCPCB remains an honest [manual-upload fallback](https://jlcpcb.com/quote).
+The manufacturing server receives the current project and configuration, validates the revision, and recompiles its artifacts. For supported two-layer bare PCBs, the visible MacroFab flow creates a provider project, uploads only the generated Gerber and drill files through MacroFab's signed S3 flow, processes and imports the recognized layers, and returns a short-lived polling token. The status route displays MacroFab's returned total only after the provider marks the base PCB quote valid and manufacturable. MacroFab's API omits a currency field; USD comes from its published [Manufacturing Services Agreement](https://www.macrofab.com/legal/msa), which states that its prices are in U.S. dollars. A valid quote links to the exact authenticated MacroFab project, where MacroFab collects shipping and payment and places the order. RoarCAD does not call an undocumented purchase endpoint, hold addresses or payment details, or claim that an order was placed. PCBA remains unavailable. JLCPCB remains an honest [manual-upload fallback](https://jlcpcb.com/quote).
 
 Server variables:
 
