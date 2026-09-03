@@ -32,6 +32,9 @@ for (const path of [
     const asset = await request(script)
     assert.equal(asset.status, 200, "Built script is served")
     assert.match(asset.headers.get("content-type") ?? "", /javascript/, "Script is not HTML")
+    const icon = await request("/favicon.svg")
+    assert.equal(icon.status, 200, "Favicon is served")
+    assert.match(icon.headers.get("content-type") ?? "", /image\/svg\+xml/, "Favicon is SVG")
   }
   console.log(`PASS page ${path}`)
 }
