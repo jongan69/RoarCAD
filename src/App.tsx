@@ -1081,7 +1081,13 @@ export default function App() {
           <p>Requests send this revision’s generated Gerber and drill files to MacroFab.</p>
           <button
             className="full"
-            disabled={!design || compiling || quoteBusy}
+            disabled={
+              !design ||
+              compiling ||
+              quoteBusy ||
+              (quote?.provider === "MacroFab" &&
+                (quote.state === "processing" || quote.state === "quoted"))
+            }
             type="button"
             onClick={() => void quoteMacroFab()}
           >
