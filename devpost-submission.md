@@ -109,6 +109,7 @@ Codex helped research WebMCP, tscircuit, PCB validation, PocketRoar’s HDMI-to-
 - Clear separation between an engineering candidate and a fabrication-ready board.
 - Gerber factory drawings, BOM part lists, CPL placement lists, structured project data, validation reports, and SHA-256 manifests.
 - A server-side manufacturing recheck so changing a browser label cannot unlock a quote.
+- A human-confirmed MacroFab handoff that returned a live provider quote for the fabrication-ready indicator without exposing credentials or enabling ordering.
 - A complete manual workflow when WebMCP is unavailable.
 
 ## What Works Today
@@ -119,7 +120,7 @@ Three boards demonstrate one project-independent compiler:
 
 | Board | Demonstrated result |
 | --- | --- |
-| Power indicator | Compiles, passes the fabrication gate, and prepares Gerber/BOM/CPL artifacts for a human-controlled download. |
+| Power indicator | Compiles, passes the fabrication gate, prepares Gerber/BOM/CPL artifacts, and received a live MacroFab quote after a human confirmed the file upload. |
 | Environmental monitor | Starts from a new structured brief and completes the bounded engineering workflow with agent inputs visibly unreviewed. |
 | PocketRoar Capture Bridge | Compiles a 2,566-element eight-layer feasibility slice with zero compiler/checker errors and prepares review artifacts while fabrication export and quoting remain blocked. |
 
@@ -135,7 +136,7 @@ RoarCAD also begins translating the engineering surface for newcomers. The app e
 
 React builds the visible interface, and TypeScript helps catch incorrect data while the code is being written. Zod checks every project and tool input at runtime. One `compileBoardGraph()` function translates every supported board into tscircuit; there is no hidden special-case compiler for PocketRoar. IndexedDB stores limited revision history inside the browser. The WebMCP tools call the same checked actions as the buttons. A native Netlify Function independently reads, compiles, and validates manufacturing requests using the same handlers as the Vercel fallback. Private credentials never enter browser code.
 
-The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. A person may explicitly share a fabrication-ready bare-board package with MacroFab. RoarCAD recompiles it on the server, uploads Gerber and drill files through MacroFab's signed flow, and polls with a short-lived tamper-resistant token. It shows a monetary value only when MacroFab returns an explicit total and currency. PCBA, shipping, tax, ordering, addresses, carts, payment, and agent access remain disabled; JLCPCB remains a manual-upload fallback.
+The Netlify deployment needs no hosted database or AI API key. Netlify serves the website and its guides, while the board remains in the browser. The server reads manufacturing requests with a strict byte limit, rejects unsupported methods, and does not cache private responses. A person may explicitly share a fabrication-ready bare-board package with MacroFab. RoarCAD recompiles it on the server, uploads Gerber and drill files through MacroFab's signed flow, and polls with a short-lived tamper-resistant token. It shows a monetary value only when MacroFab returns an unambiguous total. MacroFab's API omits a currency field, so RoarCAD labels it USD only because MacroFab's published Manufacturing Services Agreement defines its prices in U.S. dollars and the interface discloses that limitation. PCBA, shipping, tax, ordering, addresses, carts, payment, and agent access remain disabled; JLCPCB remains a manual-upload fallback.
 
 Heavy board calculations run in a native browser worker, using the same compiler as the server. This keeps the page usable while an engineering export runs. A person can cancel, and changing revisions discards obsolete work. Checkpoint links also work when opened in an existing tab; integrity checks finish before editing is allowed.
 
@@ -143,14 +144,21 @@ WebMCP is a tool connection inside a browser page, not a remote MCP-server addre
 
 ## Verified Software Release
 
-The Netlify production release is commit `3895452567e767bbf2df5c1bb1ac46766af48fa6`.
-Its build, hosting-provider status, public HTTP checks, and live browser checks
-are separately recorded in `docs/NETLIFY_RELEASE.md`.
+The current Netlify production release, build status, public HTTP checks, live
+provider proof, and browser checks are separately recorded in
+`docs/NETLIFY_RELEASE.md`.
 
 - **CI (continuous integration)** automatically checked types, formatting,
   all 38 tests across 12 files, and the production build.
 - The production **smoke test**, a quick check of essential behavior, passed
   the website, six guides, discovery files, and manufacturing safety boundary.
+- A production-only secret authenticated the server to MacroFab. After visible
+  human confirmation, the indicator's 11 Gerber/drill files were recognized,
+  imported, and quoted by MacroFab at **$591.08 USD total for five boards** with
+  a **22-business-day** lead time. The returned manifest was
+  `0a577ec2db7cb233a181bba95f00e62e069bea485afd6bdf406c7dc97ef7d0d5`.
+  This timestamped test quote is evidence of the integration, not a standing
+  price or an order; shipping and tax were not returned.
 - Live production WebMCP preview preserved the saved revision. The visible
   approval button created a new revision, and background export prepared
   fabrication artifacts while still requiring a human download click.
@@ -186,8 +194,10 @@ are separately recorded in `docs/NETLIFY_RELEASE.md`.
 6. Select the bundled indicator to test fabrication export. Incoming checkpoint approvals are intentionally reset, so an adopted board is not automatically fabrication-ready. Confirm the browser requires a visible download click.
 7. Open PocketRoar, prepare an engineering bundle, then confirm fabrication export and quoting remain blocked.
 8. Load the environmental-monitor sample and confirm its agent-supplied requirements, parts, footprints, and evidence are unreviewed.
+9. On the fabrication-ready indicator, read the disclosure and check the MacroFab confirmation box. Request a live quote. If provider processing exceeds one minute, use **Retry status without uploading again**. Confirm that any returned total includes its provider, currency basis, lead time, timestamp, manifest, and unavailable shipping/tax labels.
 
-No credentials are required.
+No visitor credentials are required. The MacroFab credential stays in the
+server-side production environment.
 
 ## Public Demo Link
 
@@ -239,6 +249,13 @@ evidence, not current-release screenshots.
   re-ran the live from-scratch WebMCP journey on Netlify. Devpost project version
   7 is published and submitted with the Netlify URL and new public YouTube video;
   the post-submit project readback confirmed every final field.
+- September 3 manufacturing work added the human-confirmed MacroFab bare-PCB
+  path through [PR #16](https://github.com/jongan69/RoarCAD/pull/16). A real
+  provider workflow exposed one contract mismatch—MacroFab-generated SVG/PNG
+  previews—which was fixed and regression-tested in
+  [PR #17](https://github.com/jongan69/RoarCAD/pull/17). Production then returned
+  the genuine indicator quote recorded above. No cart, order, payment, PCBA, or
+  agent-callable manufacturing action was added.
 
 - Devpost authentication, registration, and official form requirements were
   verified again on September 2, 2026.
@@ -267,7 +284,7 @@ evidence, not current-release screenshots.
 - RoarCAD does not execute arbitrary TSX or uploaded KiCad files.
 - It does not replace professional schematic, SI/PI, DFM, compliance, or physical validation.
 - JLCPCB live quoting remains disabled until the approved endpoint contract is verified.
-- MacroFab bare-PCB quoting fails closed unless its live response supplies an unambiguous total and currency; a quote is not electrical proof, DFM signoff, or an order.
+- MacroFab bare-PCB quoting fails closed unless its live response supplies an unambiguous total and matches the reviewed configuration. The API omits currency, so RoarCAD's USD label depends on MacroFab's published U.S.-dollar contract terms and is disclosed. A quote is not electrical proof, final DFM signoff, or an order.
 - PocketRoar is an engineering candidate, not a fabrication-ready or physically validated product.
 - PocketRoar's zero-error feasibility slice is not a complete schematic; differential-pair impedance, coupling, and skew remain unverified.
 - The current CX3/UVC graph is not the final iPhone bridge. It does not yet implement SeeMo-class H.264 compression or an app-specific iPhone accessory transport.
