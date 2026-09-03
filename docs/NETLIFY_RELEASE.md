@@ -76,6 +76,30 @@ fabrication refusal. It does not place orders or prove browser behavior.
 
 ## Evidence recorded September 2
 
+### September 3 MacroFab order-handoff release
+
+- [PR #19](https://github.com/jongan69/RoarCAD/pull/19) merged as
+  `310c02e93bda2d799a46878bc4dd02f5dc10ef37`. Main
+  [CI run 33808206784](https://github.com/jongan69/RoarCAD/actions/runs/33808206784)
+  passed typecheck, Biome, all tests, and the production build. CodeRabbit's one
+  actionable repeat-request finding was fixed before merge; GitGuardian and both
+  deployment checks passed.
+- Netlify production deploy `6a99e6ad61b7c40008e01dce` reached `ready` and
+  published that exact commit. Netlify's deploy scan checked 101 files and found
+  no secret match.
+- A request to the production MacroFab endpoint created and processed the
+  indicator's provider project. The signed status path returned a genuine
+  **591.08 USD** quote for five boards, **22 business days**, manifest
+  `b621a2da34752e89ed8a295d42a742c6f9aadd6f6a769572fdbbac1c59a36c4c`,
+  and exact project handoff <https://factory.macrofab.com/pcb/g22x00i7> at
+  `2026-09-03T21:34:26.202Z`. The provider project URL returned HTTP 200.
+- The deployed JavaScript contains the visible upload disclosure, live quote
+  action, provider-owned shipping/payment explanation, and exact-project order
+  link. No order was created and no payment or shipping information was sent.
+- The repeatable production smoke passed all seven HTML routes, discovery files,
+  headers, malformed and oversized request boundaries, JLCPCB fallback,
+  indicator recompilation, and both PocketRoar pre-provider refusals.
+
 ### September 3 MacroFab production proof
 
 - [PR #16](https://github.com/jongan69/RoarCAD/pull/16) added the server-only

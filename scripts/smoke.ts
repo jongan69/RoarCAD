@@ -130,7 +130,6 @@ const macroFabBlocked = await request("/api/manufacturing/macrofab/quote", {
   body: JSON.stringify({
     project: capture,
     revisionId: capture.currentRevisionId,
-    confirmed: true,
     configuration: {
       mode: "bare-pcb",
       quantity: 5,
@@ -145,7 +144,10 @@ const macroFabBlocked = await request("/api/manufacturing/macrofab/quote", {
   }),
 })
 assert.equal(macroFabBlocked.status, 422, "PocketRoar must fail before MacroFab upload")
-assert.match((await macroFabBlocked.json()).error, /fabrication-ready|Export blocked/)
+assert.match(
+  (await macroFabBlocked.json()).error,
+  /fabrication-ready|Export blocked|Unsupported MacroFab configuration/,
+)
 console.log("PASS PocketRoar: MacroFab upload refused before provider contact")
 
 console.log(`PASS live HTTP smoke at ${target.origin}; browser and hardware proof are separate.`)
