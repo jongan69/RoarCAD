@@ -15,7 +15,7 @@
     "ai_usage": "Codex assisted research, implementation, validation, and submission preparation.",
     "codex_usage": "Codex built the typed domain workflow, tscircuit integration, browser tools, safety boundary, and tests."
   },
-  "current_stage": "prepare-submission",
+  "current_stage": "submit-project",
   "completed_stages": ["review", "resources", "submit-project"],
   "rules_acknowledged": true,
   "learning": {
@@ -27,10 +27,10 @@
   },
   "submission": {
     "draft_file": "devpost-submission.md",
-    "status": "drafting",
+    "status": "submitted",
     "submission_id": 1154859,
     "submitted_at": "2026-08-26T10:37:25.894-04:00",
     "public_url": "https://devpost.com/software/roarcad"
   },
-  "next_command": "prepare-submission"
+  "next_command": "hackathon-map"
 }

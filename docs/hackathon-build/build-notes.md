@@ -46,3 +46,19 @@ Jonathan chose an AI-led demo centered on visibly building the PocketRoar design
 - The in-app-browser release-candidate smoke showed zero viewer errors, stable 390×844 schematic height, exactly four WebMCP tools, and bounded focused inspection. A clean Chrome profile independently loaded the public production origin with WebMCP ready.
 - Existing edited IndexedDB projects remain preserved. A previously edited browser profile can therefore show an older PocketRoar fork until the user explicitly selects the current reference or opens a clean profile; RoarCAD does not silently delete that work.
 - The canonical Devpost draft now includes the zero-error evidence. The public entry and replacement screenshot remain separate, confirmation-gated publication work.
+
+## 2026-09-03 final submission
+
+- Live WebMCP created a three-part environmental monitor from a structured brief,
+  returned focused inspection, previewed a move without mutating revision
+  `a5926b6e38c9e3b7`, and created revision `849f7e21d4758f5f` only after the
+  visible **Approve & apply** click. The board displayed zero viewer errors.
+- The replacement master is 2:46.635 at 1920×1080 with H.264 video and narrated
+  AAC audio. Its SHA-256 is
+  `8724ca4064235bf83d49cd909f2b88d1ec6c2d7146e590ac1c7fe6d10b20c2da`.
+- YouTube published `https://youtu.be/DEJ6Mwa9TYU`; anonymous oEmbed returned the
+  final title, author, and thumbnail after copyright and Community Guidelines
+  checks completed with no issues.
+- Devpost project version 7 and submission `1154859` now point to Netlify and the
+  replacement video. Live project readback confirmed the final tagline,
+  description, video, website URL, published state, and WebMCP association.
