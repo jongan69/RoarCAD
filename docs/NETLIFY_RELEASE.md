@@ -15,8 +15,8 @@ Release requires:
   requests; the indicator must return the honest manual-upload fallback.
 - Live four-tool WebMCP registration, non-mutating preview, visible human
   approval, export preparation, and immutable checkpoint handoff.
-- No claim of physical PCB proof, universal agent compatibility, live pricing,
-  or a separate Netlify prize.
+- No claim of physical PCB proof, universal agent compatibility, fabrication
+  acceptance, or a separate Netlify prize.
 
 ## Failure modes and migration
 
@@ -36,9 +36,11 @@ Adopting a returned checkpoint retains the recipient's existing local history
 and records incoming provenance, but resets incoming approval claims to
 unreviewed. Adoption replaces the snapshot; it never auto-merges PCB graphs.
 
-No database migration, new authentication service, or production credential
-copy is required. Live quoting remains disabled even when credentials exist
-until the provider contract and abuse controls are independently verified.
+No database migration or new authentication service is required. MacroFab's
+credential is a write-only Netlify production secret and never enters Vite's
+browser environment. Live bare-PCB quoting stays behind server recompilation,
+fabrication readiness, visible upload confirmation, and the provider contract;
+PCBA and ordering remain disabled.
 
 The native function declares a 20-request / 60-second limit per IP and domain.
 This protects the public compilation boundary without application-level state.
@@ -73,6 +75,38 @@ and oversized bodies, the indicator's compiled fallback, and PocketRoar's
 fabrication refusal. It does not place orders or prove browser behavior.
 
 ## Evidence recorded September 2
+
+### September 3 MacroFab production proof
+
+- [PR #16](https://github.com/jongan69/RoarCAD/pull/16) added the server-only
+  MacroFab upload, processing, strict quote contract, signed polling token,
+  human confirmation, UI, and safety tests. Both CI runs, GitGuardian, and the
+  deployment checks passed before merge.
+- `MACROFAB_API_KEY` is present as a secret in Netlify's production environment.
+  Netlify's free plan exposes build/functions/runtime scopes together; the name
+  is not prefixed with `VITE_`, so Vite does not place it in the browser bundle.
+  Netlify's deploy secret scan reported no match.
+- The first real production status call correctly failed closed because
+  MacroFab includes generated SVG/PNG previews beside fabrication files. The
+  smallest root fix in [PR #17](https://github.com/jongan69/RoarCAD/pull/17)
+  validates the workflow envelope broadly but still validates only the selected
+  Gerber/drill import strictly. Biome, TypeScript, 14 focused tests with 111
+  assertions, both remote CI runs, GitGuardian, and deploy checks passed.
+- Netlify deploy `6a99db57ea6e610008337fb4` published merge
+  `c9375b270ba1563c9d129c353d1fe9b871f19745`. The live production function
+  recognized and imported all 11 indicator fabrication files. MacroFab then
+  returned HTTP 200, a valid/manufacturable base-PCB quote of **591.08 USD total
+  for quantity five**, and **22 business days** for manifest
+  `0a577ec2db7cb233a181bba95f00e62e069bea485afd6bdf406c7dc97ef7d0d5` at
+  `2026-09-03T20:48:25.858Z`.
+- MacroFab's quote API omitted currency. RoarCAD labels the returned total USD
+  only because MacroFab's published Manufacturing Services Agreement defines
+  prices in U.S. dollars, and displays that basis as a warning. Shipping and tax
+  remained unavailable. No order, address, cart, or payment call was made.
+- The post-deploy HTTP smoke passed every page, discovery file, method/body
+  boundary, JLCPCB fallback, indicator recompilation, and both PocketRoar
+  pre-provider refusals. Provider proof, deployment proof, browser proof, and
+  physical hardware proof remain separate evidence lanes.
 
 - Production release: [PR #10](https://github.com/jongan69/RoarCAD/pull/10)
   merged as `3895452567e767bbf2df5c1bb1ac46766af48fa6`. Netlify production
