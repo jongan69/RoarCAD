@@ -49,6 +49,7 @@ const ingestionFileSchema = z.object({
   source: z.string().min(1).max(80),
   layer_name: z.string().nullable().optional(),
 })
+const ingestionFilesSchema = z.array(ingestionFileSchema)
 
 export const workflowResponseSchema = z.object({
   current_stage: z.string(),
@@ -61,7 +62,7 @@ export const workflowResponseSchema = z.object({
       status: z.string(),
       errors: z.array(z.unknown()).nullable().optional(),
       result: z
-        .object({ files: z.array(ingestionFileSchema) })
+        .object({ files: z.array(z.unknown()) })
         .passthrough()
         .nullable()
         .optional(),
@@ -384,8 +385,10 @@ export function acceptedMacroFabFiles(workflow: z.infer<typeof workflowResponseS
   const task = workflow.tasks.find(({ task_type }) => task_type === "processing_gerbers")
   if (task?.status !== "completed" || task.errors?.length || !task.result)
     throw new Error("MacroFab could not process the uploaded fabrication files.")
+  const files = ingestionFilesSchema.safeParse(task.result.files)
+  if (!files.success) throw new Error("MacroFab returned unsupported processed fabrication files.")
   return macroFabUploadNames.map((filename) => {
-    const file = task.result?.files.find((candidate) => candidate.filename === filename)
+    const file = files.data.find((candidate) => candidate.filename === filename)
     const expectedLayer = expectedLayers[filename]
     const expectedType = filename.endsWith(".drl") ? "excellon" : "gerber"
     if (
